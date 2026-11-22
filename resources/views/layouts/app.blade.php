@@ -1,84 +1,154 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'Bank Sampah Sahabat Ibu' }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="noindex">
+    <title>{{ $title ?? 'Portal Bank Sampah Sahabat Ibu' }}</title>
+    <link rel="stylesheet" href="{{ asset('assets/style.css') }}">
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800 flex flex-col font-sans">
-    <nav class="bg-emerald-800 text-white shadow">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
-            <div class="flex items-center space-x-3">
-                <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}" class="font-bold text-lg tracking-tight">
-                    Bank Sampah Sahabat Ibu
-                </a>
-                <span class="text-xs bg-emerald-900 px-2 py-0.5 rounded uppercase tracking-wider font-semibold">
-                    {{ auth()->user()->role }}
-                </span>
-            </div>
+<body data-view="{{ $dataView ?? 'home' }}" data-role="{{ auth()->user()->role }}">
+    @include('partials.icons')
 
-            <div class="flex items-center space-x-3 text-sm flex-wrap">
-                @if(auth()->user()->role === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-emerald-200">Dashboard</a>
-                    <a href="{{ route('admin.nasabah.index') }}" class="hover:text-emerald-200">Nasabah</a>
-                    <a href="{{ route('admin.nasabah.pendaftar') }}" class="hover:text-emerald-200">Pendaftar</a>
-                    <a href="{{ route('admin.katalog.index') }}" class="hover:text-emerald-200">Katalog</a>
-                    <a href="{{ route('admin.setoran.index') }}" class="hover:text-emerald-200">Setoran</a>
-                    <a href="{{ route('admin.penarikan.index') }}" class="hover:text-emerald-200">Penarikan</a>
-                    <a href="{{ route('admin.laporan.index') }}" class="hover:text-emerald-200">Laporan</a>
-                    <a href="{{ route('admin.profile.show') }}" class="hover:text-emerald-200">Profil & Log</a>
-                @elseif(auth()->user()->role === 'nasabah')
-                    <a href="{{ route('nasabah.dashboard') }}" class="hover:text-emerald-200">Dashboard</a>
-                    <a href="{{ route('nasabah.setoran.index') }}" class="hover:text-emerald-200">Riwayat Setoran</a>
-                    <a href="{{ route('nasabah.penarikan.index') }}" class="hover:text-emerald-200">Tarik Dana</a>
-                    <a href="{{ route('nasabah.katalog.index') }}" class="hover:text-emerald-200">Katalog Harga</a>
-                    <a href="{{ route('nasabah.profile.show') }}" class="hover:text-emerald-200">Profil Saya</a>
-                @endif
-
-                <form method="POST" action="{{ route('logout') }}" class="inline ml-2">
-                    @csrf
-                    <button type="submit" class="bg-emerald-950 hover:bg-black text-xs px-3 py-1.5 rounded transition">
-                        Keluar
-                    </button>
-                </form>
+    <header id="top">
+        <div class="crumb g">
+            <button class="burger" onclick="toggleSide(true)" aria-label="Buka menu">
+                <svg class="i"><use href="#i-menu"/></svg>
+            </button>
+            <div>
+                <b>{{ $pageTitle ?? 'Dashboard' }}</b>
+                <small>{{ auth()->user()->role === 'admin' ? 'Admin' : 'Nasabah' }} · Sahabat Ibu</small>
             </div>
         </div>
-    </nav>
-
-    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
-        @if(session('success'))
-            <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 mb-5 text-emerald-800 text-sm rounded shadow-sm">
-                {{ session('success') }}
+        <div class="right">
+            <div class="bal g">
+                @if(auth()->user()->role === 'admin')
+                    <small>Pengajuan menunggu</small>
+                    <b>{{ \App\Models\PenarikanDana::where('status', 'menunggu')->count() }}</b>
+                @else
+                    <small>Uang bisa diambil</small>
+                    <b>Rp {{ number_format(auth()->user()->nasabah?->saldo_tersedia ?? 0, 0, ',', '.') }}</b>
+                @endif
             </div>
-        @endif
+        </div>
+    </header>
 
-        @if(session('error'))
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-5 text-red-800 text-sm rounded shadow-sm">
-                {{ session('error') }}
-            </div>
-        @endif
+    <aside id="side" class="g" aria-label="Menu utama">
+        <a class="brand" href="{{ url('/') }}" style="text-decoration:none">
+            <i></i>
+            <div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div>
+        </a>
+        <nav id="keys">
+            @if(auth()->user()->role === 'admin')
+                <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-home"/></svg><span class="t">Dashboard</span>
+                </a>
+                <a href="{{ route('admin.nasabah.index') }}" class="{{ request()->routeIs('admin.nasabah.index') || request()->routeIs('admin.nasabah.edit') || request()->routeIs('admin.nasabah.create') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-users"/></svg><span class="t">Pendaftar &amp; Nasabah</span>
+                </a>
+                <a href="{{ route('admin.katalog.index') }}" class="{{ request()->routeIs('admin.katalog.*') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-tag"/></svg><span class="t">Katalog Harga</span>
+                </a>
+                <a href="{{ route('admin.setoran.index') }}" class="{{ request()->routeIs('admin.setoran.*') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-scale"/></svg><span class="t">Setoran</span>
+                </a>
+                <a href="{{ route('admin.penarikan.index') }}" class="{{ request()->routeIs('admin.penarikan.*') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-cash"/></svg><span class="t">Penarikan</span>
+                </a>
+                <a href="{{ route('admin.laporan.index') }}" class="{{ request()->routeIs('admin.laporan.*') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-receipt"/></svg><span class="t">Laporan</span>
+                </a>
+                <a href="{{ route('admin.profile.show') }}" class="{{ request()->routeIs('admin.profile.*') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-user"/></svg><span class="t">Profil &amp; Log</span>
+                </a>
+            @else
+                <a href="{{ route('nasabah.dashboard') }}" class="{{ request()->routeIs('nasabah.dashboard') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-home"/></svg><span class="t">Dashboard</span>
+                </a>
+                <a href="{{ route('nasabah.setoran.index') }}" class="{{ request()->routeIs('nasabah.setoran.*') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-scale"/></svg><span class="t">Riwayat Setoran</span>
+                </a>
+                <a href="{{ route('nasabah.penarikan.index') }}" class="{{ request()->routeIs('nasabah.penarikan.*') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-cash"/></svg><span class="t">Penarikan Dana</span>
+                </a>
+                <a href="{{ route('nasabah.katalog.index') }}" class="{{ request()->routeIs('nasabah.katalog.*') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-tag"/></svg><span class="t">Katalog Harga</span>
+                </a>
+                <a href="{{ route('nasabah.profile.show') }}" class="{{ request()->routeIs('nasabah.profile.*') ? 'on' : '' }}">
+                    <svg class="i"><use href="#i-user"/></svg><span class="t">Profil</span>
+                </a>
+            @endif
 
-        @if(session('warning'))
-            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-5 text-amber-800 text-sm rounded shadow-sm">
-                {{ session('warning') }}
-            </div>
-        @endif
+            <small class="gl">Lainnya</small>
+            <a href="{{ url('/') }}">
+                <svg class="i"><use href="#i-door"/></svg><span class="t">Garasi 3D</span>
+            </a>
+            <form method="POST" action="{{ route('logout') }}" id="form-logout" style="margin:0">
+                @csrf
+                <button type="submit" style="width:100%;background:transparent;border:0;color:inherit;text-align:left;padding:0">
+                    <svg class="i"><use href="#i-key"/></svg><span class="t">Keluar</span>
+                </button>
+            </form>
+        </nav>
+        <button class="fold" id="fold" onclick="toggleSide()" aria-label="Ciutkan atau perluas menu">
+            <svg class="i"><use href="#i-chev"/></svg><span class="t">Ciutkan menu</span>
+        </button>
+    </aside>
+    <div id="scrim" onclick="toggleSide(false)"></div>
 
-        @if(session('info'))
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-5 text-blue-800 text-sm rounded shadow-sm">
-                {{ session('info') }}
-            </div>
-        @endif
+    @if(session('success'))
+        <div id="toast" class="on" role="status" aria-live="polite">
+            {{ session('success') }}
+        </div>
+    @elseif(session('error'))
+        <div id="toast" class="on" style="background:#4a1b1b;border-color:#ff6b6b;" role="status" aria-live="polite">
+            {{ session('error') }}
+        </div>
+    @elseif(session('warning'))
+        <div id="toast" class="on" style="background:#4a391b;border-color:#ffcc66;" role="status" aria-live="polite">
+            {{ session('warning') }}
+        </div>
+    @elseif(session('info'))
+        <div id="toast" class="on" style="background:#1d2e3a;border-color:#6ba4ff;" role="status" aria-live="polite">
+            {{ session('info') }}
+        </div>
+    @else
+        <div id="toast" role="status" aria-live="polite"></div>
+    @endif
 
-        @yield('content')
+    <main class="pgm top">
+        <section class="box x g" id="isi">
+            @yield('content')
+        </section>
     </main>
 
-    <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-500">
-        <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
-            <span>&copy; {{ date('Y') }} Bank Sampah Sahabat Ibu</span>
-            <a href="{{ route('privacy.policy') }}" class="hover:underline">Kebijakan Privasi</a>
-        </div>
-    </footer>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script defer src="{{ asset('assets/js/inti.js') }}"></script>
+    <script defer src="{{ asset('assets/js/ruangan.js') }}"></script>
+    <script defer src="{{ asset('assets/js/alat.js') }}"></script>
+    <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
+    <script defer src="{{ asset('assets/js/aksi.js') }}"></script>
+    <script defer src="{{ asset('assets/js/latar.js') }}"></script>
+    <script>
+        function toggleSide(open) {
+            const side = document.getElementById('side');
+            const scrim = document.getElementById('scrim');
+            if (typeof open === 'boolean') {
+                side.classList.toggle('open', open);
+                scrim.classList.toggle('on', open);
+            } else {
+                side.classList.toggle('open');
+                scrim.classList.toggle('on');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const t = document.getElementById('toast');
+            if (t && t.classList.contains('on')) {
+                setTimeout(() => t.classList.remove('on'), 5000);
+            }
+        });
+    </script>
+    @stack('scripts')
 </body>
 </html>

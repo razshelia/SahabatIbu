@@ -47,4 +47,9 @@ class TransaksiSetoran extends Model
     {
         return $this->hasMany(DetailSetoran::class);
     }
+
+    public function getNomorSetoranAttribute(): ?string
+    {
+        return $this->kode;
+    }
 }

@@ -43,7 +43,7 @@ Route::get('/', function () {
         }
         return redirect()->route('nasabah.dashboard');
     }
-    return redirect()->route('login');
+    return view('welcome');
 });
 
 // Area Tamu (Guest)

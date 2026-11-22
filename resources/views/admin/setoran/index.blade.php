@@ -1,102 +1,131 @@
-@extends('layouts.app')
+@extends('layouts.app', ['title' => 'Setoran · Bank Sampah Sahabat Ibu', 'dataView' => 'timbang', 'pageTitle' => 'Setoran Sampah'])
 
 @section('content')
-<div class="space-y-5">
-    <div class="flex flex-wrap justify-between items-center gap-3">
-        <div>
-            <h1 class="text-xl font-bold text-gray-800">Transaksi Setoran Sampah</h1>
-            <p class="text-xs text-gray-500">Daftar rekaman penimbangan dan setoran sampah nasabah</p>
-        </div>
-        <a href="{{ route('admin.setoran.create') }}" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-4 py-2 rounded shadow transition">
-            + Input Setoran Baru
-        </a>
-    </div>
+<small class="kick">Setoran</small>
+<h1>Riwayat &amp; data <em>setoran</em></h1>
 
-    <!-- Filter Form (F-21) -->
-    <div class="bg-white p-3 rounded border border-gray-200">
-        <form method="GET" action="{{ route('admin.setoran.index') }}" class="flex flex-wrap gap-2 items-center text-xs">
-            <select name="nasabah_id" class="px-2 py-1.5 border border-gray-300 rounded focus:border-emerald-600">
-                <option value="">-- Semua Nasabah --</option>
-                @foreach($nasabahList as $n)
-                    <option value="{{ $n->id }}" {{ $nasabahId == $n->id ? 'selected' : '' }}>
-                        {{ $n->nomor_nasabah }} - {{ $n->user->name }}
-                    </option>
-                @endforeach
-            </select>
-
-            <div class="flex items-center gap-1">
-                <span>Dari:</span>
-                <input type="date" name="start_date" value="{{ $startDate }}" class="px-2 py-1.5 border border-gray-300 rounded">
-            </div>
-
-            <div class="flex items-center gap-1">
-                <span>Sampai:</span>
-                <input type="date" name="end_date" value="{{ $endDate }}" class="px-2 py-1.5 border border-gray-300 rounded">
-            </div>
-
-            <select name="status" class="px-2 py-1.5 border border-gray-300 rounded">
-                <option value="">-- Semua Status --</option>
-                <option value="berhasil" {{ $status === 'berhasil' ? 'selected' : '' }}>Berhasil</option>
-                <option value="dibatalkan" {{ $status === 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
-            </select>
-
-            <button type="submit" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded font-medium">Filter</button>
-            @if($nasabahId || $startDate || $endDate || $status)
-                <a href="{{ route('admin.setoran.index') }}" class="text-gray-500 hover:underline px-2">Reset</a>
-            @endif
-        </form>
-    </div>
-
-    <!-- Tabel Setoran -->
-    <div class="bg-white rounded border border-gray-200 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-gray-50 text-gray-600 uppercase border-b border-gray-200">
-                    <tr>
-                        <th class="py-2.5 px-3">Kode</th>
-                        <th class="py-2.5 px-3">Tanggal</th>
-                        <th class="py-2.5 px-3">Nasabah</th>
-                        <th class="py-2.5 px-3">Total Berat</th>
-                        <th class="py-2.5 px-3">Total Tabungan</th>
-                        <th class="py-2.5 px-3">Status</th>
-                        <th class="py-2.5 px-3 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @forelse($transaksiList as $t)
-                        <tr>
-                            <td class="py-2.5 px-3 font-mono font-bold text-gray-700">
-                                <a href="{{ route('admin.setoran.show', $t->id) }}" class="text-emerald-700 hover:underline">
-                                    {{ $t->kode }}
-                                </a>
-                            </td>
-                            <td class="py-2.5 px-3 text-gray-500 whitespace-nowrap">{{ $t->tanggal->format('d/m/Y H:i') }}</td>
-                            <td class="py-2.5 px-3">
-                                <div class="font-bold text-gray-800">{{ $t->nasabah->user->name }}</div>
-                                <div class="text-[11px] text-gray-400 font-mono">{{ $t->nasabah->nomor_nasabah }}</div>
-                            </td>
-                            <td class="py-2.5 px-3 font-semibold">{{ number_format($t->total_berat, 2, ',', '.') }} kg</td>
-                            <td class="py-2.5 px-3 font-bold text-emerald-700">Rp {{ number_format($t->total_nilai, 0, ',', '.') }}</td>
-                            <td class="py-2.5 px-3">
-                                <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold {{ $t->status === 'berhasil' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ $t->status }}
-                                </span>
-                            </td>
-                            <td class="py-2.5 px-3 text-right">
-                                <a href="{{ route('admin.setoran.show', $t->id) }}" class="text-blue-600 hover:underline">Rincian &rarr;</a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="py-6 text-center text-gray-400">Tidak ada data setoran ditemukan.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="p-3 border-t border-gray-200">
-            {{ $transaksiList->links() }}
-        </div>
-    </div>
+<div class="row" style="margin-bottom:16px">
+    <a href="{{ route('admin.setoran.create') }}" class="btn sm" style="text-decoration:none">+ Catat Setoran Baru</a>
 </div>
+
+<form class="f frow" method="GET" action="{{ route('admin.setoran.index') }}" style="margin-bottom:20px">
+    <label>
+        Nasabah
+        <select name="nasabah_id">
+            <option value="">Semua Nasabah</option>
+            @foreach($nasabahList as $n)
+                <option value="{{ $n->id }}" {{ request('nasabah_id') == $n->id ? 'selected' : '' }}>
+                    {{ $n->nomor_nasabah }} · {{ $n->user->name }}
+                </option>
+            @endforeach
+        </select>
+    </label>
+
+    <label>
+        Dari Tanggal
+        <input name="start_date" type="date" value="{{ request('start_date') }}">
+    </label>
+
+    <label>
+        Sampai Tanggal
+        <input name="end_date" type="date" value="{{ request('end_date') }}">
+    </label>
+
+    <label>
+        Status
+        <select name="status">
+            <option value="">Semua Status</option>
+            <option value="berhasil" {{ request('status') === 'berhasil' ? 'selected' : '' }}>Berhasil</option>
+            <option value="dibatalkan" {{ request('status') === 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+        </select>
+    </label>
+
+    <button class="btn sm" type="submit">Filter</button>
+    @if(request('nasabah_id') || request('start_date') || request('end_date') || request('status'))
+        <a href="{{ route('admin.setoran.index') }}" class="btn o sm" style="text-decoration:none">Reset</a>
+    @endif
+</form>
+
+<div class="tbl">
+    <table>
+        <thead>
+            <tr>
+                <th>Kode</th>
+                <th>Tanggal</th>
+                <th>Nasabah</th>
+                <th>Total Berat</th>
+                <th>Nilai (Rp)</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($transaksiList as $setoran)
+                <tr>
+                    <td><b>{{ $setoran->kode }}</b></td>
+                    <td>{{ $setoran->tanggal->format('d/m/Y') }}</td>
+                    <td>{{ $setoran->nasabah->user->name ?? '-' }}</td>
+                    <td>{{ number_format($setoran->total_berat, 2, ',', '.') }} kg</td>
+                    <td>Rp {{ number_format($setoran->total_nilai, 0, ',', '.') }}</td>
+                    <td>
+                        <span class="pill {{ $setoran->status === 'berhasil' ? 'ok' : 'no' }}">
+                            {{ ucfirst($setoran->status) }}
+                        </span>
+                        @if($setoran->status === 'dibatalkan' && $setoran->alasan_pembatalan)
+                            <small style="color:var(--mu);display:block">Alasan: {{ $setoran->alasan_pembatalan }}</small>
+                        @endif
+                    </td>
+                    <td>
+                        <div class="row" style="gap:6px">
+                            <a href="{{ route('admin.setoran.show', $setoran) }}" class="btn o sm" style="text-decoration:none">Detail</a>
+
+                            @if($setoran->status === 'berhasil')
+                                <button class="btn o sm" type="button" onclick="bukaModalBatal({{ $setoran->id }}, '{{ addslashes($setoran->kode) }}', '{{ addslashes($setoran->nasabah->user->name ?? '') }}')">
+                                    Batalkan
+                                </button>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="7">Belum ada transaksi setoran yang cocok.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:16px">
+    {{ $transaksiList->links() }}
+</div>
+
+<dialog id="modal-batal">
+    <form method="POST" id="form-batal" class="f" style="min-width:320px">
+        @csrf
+        <h3>Batalkan Setoran</h3>
+        <p class="lead" id="ket-setoran-batal" style="margin-bottom:12px"></p>
+        <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
+            Pembatalan akan mengurangi saldo nasabah sebesar nilai transaksi ini (BR-10, BR-17).
+        </p>
+
+        <label for="alasan_pembatalan">
+            Alasan pembatalan (wajib)
+            <input id="alasan_pembatalan" name="alasan_pembatalan" type="text" maxlength="255" required placeholder="Contoh: Kesalahan timbang atau permintaan nasabah">
+        </label>
+
+        <div class="row" style="margin-top:14px;gap:8px">
+            <button class="btn" type="submit" style="background:#dc2626;border-color:#b91c1c">Konfirmasi Batal</button>
+            <button class="btn o" type="button" onclick="document.getElementById('modal-batal').close()">Tutup</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    function bukaModalBatal(id, kode, nama) {
+        const modal = document.getElementById('modal-batal');
+        const form = document.getElementById('form-batal');
+        document.getElementById('ket-setoran-batal').textContent = kode + ' · ' + nama;
+        form.action = "{{ url('admin/setoran') }}/" + id + "/batalkan";
+        modal.showModal();
+    }
+</script>
 @endsection

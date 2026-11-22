@@ -1,37 +1,33 @@
-@extends('layouts.guest')
+@extends('layouts.guest', ['title' => 'Atur Ulang Kata Sandi · Bank Sampah Sahabat Ibu', 'dataView' => 'scan'])
 
 @section('content')
-<div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <h2 class="text-xl font-bold text-gray-800 mb-1 text-center">Atur Ulang Kata Sandi</h2>
-    <p class="text-xs text-gray-500 mb-6 text-center">Buat kata sandi baru untuk akun Anda</p>
+<section class="box g">
+    <small class="kick">Pemulihan Akun</small>
+    <h1>Atur ulang <em>kata sandi</em></h1>
+    <p class="lead">Buat kata sandi baru untuk akun Ibu (min. 8 karakter, huruf dan angka).</p>
 
-    <form method="POST" action="{{ route('password.reset.update') }}" class="space-y-4">
+    <form class="f" method="POST" action="{{ route('password.reset.update') }}" novalidate>
         @csrf
         <input type="hidden" name="token" value="{{ $token }}">
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Alamat Email</label>
-            <input type="email" name="email" value="{{ old('email', $email) }}" required
-                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600 @error('email') border-red-500 @enderror">
-            @error('email') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
-        </div>
+        <label for="email">
+            Email
+            <input id="email" name="email" type="email" autocomplete="username" value="{{ old('email', $email) }}" required readonly>
+            @error('email')<span class="err" style="display:block">{{ $message }}</span>@enderror
+        </label>
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Kata Sandi Baru</label>
-            <input type="password" name="password" required placeholder="Min. 8 karakter (huruf & angka)"
-                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600 @error('password') border-red-500 @enderror">
-            @error('password') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
-        </div>
+        <label for="password">
+            Kata sandi baru
+            <input id="password" name="password" type="password" autocomplete="new-password" required autofocus>
+            @error('password')<span class="err" style="display:block">{{ $message }}</span>@enderror
+        </label>
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Konfirmasi Kata Sandi Baru</label>
-            <input type="password" name="password_confirmation" required
-                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600">
-        </div>
+        <label for="password_confirmation">
+            Ulangi kata sandi baru
+            <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
+        </label>
 
-        <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2 rounded text-sm transition">
-            Simpan Kata Sandi Baru
-        </button>
+        <button class="btn" type="submit">Simpan Kata Sandi</button>
     </form>
-</div>
+</section>
 @endsection

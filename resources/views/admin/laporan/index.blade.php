@@ -1,93 +1,133 @@
-@extends('layouts.app')
+@extends('layouts.app', ['title' => 'Laporan Rekapitulasi · Bank Sampah Sahabat Ibu', 'dataView' => 'riwayat', 'pageTitle' => 'Laporan Operasional'])
 
 @section('content')
-<div class="space-y-6">
-    <div class="flex flex-wrap justify-between items-center gap-3">
-        <div>
-            <h1 class="text-xl font-bold text-gray-800">Laporan Operasional & Keuangan</h1>
-            <p class="text-xs text-gray-500">Rekapitulasi setoran sampah dan penarikan saldo per periode (F-31, F-32)</p>
-        </div>
-        <div class="flex gap-2 flex-wrap">
-            <a href="{{ route('admin.laporan.export.setoran', ['start_date' => $startDate, 'end_date' => $endDate]) }}"
-               class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded transition">
-                &darr; Ekspor CSV Setoran
-            </a>
-            <a href="{{ route('admin.laporan.export.penarikan', ['start_date' => $startDate, 'end_date' => $endDate]) }}"
-               class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-2 rounded transition">
-                &darr; Ekspor CSV Penarikan
-            </a>
-            <a href="{{ route('admin.laporan.cetak', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank"
-               class="bg-gray-800 hover:bg-black text-white text-xs font-semibold px-3 py-2 rounded transition">
-                &#128438; Cetak Halaman
-            </a>
-        </div>
+<small class="kick">Laporan</small>
+<h1>Rekap <em>periode operasional</em></h1>
+
+<form class="f frow" method="GET" action="{{ route('admin.laporan.index') }}" style="margin-bottom:20px">
+    <label>
+        Dari Tanggal
+        <input name="start_date" type="date" value="{{ $startDate }}">
+    </label>
+    <label>
+        Sampai Tanggal
+        <input name="end_date" type="date" value="{{ $endDate }}">
+    </label>
+    <button class="btn sm" type="submit">Terapkan</button>
+</form>
+
+<div class="kpi">
+    <div class="g">
+        <small>Total setoran</small>
+        <b>Rp {{ number_format($rekap['total_setoran'] ?? 0, 0, ',', '.') }}</b>
     </div>
-
-    <!-- Filter Rentang Periode -->
-    <div class="bg-white p-3 rounded border border-gray-200">
-        <form method="GET" action="{{ route('admin.laporan.index') }}" class="flex flex-wrap gap-3 items-center text-xs">
-            <div class="flex items-center gap-1.5">
-                <span class="font-semibold text-gray-600">Dari Tanggal:</span>
-                <input type="date" name="start_date" value="{{ $startDate }}" class="px-2 py-1.5 border border-gray-300 rounded focus:border-emerald-600">
-            </div>
-            <div class="flex items-center gap-1.5">
-                <span class="font-semibold text-gray-600">Sampai:</span>
-                <input type="date" name="end_date" value="{{ $endDate }}" class="px-2 py-1.5 border border-gray-300 rounded focus:border-emerald-600">
-            </div>
-            <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-1.5 rounded font-medium">Terapkan Filter</button>
-        </form>
+    <div class="g">
+        <small>Transaksi setoran</small>
+        <b>{{ $rekap['jumlah_setoran'] ?? 0 }}</b>
     </div>
-
-    <!-- Kartu Rekapitulasi Periode -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded border border-gray-200 shadow-sm">
-            <p class="text-xs text-gray-500 font-semibold uppercase">Total Tabungan Masuk</p>
-            <p class="text-xl font-bold text-emerald-700 mt-1">Rp {{ number_format($rekap['total_setoran'], 0, ',', '.') }}</p>
-            <p class="text-[11px] text-gray-400 mt-0.5">{{ $rekap['jumlah_setoran'] }} transaksi setoran</p>
-        </div>
-
-        <div class="bg-white p-4 rounded border border-gray-200 shadow-sm">
-            <p class="text-xs text-gray-500 font-semibold uppercase">Total Sampah Terkumpul</p>
-            <p class="text-xl font-bold text-blue-700 mt-1">{{ number_format($rekap['total_berat'], 2, ',', '.') }} kg</p>
-            <p class="text-[11px] text-gray-400 mt-0.5">Seluruh jenis sampah</p>
-        </div>
-
-        <div class="bg-white p-4 rounded border border-gray-200 shadow-sm">
-            <p class="text-xs text-gray-500 font-semibold uppercase">Total Penarikan Dicairkan</p>
-            <p class="text-xl font-bold text-red-600 mt-1">Rp {{ number_format($rekap['total_penarikan'], 0, ',', '.') }}</p>
-            <p class="text-[11px] text-gray-400 mt-0.5">{{ $rekap['jumlah_penarikan'] }} pencairan tunai</p>
-        </div>
-
-        <div class="bg-white p-4 rounded border border-gray-200 shadow-sm">
-            <p class="text-xs text-gray-500 font-semibold uppercase">Selisih Kas Bersih</p>
-            <p class="text-xl font-bold text-gray-800 mt-1">Rp {{ number_format($rekap['saldo_bersih'], 0, ',', '.') }}</p>
-            <p class="text-[11px] text-gray-400 mt-0.5">Setoran minus Penarikan</p>
-        </div>
+    <div class="g">
+        <small>Total berat sampah</small>
+        <b>{{ number_format($rekap['total_berat'] ?? 0, 2, ',', '.') }} kg</b>
     </div>
+    <div class="g">
+        <small>Dana dicairkan</small>
+        <b>Rp {{ number_format($rekap['total_penarikan'] ?? 0, 0, ',', '.') }}</b>
+    </div>
+</div>
 
-    <!-- Rekap Sampah Per Jenis -->
-    <div class="bg-white p-4 rounded border border-gray-200 shadow-sm">
-        <h2 class="font-bold text-sm text-gray-800 mb-2">Rekapitulasi Sampah Berdasarkan Jenis</h2>
-        <table class="w-full text-left text-xs">
-            <thead class="bg-gray-50 text-gray-600 uppercase border-b border-gray-200">
+<div class="row noprint" style="margin:20px 0;gap:8px">
+    <a href="{{ route('admin.laporan.export.setoran', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="btn sm" style="text-decoration:none">
+        Ekspor CSV Setoran
+    </a>
+    <a href="{{ route('admin.laporan.export.penarikan', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="btn sm" style="text-decoration:none">
+        Ekspor CSV Penarikan
+    </a>
+    <a href="{{ route('admin.laporan.cetak', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank" class="btn o sm" style="text-decoration:none">
+        Halaman Cetak (Print/PDF)
+    </a>
+</div>
+
+<h2>Rekap per jenis sampah</h2>
+<div class="tbl">
+    <table>
+        <thead>
+            <tr>
+                <th>Jenis Sampah</th>
+                <th>Total Berat</th>
+                <th>Total Nilai</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($rekapJenis as $item)
                 <tr>
-                    <th class="py-2 px-3">Jenis Sampah</th>
-                    <th class="py-2 px-3">Total Berat (kg)</th>
-                    <th class="py-2 px-3">Total Nilai Tabungan</th>
+                    <td><b>{{ $item->nama }}</b></td>
+                    <td>{{ number_format($item->total_berat, 2, ',', '.') }} {{ $item->satuan ?? 'kg' }}</td>
+                    <td>Rp {{ number_format($item->total_nilai, 0, ',', '.') }}</td>
                 </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-                @forelse($rekapJenis as $j)
-                    <tr>
-                        <td class="py-2 px-3 font-semibold">{{ $j->jenis_nama }}</td>
-                        <td class="py-2 px-3">{{ number_format($j->total_berat, 2, ',', '.') }} {{ $j->jenis_satuan }}</td>
-                        <td class="py-2 px-3 font-bold text-emerald-700">Rp {{ number_format($j->total_nilai, 0, ',', '.') }}</td>
-                    </tr>
-                @empty
-                    <tr><td colspan="3" class="py-3 text-center text-gray-400">Tidak ada data sampah pada periode ini.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @empty
+                <tr><td colspan="3">Tidak ada data setoran pada periode ini.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+<h2>Transaksi setoran pada periode ini</h2>
+<div class="tbl">
+    <table>
+        <thead>
+            <tr>
+                <th>Kode</th>
+                <th>Tanggal</th>
+                <th>Nasabah</th>
+                <th>Total Berat</th>
+                <th>Nilai (Rp)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($setoranList as $s)
+                <tr>
+                    <td><b>{{ $s->kode }}</b></td>
+                    <td>{{ $s->tanggal->format('d/m/Y') }}</td>
+                    <td>{{ $s->nasabah->user->name ?? '-' }}</td>
+                    <td>{{ number_format($s->total_berat, 2, ',', '.') }} kg</td>
+                    <td>Rp {{ number_format($s->total_nilai, 0, ',', '.') }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="5">Belum ada transaksi setoran pada rentang tanggal ini.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+<div style="margin:12px 0 24px">
+    {{ $setoranList->links() }}
+</div>
+
+<h2>Penarikan dana dicairkan pada periode ini</h2>
+<div class="tbl">
+    <table>
+        <thead>
+            <tr>
+                <th>Kode</th>
+                <th>Waktu Pencairan</th>
+                <th>Nasabah</th>
+                <th>Nominal (Rp)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($penarikanList as $p)
+                <tr>
+                    <td><b>{{ $p->kode }}</b></td>
+                    <td>{{ $p->dicairkan_pada?->format('d/m/Y H:i') ?? '-' }}</td>
+                    <td>{{ $p->nasabah->user->name ?? '-' }}</td>
+                    <td><b>Rp {{ number_format($p->nominal, 0, ',', '.') }}</b></td>
+                </tr>
+            @empty
+                <tr><td colspan="4">Belum ada penarikan dicairkan pada rentang tanggal ini.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+<div style="margin-top:12px">
+    {{ $penarikanList->links() }}
 </div>
 @endsection

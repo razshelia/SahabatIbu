@@ -1,72 +1,70 @@
-@extends('layouts.app')
+@extends('layouts.app', ['title' => 'Profil Nasabah · Bank Sampah Sahabat Ibu', 'dataView' => 'home', 'pageTitle' => 'Profil Nasabah'])
 
 @section('content')
-<div class="max-w-xl mx-auto space-y-6">
-    <div class="flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-bold text-gray-800">Profil Saya</h1>
-            <p class="text-xs text-gray-500">Kelola informasi kontak dan pengaturan keamanan akun Anda (F-11)</p>
-        </div>
-        <a href="{{ route('nasabah.dashboard') }}" class="text-xs text-emerald-700 hover:underline">&larr; Kembali ke Dashboard</a>
-    </div>
+<small class="kick">Profil</small>
+<h1>Data <em>Ibu</em></h1>
+<p class="lead">
+    <b>{{ $user->name }}</b> · {{ $nasabah->nomor_nasabah }} · {{ $user->email }}
+    <span class="pill ok" style="margin-left:8px">{{ ucfirst($user->status) }}</span>
+</p>
 
-    <!-- Ringkasan Akun -->
-    <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm text-xs grid grid-cols-2 gap-4">
-        <div>
-            <span class="text-gray-400 font-semibold uppercase">Nomor Nasabah</span>
-            <p class="font-mono font-bold text-gray-800 text-sm mt-0.5">{{ $nasabah->nomor_nasabah }}</p>
-        </div>
-        <div>
-            <span class="text-gray-400 font-semibold uppercase">Status Keaktifan</span>
-            <p class="font-bold text-emerald-700 text-sm mt-0.5 uppercase">{{ $user->status }}</p>
-        </div>
-        <div>
-            <span class="text-gray-400 font-semibold uppercase">Nama Lengkap</span>
-            <p class="font-bold text-gray-800 mt-0.5">{{ $user->name }}</p>
-        </div>
-        <div>
-            <span class="text-gray-400 font-semibold uppercase">Alamat Email</span>
-            <p class="font-bold text-gray-800 mt-0.5">{{ $user->email }}</p>
-        </div>
-    </div>
+<h2>Perbarui informasi kontak</h2>
+<form class="f" method="POST" action="{{ route('nasabah.profile.update') }}" style="max-width:540px" novalidate>
+    @csrf
+    @method('PUT')
 
-    <!-- Form Ubah Kontak (F-11) -->
-    <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm space-y-4 text-xs">
-        <h2 class="font-bold text-sm text-gray-800 border-b border-gray-100 pb-2">Perbarui Data Kontak Rumah</h2>
+    <label for="name">
+        Nama
+        <input id="name" type="text" value="{{ $user->name }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
+        <small style="color:var(--mu);margin-top:2px;display:block">Perubahan nama silakan hubungi pengurus.</small>
+    </label>
 
-        <form method="POST" action="{{ route('nasabah.profile.update') }}" class="space-y-4">
-            @csrf
-            @method('PUT')
+    <label for="email">
+        Email
+        <input id="email" type="email" value="{{ $user->email }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
+        <small style="color:var(--mu);margin-top:2px;display:block">Email akun terikat dan dilindungi.</small>
+    </label>
 
-            <div>
-                <label class="block font-semibold text-gray-700 uppercase mb-1">Nomor Telepon / WhatsApp</label>
-                <input type="text" name="telepon" value="{{ old('telepon', $nasabah->telepon) }}" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:border-emerald-600 @error('telepon') border-red-500 @enderror">
-                @error('telepon') <p class="text-red-600 mt-1">{{ $message }}</p> @enderror
-            </div>
+    <label for="telepon">
+        Telepon / WhatsApp
+        <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required autofocus>
+        @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
+    </label>
 
-            <div>
-                <label class="block font-semibold text-gray-700 uppercase mb-1">Alamat Tempat Tinggal</label>
-                <textarea name="alamat" rows="3" required
-                          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:border-emerald-600 @error('alamat') border-red-500 @enderror">{{ old('alamat', $nasabah->alamat) }}</textarea>
-                @error('alamat') <p class="text-red-600 mt-1">{{ $message }}</p> @enderror
-            </div>
+    <label for="alamat">
+        Alamat Domisili
+        <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ old('alamat', $nasabah->alamat) }}" maxlength="255" required>
+        @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
+    </label>
 
-            <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-4 py-2 rounded text-xs transition">
-                Simpan Perubahan Kontak
-            </button>
-        </form>
-    </div>
+    <button class="btn" type="submit">Simpan Kontak</button>
+</form>
 
-    <!-- Ganti Kata Sandi -->
-    <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm text-xs flex justify-between items-center">
-        <div>
-            <h3 class="font-bold text-gray-800">Kata Sandi Akun</h3>
-            <p class="text-gray-500 text-[11px]">Amankan akun Anda dengan memperbarui kata sandi secara berkala.</p>
-        </div>
-        <a href="{{ route('password.change.form') }}" class="bg-gray-800 hover:bg-black text-white text-xs font-semibold px-3 py-2 rounded transition">
-            Ganti Kata Sandi
-        </a>
-    </div>
-</div>
+<h2>Ganti kata sandi</h2>
+<form class="f" method="POST" action="{{ route('password.change.update') }}" style="max-width:540px;margin-top:16px" novalidate>
+    @csrf
+
+    <label for="current_password">
+        Kata sandi saat ini
+        <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
+        @error('current_password')<span class="err" style="display:block">{{ $message }}</span>@enderror
+    </label>
+
+    <label for="password">
+        Kata sandi baru (min. 8 karakter, kombinasi huruf &amp; angka)
+        <input id="password" name="password" type="password" autocomplete="new-password" required>
+        @error('password')<span class="err" style="display:block">{{ $message }}</span>@enderror
+    </label>
+
+    <label for="password_confirmation">
+        Ulangi kata sandi baru
+        <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
+    </label>
+
+    <button class="btn" type="submit">Simpan Kata Sandi</button>
+</form>
+
+<p class="sub" style="margin-top:24px">
+    Pelindungan data Ibu dijamin UU No. 27 Tahun 2022. Baca <a class="lk" href="{{ route('privacy.policy') }}">Kebijakan Privasi</a>.
+</p>
 @endsection

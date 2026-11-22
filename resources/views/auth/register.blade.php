@@ -1,90 +1,89 @@
-@extends('layouts.guest')
+@extends('layouts.guest', ['title' => 'Daftar · Bank Sampah Sahabat Ibu', 'dataView' => 'luar'])
 
 @section('content')
-<div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <h2 class="text-xl font-bold text-gray-800 mb-1 text-center">Pendaftaran Nasabah Baru</h2>
-    <p class="text-xs text-gray-500 mb-6 text-center">Daftarkan diri Anda untuk mulai menabung sampah</p>
+<section class="box g">
+    <small class="kick">Daftar nasabah</small>
+    <h1>Mulai <em>menabung sampah</em></h1>
+    <p class="lead">Akun baru berstatus <em>Menunggu Verifikasi</em> sampai pengurus menyetujui.</p>
 
-    <a href="{{ route('auth.google') }}" class="w-full flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 py-2 rounded text-sm text-gray-700 font-medium transition mb-5">
-        <svg class="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/>
-            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
-            <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15.1c0 2.8.7 5.4 1.9 7.8l3.7-2.9z"/>
-            <path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16.5C3.7 20.4 7.5 23.5 12 23.5z"/>
-        </svg>
-        Daftar Cepat dengan Google
+    <a href="{{ route('auth.google') }}" class="btn o" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none">
+        <svg class="i" style="width:18px;height:18px"><use href="#i-google"/></svg>
+        Lanjut dengan Google
     </a>
 
-    <div class="relative my-4">
-        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
-        <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-gray-400">Atau Isi Formulir</span></div>
-    </div>
+    <div class="sep">atau</div>
 
-    <form method="POST" action="{{ route('register') }}" class="space-y-3">
+    <form class="f" method="POST" action="{{ route('register') }}" novalidate>
         @csrf
+        <label for="name">
+            Nama lengkap
+            <input id="name" name="name" type="text" autocomplete="name" value="{{ old('name') }}" maxlength="100" required>
+            @error('name')<span class="err" style="display:block">{{ $message }}</span>@enderror
+        </label>
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Nama Lengkap</label>
-            <input type="text" name="name" value="{{ old('name') }}" required
-                   class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600 @error('name') border-red-500 @enderror">
-            @error('name') <p class="text-red-600 text-xs mt-0.5">{{ $message }}</p> @enderror
-        </div>
+        <label for="email">
+            Email
+            <input id="email" name="email" type="email" autocomplete="email" value="{{ old('email') }}" maxlength="255" required>
+            @error('email')<span class="err" style="display:block">{{ $message }}</span>@enderror
+        </label>
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Alamat Email</label>
-            <input type="email" name="email" value="{{ old('email') }}" required
-                   class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600 @error('email') border-red-500 @enderror">
-            @error('email') <p class="text-red-600 text-xs mt-0.5">{{ $message }}</p> @enderror
-        </div>
+        <label for="telepon">
+            Telepon
+            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon') }}" maxlength="20" required>
+            @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
+        </label>
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Nomor Telepon / WhatsApp</label>
-            <input type="text" name="telepon" value="{{ old('telepon') }}" placeholder="Contoh: 08123456789" required
-                   class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600 @error('telepon') border-red-500 @enderror">
-            @error('telepon') <p class="text-red-600 text-xs mt-0.5">{{ $message }}</p> @enderror
-        </div>
+        <label for="alamat">
+            Alamat
+            <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ old('alamat') }}" maxlength="255" required>
+            @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
+        </label>
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Alamat Rumah</label>
-            <textarea name="alamat" rows="2" required placeholder="Alamat RT/RW di lingkungan Taman Gading"
-                      class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600 @error('alamat') border-red-500 @enderror">{{ old('alamat') }}</textarea>
-            @error('alamat') <p class="text-red-600 text-xs mt-0.5">{{ $message }}</p> @enderror
-        </div>
+        <label for="password" style="position:relative">
+            Kata sandi (min. 8, huruf dan angka)
+            <span class="pw-wrap" style="display:block;position:relative">
+                <input id="password" name="password" type="password" autocomplete="new-password" required style="padding-right:44px;width:100%;box-sizing:border-box">
+                <button type="button" class="pw-eye" onclick="togglePw('password','icon-pw-reg')" aria-label="Tampilkan kata sandi" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--mu)">
+                    <svg class="i" id="icon-pw-reg" style="width:20px;height:20px"><use href="#i-eye"/></svg>
+                </button>
+            </span>
+            @error('password')<span class="err" style="display:block">{{ $message }}</span>@enderror
+        </label>
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Kata Sandi</label>
-            <input type="password" name="password" required placeholder="Min. 8 karakter (huruf & angka)"
-                   class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600 @error('password') border-red-500 @enderror">
-            @error('password') <p class="text-red-600 text-xs mt-0.5">{{ $message }}</p> @enderror
-        </div>
+        <label for="password_confirmation" style="position:relative">
+            Ulangi kata sandi
+            <span class="pw-wrap" style="display:block;position:relative">
+                <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required style="padding-right:44px;width:100%;box-sizing:border-box">
+                <button type="button" class="pw-eye" onclick="togglePw('password_confirmation','icon-pw-conf')" aria-label="Tampilkan ulangi kata sandi" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--mu)">
+                    <svg class="i" id="icon-pw-conf" style="width:20px;height:20px"><use href="#i-eye"/></svg>
+                </button>
+            </span>
+        </label>
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Konfirmasi Kata Sandi</label>
-            <input type="password" name="password_confirmation" required
-                   class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600">
-        </div>
+        <label class="ck" for="persetujuan_privasi">
+            <input id="persetujuan_privasi" name="persetujuan_privasi" type="checkbox" value="1" {{ old('persetujuan_privasi') ? 'checked' : '' }} required>
+            <span>Saya menyetujui pemrosesan data pribadi saya sesuai <a class="lk" href="{{ route('privacy.policy') }}" target="_blank" rel="noopener">Kebijakan Privasi</a> (UU No. 27 Tahun 2022).</span>
+        </label>
+        @error('persetujuan_privasi')<span class="err" style="display:block">{{ $message }}</span>@enderror
 
-        <div class="pt-2">
-            <label class="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" name="persetujuan_privasi" value="1" {{ old('persetujuan_privasi') ? 'checked' : '' }}
-                       class="mt-1 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                <span class="text-xs text-gray-600">
-                    Saya menyetujui pemrosesan data pribadi saya sesuai ketentuan dalam
-                    <a href="{{ route('privacy.policy') }}" target="_blank" class="text-emerald-700 underline font-medium">Kebijakan Privasi</a>.
-                </span>
-            </label>
-            @error('persetujuan_privasi')
-                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2 rounded text-sm transition mt-2">
-            Daftar Sebagai Nasabah
-        </button>
+        <button class="btn" type="submit">Daftar</button>
     </form>
 
-    <p class="mt-5 text-center text-xs text-gray-600">
-        Sudah memiliki akun? <a href="{{ route('login') }}" class="text-emerald-700 font-semibold hover:underline">Masuk ke sini</a>
-    </p>
-</div>
+    <p class="sub">Sudah punya akun? <a class="lk" href="{{ route('login') }}">Masuk</a></p>
+</section>
+
+<script>
+function togglePw(inputId, iconId) {
+    var inp = document.getElementById(inputId);
+    var ico = document.getElementById(iconId);
+    if (!inp || !ico) return;
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        ico.querySelector('use').setAttribute('href', '#i-eye-off');
+    } else {
+        inp.type = 'password';
+        ico.querySelector('use').setAttribute('href', '#i-eye');
+    }
+}
+</script>
 @endsection

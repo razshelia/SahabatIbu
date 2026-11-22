@@ -1,40 +1,29 @@
-@extends('layouts.guest')
+@extends('layouts.guest', ['title' => 'Lupa kata sandi · Bank Sampah Sahabat Ibu', 'dataView' => 'luar'])
 
 @section('content')
-<div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <h2 class="text-xl font-bold text-gray-800 mb-1 text-center">Lupa Kata Sandi</h2>
-    <p class="text-xs text-gray-500 mb-6 text-center">Masukkan email Anda untuk menerima tautan pemulihan sandi</p>
-
-    @if(session('status'))
-        <div class="bg-emerald-50 border-l-4 border-emerald-500 p-3 mb-4 text-emerald-800 text-xs rounded">
-            {{ session('status') }}
-        </div>
-    @endif
+<section class="box g">
+    <small class="kick">Lupa kata sandi</small>
+    <h1>Atur ulang <em>kata sandi</em></h1>
+    <p class="lead">Masukkan email Ibu. Tautan reset hanya berlaku sekali pakai.</p>
 
     @if(session('demo_reset_link'))
-        <div class="bg-blue-50 border border-blue-200 p-3 mb-4 rounded text-xs text-blue-900">
-            <strong>Tautan Cepat (Uji Lokal):</strong><br>
-            <a href="{{ session('demo_reset_link') }}" class="underline text-blue-700 break-all">{{ session('demo_reset_link') }}</a>
+        <div style="background:rgba(217,119,6,0.15);border:1px solid #d97706;padding:12px;border-radius:12px;margin-bottom:14px;font-size:13px;color:#fef3c7;">
+            <b>Tautan Cepat (Uji Lokal):</b><br>
+            <a href="{{ session('demo_reset_link') }}" class="lk" style="word-break:break-all;">{{ session('demo_reset_link') }}</a>
         </div>
     @endif
 
-    <form method="POST" action="{{ route('password.forgot.send') }}" class="space-y-4">
+    <form class="f" method="POST" action="{{ route('password.forgot.send') }}" novalidate>
         @csrf
+        <label for="email">
+            Email
+            <input id="email" name="email" type="email" autocomplete="username" value="{{ old('email') }}" maxlength="255" required autofocus>
+            @error('email')<span class="err" style="display:block">{{ $message }}</span>@enderror
+        </label>
 
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Alamat Email</label>
-            <input type="email" name="email" value="{{ old('email') }}" required autofocus
-                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-emerald-600 @error('email') border-red-500 @enderror">
-            @error('email') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2 rounded text-sm transition">
-            Kirim Tautan Reset Sandi
-        </button>
+        <button class="btn" type="submit">Kirim tautan</button>
     </form>
 
-    <p class="mt-6 text-center text-xs text-gray-600">
-        Ingat kata sandi Anda? <a href="{{ route('login') }}" class="text-emerald-700 font-semibold hover:underline">Kembali ke halaman masuk</a>
-    </p>
-</div>
+    <p class="sub"><a class="lk" href="{{ route('login') }}">Kembali ke halaman masuk</a></p>
+</section>
 @endsection

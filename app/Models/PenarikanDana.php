@@ -36,4 +36,9 @@ class PenarikanDana extends Model
     {
         return $this->belongsTo(User::class, 'diproses_oleh');
     }
+
+    public function getNomorPenarikanAttribute(): ?string
+    {
+        return $this->kode;
+    }
 }

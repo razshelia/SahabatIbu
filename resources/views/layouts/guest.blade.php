@@ -1,57 +1,64 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="noindex">
     <title>{{ $title ?? 'Bank Sampah Sahabat Ibu' }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ asset('assets/style.css') }}">
 </head>
-<body class="bg-gray-100 min-h-screen text-gray-800 flex flex-col justify-between font-sans">
-    <header class="bg-white border-b border-gray-200 py-4 px-6 shadow-sm">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <a href="/" class="text-xl font-bold text-emerald-700">Bank Sampah Sahabat Ibu</a>
-            <div class="space-x-4 text-sm">
-                <a href="{{ route('privacy.policy') }}" class="text-gray-600 hover:text-emerald-700">Kebijakan Privasi</a>
-                @guest
-                    <a href="{{ route('login') }}" class="text-gray-600 hover:text-emerald-700">Masuk</a>
-                    <a href="{{ route('register') }}" class="text-emerald-700 font-semibold hover:underline">Daftar</a>
-                @endguest
-            </div>
-        </div>
+<body data-view="{{ $dataView ?? 'luar' }}">
+    @include('partials.icons')
+
+    <header id="top">
+        <a class="brand g" href="{{ url('/') }}">
+            <i></i>
+            <div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div>
+        </a>
+        <a class="g tl" href="{{ url('/') }}">
+            <svg class="i"><use href="#i-home"/></svg> Kembali ke garasi
+        </a>
     </header>
 
-    <main class="flex-grow flex items-center justify-center p-4">
-        <div class="w-full max-w-md my-6">
-            @if(session('success'))
-                <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 mb-4 text-emerald-800 text-sm rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 text-red-800 text-sm rounded">
-                    {{ session('error') }}
-                </div>
-            @endif
-
-            @if(session('warning'))
-                <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-4 text-amber-800 text-sm rounded">
-                    {{ session('warning') }}
-                </div>
-            @endif
-
-            @if(session('info'))
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 text-blue-800 text-sm rounded">
-                    {{ session('info') }}
-                </div>
-            @endif
-
-            @yield('content')
+    @if(session('success'))
+        <div id="toast" class="on" role="status" aria-live="polite">
+            {{ session('success') }}
         </div>
+    @elseif(session('error'))
+        <div id="toast" class="on" style="background:#4a1b1b;border-color:#ff6b6b;" role="status" aria-live="polite">
+            {{ session('error') }}
+        </div>
+    @elseif(session('warning'))
+        <div id="toast" class="on" style="background:#4a391b;border-color:#ffcc66;" role="status" aria-live="polite">
+            {{ session('warning') }}
+        </div>
+    @elseif(session('status'))
+        <div id="toast" class="on" role="status" aria-live="polite">
+            {{ session('status') }}
+        </div>
+    @else
+        <div id="toast" role="status" aria-live="polite"></div>
+    @endif
+
+    <main class="pgm">
+        @yield('content')
     </main>
 
-    <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-500">
-        &copy; {{ date('Y') }} Bank Sampah Sahabat Ibu - Perumahan Taman Gading, Jember
-    </footer>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script defer src="{{ asset('assets/js/inti.js') }}"></script>
+    <script defer src="{{ asset('assets/js/ruangan.js') }}"></script>
+    <script defer src="{{ asset('assets/js/alat.js') }}"></script>
+    <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
+    <script defer src="{{ asset('assets/js/aksi.js') }}"></script>
+    <script defer src="{{ asset('assets/js/latar.js') }}"></script>
+    <script>
+        // Auto-hide toast after 5s
+        document.addEventListener('DOMContentLoaded', () => {
+            const t = document.getElementById('toast');
+            if (t && t.classList.contains('on')) {
+                setTimeout(() => t.classList.remove('on'), 5000);
+            }
+        });
+    </script>
 </body>
 </html>

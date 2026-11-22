@@ -1,42 +1,50 @@
-@extends('layouts.guest')
+@extends('layouts.guest', ['title' => 'Status pendaftaran · Bank Sampah Sahabat Ibu', 'dataView' => 'scan'])
 
 @section('content')
-<div class="bg-white p-6 rounded-lg shadow border border-gray-200 text-center">
+<section class="box g">
+    <small class="kick">Status pendaftaran</small>
+
     @if($user->status === 'menunggu')
-        <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-            ⏳
-        </div>
-        <h2 class="text-xl font-bold text-gray-800 mb-2">Menunggu Verifikasi Pengurus</h2>
-        <p class="text-sm text-gray-600 mb-4">
-            Terima kasih telah mendaftar, <strong>{{ $user->name }}</strong>.<br>
-            Pendaftaran nasabah Anda saat ini sedang diperiksa dan diverifikasi oleh pengurus Bank Sampah Sahabat Ibu.
+        <h1>Menunggu Verifikasi</h1>
+        <p class="lead">Halo, <b>{{ $user->name }}</b> ({{ $user->email }}).</p>
+        <span class="pill">Menunggu Verifikasi</span>
+
+        <h2>Sementara menunggu, Ibu bisa:</h2>
+        <ul>
+            <li>Menghubungi pengurus bila ada kendala</li>
+            <li>Melengkapi data atau mengganti kata sandi</li>
+            <li>Melihat status pendaftaran ini, lalu keluar</li>
+        </ul>
+
+        <p class="lead" style="margin-top:14px">
+            Setoran dan penarikan baru bisa dilakukan setelah pengurus menyetujui dan akun berstatus <em>Aktif</em>.
         </p>
-        <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-3 rounded mb-6 text-left">
-            <strong>Catatan:</strong> Akun Anda akan aktif setelah pengurus menyetujui pendaftaran. Silakan cek berkala atau hubungi pengurus RT/RW Bank Sampah Sahabat Ibu.
-        </div>
     @elseif($user->status === 'ditolak')
-        <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-            ✕
-        </div>
-        <h2 class="text-xl font-bold text-red-700 mb-2">Pendaftaran Ditolak</h2>
-        <p class="text-sm text-gray-600 mb-4">
-            Mohon maaf, pendaftaran nasabah Anda tidak dapat disetujui oleh pengurus bank sampah.
-        </p>
+        <h1>Pendaftaran Ditolak</h1>
+        <p class="lead">Halo, <b>{{ $user->name }}</b> ({{ $user->email }}).</p>
+        <span class="pill no">Ditolak</span>
+
         @if($user->alasan_penolakan)
-            <div class="bg-red-50 border border-red-200 text-red-800 text-xs p-3 rounded mb-6 text-left">
-                <strong>Alasan Penolakan:</strong><br>
+            <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:12px;border-radius:12px;margin:14px 0;font-size:13px;color:#fca5a5;">
+                <b>Alasan penolakan:</b><br>
                 {{ $user->alasan_penolakan }}
             </div>
         @endif
+
+        <p class="lead" style="margin-top:14px">
+            Silakan hubungi pengurus RT/RW jika memerlukan klarifikasi data pendaftaran Ibu.
+        </p>
+    @else
+        <h1>Akun {{ ucfirst($user->status) }}</h1>
+        <p class="lead">Halo, <b>{{ $user->name }}</b>.</p>
+        <span class="pill {{ $user->status === 'aktif' ? 'ok' : 'no' }}">{{ ucfirst($user->status) }}</span>
     @endif
 
-    <div class="border-t border-gray-200 pt-4 flex justify-center gap-3">
-        <form method="POST" action="{{ route('logout') }}">
+    <div class="row" style="margin-top:20px">
+        <form method="POST" action="{{ route('logout') }}" style="margin:0">
             @csrf
-            <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold px-4 py-2 rounded transition">
-                Keluar dari Akun
-            </button>
+            <button class="btn o" type="submit">Keluar</button>
         </form>
     </div>
-</div>
+</section>
 @endsection

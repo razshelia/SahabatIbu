@@ -1,172 +1,102 @@
-@extends('layouts.app')
+@extends('layouts.app', ['title' => 'Catat Setoran · Bank Sampah Sahabat Ibu', 'dataView' => 'timbang', 'pageTitle' => 'Catat Setoran Baru'])
 
 @section('content')
-<div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow border border-gray-200">
-    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
-        <div>
-            <h1 class="text-lg font-bold text-gray-800">Input Setoran Sampah Baru</h1>
-            <p class="text-xs text-gray-500">Pilih nasabah dan masukkan berat penimbangan (F-16, F-17)</p>
-        </div>
-        <a href="{{ route('admin.setoran.index') }}" class="text-xs text-gray-500 hover:underline">&larr; Kembali</a>
+<small class="kick">Setoran</small>
+<h1>Catat <em>setoran sampah</em></h1>
+<p class="lead">Timbang dan masukkan berat sampah yang disetorkan oleh nasabah (BR-01, BR-05).</p>
+
+<form class="f" method="POST" action="{{ route('admin.setoran.store') }}" style="max-width:680px" novalidate id="form-setoran">
+    @csrf
+
+    <label for="nasabah_id">
+        Pilih Nasabah Aktif
+        <select id="nasabah_id" name="nasabah_id" required autofocus>
+            <option value="">-- Pilih Nasabah --</option>
+            @foreach($nasabahList as $nasabah)
+                <option value="{{ $nasabah->id }}" {{ old('nasabah_id') == $nasabah->id ? 'selected' : '' }}>
+                    {{ $nasabah->nomor_nasabah }} · {{ $nasabah->user->name }} (Saldo: Rp {{ number_format($nasabah->saldo, 0, ',', '.') }})
+                </option>
+            @endforeach
+        </select>
+        @error('nasabah_id')<span class="err" style="display:block">{{ $message }}</span>@enderror
+    </label>
+
+    <h2 style="margin-top:20px;font-size:16px">Timbangan Sampah (kg)</h2>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
+        Isi berat untuk jenis sampah yang disetorkan (kosongkan jika tidak ada). Gunakan titik atau koma untuk desimal (maks. 2 desimal).
+    </p>
+
+    <div class="frow" style="flex-wrap:wrap">
+        @foreach($jenisList as $index => $jenis)
+            <label style="flex:1 1 200px">
+                {{ $jenis->nama }} ({{ $jenis->satuan }})
+                <br>
+                <small style="color:var(--em)">@ Rp {{ number_format($jenis->harga_saat_ini, 0, ',', '.') }} / {{ $jenis->satuan }}</small>
+                
+                <input type="hidden" name="items[{{ $index }}][jenis_sampah_id]" value="{{ $jenis->id }}">
+                <input type="text"
+                       name="items[{{ $index }}][berat_kg]"
+                       class="input-berat"
+                       data-harga="{{ $jenis->harga_saat_ini }}"
+                       inputmode="decimal"
+                       placeholder="0,00"
+                       value="{{ old("items.{$index}.berat_kg") }}">
+            </label>
+        @endforeach
+    </div>
+    @error('items')<span class="err" style="display:block">{{ $message }}</span>@enderror
+
+    <div class="box g" style="margin:20px 0;padding:16px;background:rgba(255,255,255,0.03)">
+        <p class="lead" id="preview-total" style="font-size:18px;margin:0">
+            Total Estimasi Nilai: <b>Rp 0</b> (0,00 kg)
+        </p>
     </div>
 
-    <form method="POST" action="{{ route('admin.setoran.store') }}" id="form-setoran" class="space-y-5 text-xs">
-        @csrf
-
-        <!-- Pilih Nasabah Aktif -->
-        <div>
-            <label class="block font-semibold text-gray-700 uppercase mb-1">Pilih Nasabah Aktif</label>
-            <select name="nasabah_id" required class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:border-emerald-600">
-                <option value="">-- Pilih Nasabah Penyetor --</option>
-                @foreach($nasabahList as $nasabah)
-                    <option value="{{ $nasabah->id }}" {{ old('nasabah_id') == $nasabah->id ? 'selected' : '' }}>
-                        {{ $nasabah->nomor_nasabah }} - {{ $nasabah->user->name }} (Saldo saat ini: Rp {{ number_format($nasabah->saldo, 0, ',', '.') }})
-                    </option>
-                @endforeach
-            </select>
-            @error('nasabah_id') <p class="text-red-600 mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <!-- Tabel Rincian Sampah (Dinamis) -->
-        <div>
-            <div class="flex justify-between items-center mb-2">
-                <label class="font-semibold text-gray-700 uppercase">Item Setoran Sampah (Minimal 1 Jenis)</label>
-                <button type="button" id="btn-tambah-baris" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded border border-gray-300 font-medium">
-                    + Tambah Baris
-                </button>
-            </div>
-
-            <table class="w-full text-left text-xs border border-gray-200 rounded" id="tabel-items">
-                <thead class="bg-gray-50 text-gray-600 border-b border-gray-200">
-                    <tr>
-                        <th class="p-2">Jenis Sampah</th>
-                        <th class="p-2 w-28">Harga/kg</th>
-                        <th class="p-2 w-28">Berat (kg)</th>
-                        <th class="p-2 w-32">Subtotal</th>
-                        <th class="p-2 w-10 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="container-items" class="divide-y divide-gray-100">
-                    <tr class="item-row">
-                        <td class="p-2">
-                            <select name="items[0][jenis_sampah_id]" class="w-full p-1.5 border border-gray-300 rounded select-jenis" required>
-                                <option value="">-- Pilih Jenis --</option>
-                                @foreach($jenisList as $j)
-                                    <option value="{{ $j->id }}" data-harga="{{ $j->harga_saat_ini }}">
-                                        {{ $j->nama }} (Rp {{ number_format($j->harga_saat_ini, 0, ',', '.') }}/kg)
-                                    </option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td class="p-2 font-mono text-gray-600 text-harga">Rp 0</td>
-                        <td class="p-2">
-                            <input type="number" step="0.01" min="0.01" name="items[0][berat_kg]" placeholder="0.00" required
-                                   class="w-full p-1.5 border border-gray-300 rounded input-berat text-right font-mono">
-                        </td>
-                        <td class="p-2 font-bold font-mono text-emerald-700 text-subtotal">Rp 0</td>
-                        <td class="p-2 text-center">
-                            <button type="button" class="btn-hapus-baris text-red-500 hover:text-red-700 font-bold text-sm">&times;</button>
-                        </td>
-                    </tr>
-                </tbody>
-                <tfoot class="bg-gray-50 font-bold border-t border-gray-200 text-sm">
-                    <tr>
-                        <td colspan="2" class="p-2.5 text-right uppercase text-xs text-gray-600">Total Berat:</td>
-                        <td class="p-2.5 font-mono text-right" id="total-berat">0.00 kg</td>
-                        <td colspan="2" class="p-2.5 font-mono text-emerald-800 text-base" id="total-nilai">Rp 0</td>
-                    </tr>
-                </tfoot>
-            </table>
-            @error('items') <p class="text-red-600 mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div class="pt-3 border-t border-gray-100">
-            <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded text-sm shadow transition">
-                Simpan Setoran & Tambah Saldo
-            </button>
-        </div>
-    </form>
-</div>
+    <div class="row" style="gap:8px">
+        <button class="btn" type="submit">Simpan Setoran</button>
+        <a href="{{ route('admin.setoran.index') }}" class="btn o" style="text-decoration:none">Batal</a>
+    </div>
+</form>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const container = document.getElementById('container-items');
-    const btnTambah = document.getElementById('btn-tambah-baris');
-    let rowIndex = 1;
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputs = document.querySelectorAll('.input-berat');
+        const preview = document.getElementById('preview-total');
 
-    const templateOptions = `@foreach($jenisList as $j)<option value="{{ $j->id }}" data-harga="{{ $j->harga_saat_ini }}">{{ $j->nama }} (Rp {{ number_format($j->harga_saat_ini, 0, ',', '.') }}/kg)</option>@endforeach`;
+        function hitungTotal() {
+            let totalNilai = 0;
+            let totalBerat = 0;
 
-    btnTambah.addEventListener('click', function () {
-        const tr = document.createElement('tr');
-        tr.className = 'item-row';
-        tr.innerHTML = `
-            <td class="p-2">
-                <select name="items[${rowIndex}][jenis_sampah_id]" class="w-full p-1.5 border border-gray-300 rounded select-jenis" required>
-                    <option value="">-- Pilih Jenis --</option>
-                    ${templateOptions}
-                </select>
-            </td>
-            <td class="p-2 font-mono text-gray-600 text-harga">Rp 0</td>
-            <td class="p-2">
-                <input type="number" step="0.01" min="0.01" name="items[${rowIndex}][berat_kg]" placeholder="0.00" required
-                       class="w-full p-1.5 border border-gray-300 rounded input-berat text-right font-mono">
-            </td>
-            <td class="p-2 font-bold font-mono text-emerald-700 text-subtotal">Rp 0</td>
-            <td class="p-2 text-center">
-                <button type="button" class="btn-hapus-baris text-red-500 hover:text-red-700 font-bold text-sm">&times;</button>
-            </td>
-        `;
-        container.appendChild(tr);
-        rowIndex++;
-        attachListeners(tr);
+            inputs.forEach(inp => {
+                const valStr = (inp.value || '').replace(',', '.').trim();
+                const berat = parseFloat(valStr);
+                const harga = parseFloat(inp.dataset.harga || 0);
+
+                if (!isNaN(berat) && berat > 0) {
+                    totalBerat += berat;
+                    totalNilai += Math.round(berat * harga);
+                }
+            });
+
+            const nilaiFmt = new Intl.NumberFormat('id-ID').format(totalNilai);
+            const beratFmt = totalBerat.toFixed(2).replace('.', ',');
+            preview.innerHTML = `Total Estimasi Nilai: <b>Rp ${nilaiFmt}</b> (${beratFmt} kg)`;
+        }
+
+        inputs.forEach(inp => {
+            inp.addEventListener('input', hitungTotal);
+        });
+
+        hitungTotal();
+
+        // Ganti koma ke titik saat submit
+        document.getElementById('form-setoran').addEventListener('submit', function() {
+            inputs.forEach(inp => {
+                if (inp.value) {
+                    inp.value = inp.value.replace(',', '.').trim();
+                }
+            });
+        });
     });
-
-    function attachListeners(row) {
-        const selectJenis = row.querySelector('.select-jenis');
-        const inputBerat = row.querySelector('.input-berat');
-        const btnHapus = row.querySelector('.btn-hapus-baris');
-
-        selectJenis.addEventListener('change', calculateAll);
-        inputBerat.addEventListener('input', calculateAll);
-
-        btnHapus.addEventListener('click', function () {
-            if (document.querySelectorAll('.item-row').length > 1) {
-                row.remove();
-                calculateAll();
-            } else {
-                alert('Setoran minimal memuat 1 baris jenis sampah.');
-            }
-        });
-    }
-
-    function calculateAll() {
-        let grandTotalBerat = 0;
-        let grandTotalNilai = 0;
-
-        document.querySelectorAll('.item-row').forEach(row => {
-            const select = row.querySelector('.select-jenis');
-            const input = row.querySelector('.input-berat');
-            const tdHarga = row.querySelector('.text-harga');
-            const tdSubtotal = row.querySelector('.text-subtotal');
-
-            const selectedOption = select.options[select.selectedIndex];
-            const harga = selectedOption ? parseFloat(selectedOption.dataset.harga || 0) : 0;
-            const berat = parseFloat(input.value) || 0;
-            const subtotal = harga * berat;
-
-            tdHarga.textContent = 'Rp ' + harga.toLocaleString('id-ID');
-            tdSubtotal.textContent = 'Rp ' + Math.round(subtotal).toLocaleString('id-ID');
-
-            grandTotalBerat += berat;
-            grandTotalNilai += subtotal;
-        });
-
-        document.getElementById('total-berat').textContent = grandTotalBerat.toFixed(2) + ' kg';
-        document.getElementById('total-nilai').textContent = 'Rp ' + Math.round(grandTotalNilai).toLocaleString('id-ID');
-    }
-
-    // Attach listener to first row
-    document.querySelectorAll('.item-row').forEach(attachListeners);
-});
 </script>
 @endsection

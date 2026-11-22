@@ -105,7 +105,7 @@ class AdminSetoranController extends Controller
      */
     public function show(TransaksiSetoran $setoran): View
     {
-        $setoran->load(['nasabah.user', 'admin', 'detailSetoran.jenisSampah', 'dibatalkanOleh']);
+        $setoran->load(['nasabah.user', 'admin', 'detail.jenisSampah', 'dibatalkanOleh']);
 
         return view('admin.setoran.show', compact('setoran'));
     }
