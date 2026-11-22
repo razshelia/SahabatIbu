@@ -80,12 +80,12 @@
             @endif
 
             <small class="gl">Lainnya</small>
-            <a href="{{ url('/') }}">
+            <a href="{{ route('garasi') }}" class="{{ request()->routeIs('garasi') ? 'on' : '' }}">
                 <svg class="i"><use href="#i-door"/></svg><span class="t">Garasi 3D</span>
             </a>
             <form method="POST" action="{{ route('logout') }}" id="form-logout" style="margin:0">
                 @csrf
-                <button type="submit" style="width:100%;background:transparent;border:0;color:inherit;text-align:left;padding:0">
+                <button type="submit" class="keluar" style="width:100%;background:transparent;border:0;text-align:left;padding:0">
                     <svg class="i"><use href="#i-key"/></svg><span class="t">Keluar</span>
                 </button>
             </form>
@@ -117,11 +117,12 @@
     @endif
 
     <main class="pgm top">
-        <section class="box x g" id="isi">
+        <section class="box isi-lebar g" id="isi">
             @yield('content')
         </section>
     </main>
 
+    <script>window.GARASI = {{ \Illuminate\Support\Js::from(\App\Support\GarasiData::safe(auth()->user())) }};</script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script defer src="{{ asset('assets/js/inti.js') }}"></script>
     <script defer src="{{ asset('assets/js/ruangan.js') }}"></script>
@@ -129,7 +130,15 @@
     <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
     <script defer src="{{ asset('assets/js/aksi.js') }}"></script>
     <script defer src="{{ asset('assets/js/latar.js') }}"></script>
+    <button type="button" id="lihat" onclick="toggleLihat()" aria-pressed="false">Lihat ruangan penuh</button>
     <script>
+        function toggleLihat() {
+            const on = document.documentElement.classList.toggle('lihat');
+            const b = document.getElementById('lihat');
+            b.textContent = on ? 'Kembali ke halaman' : 'Lihat ruangan penuh';
+            b.setAttribute('aria-pressed', on);
+            window.dispatchEvent(new Event('resize'));
+        }
         function toggleSide(open) {
             const side = document.getElementById('side');
             const scrim = document.getElementById('scrim');

@@ -1,4 +1,3 @@
-
 :root{--ink:#eef5f0;--glass:#141c18a8;--line:#ffffff1f;--green:#6fe0a2;--yel:#f3c64f;box-sizing:border-box}
 *{box-sizing:border-box;margin:0}
 html{scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}dialog,#keys{scrollbar-width:thin;scrollbar-color:#ffffff33 transparent}html,body{background:#1b211e;color:var(--ink);font-family:"Inter","Segoe UI","Trebuchet MS",sans-serif}
@@ -138,9 +137,23 @@ a.brand{color:inherit;text-decoration:none}
 .box h2{font-size:20px;margin:22px 0 6px;color:var(--green)}.box ul{padding-left:20px;display:grid;gap:6px;line-height:1.6;color:#dbe8df}
 .box small.v{opacity:.65}
 
-.pgm.top{align-items:start;padding-top:104px}.box.x{width:min(1000px,100%)}
+.pgm.top{align-items:start;padding-top:104px}.box.isi-lebar{width:min(1000px,100%)}
 .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:16px 0}.kpi div{padding:16px;border-radius:20px}.kpi small{display:block;opacity:.7;font-size:13px}.kpi b{font-size:22px;color:var(--green)}
 .tbl{overflow-x:auto;margin:10px 0}table{width:100%;border-collapse:collapse;font-size:14.5px}th{text-align:left;color:var(--yel);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase}th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 .btn.sm{min-height:38px;padding:0 14px;font-size:13.5px}.frow{display:flex;flex-wrap:wrap;gap:12px;align-items:end}.f select,.srch{min-height:48px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:#141c18;color:var(--ink);font:inherit}.srch{width:100%;margin:8px 0}
 .pill.ok{background:#6fe0a226;border-color:#6fe0a288;color:var(--green)}.pill.no{background:#ff8a7a22;border-color:#ff8a7a88;color:#ff8a7a}.pill{font-size:12.5px;padding:3px 10px}
 @media print{#top,#side,#scrim,canvas,.noprint,.btn,body:after{display:none!important}html,body{background:#fff;color:#000}.g,.box{background:#fff!important;color:#000!important;box-shadow:none!important;backdrop-filter:none!important}th{color:#000}}
+
+/* tombol Keluar berwarna merah sebagai penanda */
+#keys form .keluar,#keys form .keluar .i{color:#ff8a7a}
+#keys form .keluar:hover{background:#ff6b6b26;color:#ffb3a8}
+#keys form .keluar:hover .i{color:#ffb3a8}
+
+/* ===== 3D per peran: ruangan di kolom kanan (desktop) / jendela atas (HP) ===== */
+#lihat{display:none;position:fixed;z-index:8;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));padding:14px 22px;border:0;border-radius:999px;background:#6fe0a2;color:#141c18;font:800 16px/1 'Trebuchet MS',sans-serif;box-shadow:0 10px 26px #0008;cursor:pointer}
+html.g3d #lihat{display:block}
+html.g3d .pgm{pointer-events:none;align-items:start}
+html.g3d .pgm>*{pointer-events:auto}
+html.lihat main.pgm{display:none}
+@media(min-width:900px){html.g3d main.pgm{padding-right:calc(var(--col,0px) + 30px)}}
+@media(max-width:899px){html.g3d main.pgm{padding-top:calc(var(--win,0px) + 84px)}}

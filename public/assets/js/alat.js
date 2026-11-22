@@ -20,7 +20,7 @@ tmS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Setor sampah',24,46,30,'#9fd9b8','left','7
  if(!S.cart.length){tx(g,'Keranjang masih kosong',24,226,28,'#eef5f0','left','700');tx(g,'Isi dulu di Daftar Harga',24,262,24,'#9fd9b8','left','700')}
  if(S.cart.length>2)tx(g,'+'+(S.cart.length-2)+' baris lagi',24,284,22,'#9fd9b8','left','700');
  tx(g,'Total '+rp(tot),24,H-96,38,'#f3c64f');
- if(S.cart.length){B(24,H-76,290,62,'Timbang sekarang',S.busy?null:doSetor,'g');B(330,H-76,158,62,'Hapus',S.busy?null:()=>{S.cart=[];S.m.tm='';redraw()},'n')}else B(24,H-76,464,62,'Pilih sampah dulu →',()=>goSec('rak'),'y')});
+ if(S.cart.length){B(24,H-76,290,62,'Timbang sekarang',S.busy?null:()=>doSetor(),'g');B(330,H-76,158,62,'Hapus',S.busy?null:()=>{S.cart=[];S.m.tm='';redraw()},'n')}else B(24,H-76,464,62,'Pilih sampah dulu →',()=>goSec('rak'),'y')});
 handOn(tmS,169,373,'timbang',1);lab(tm,0,3.5,0,'3','Timbang',2.4,'timbang');ring(tm,2,'timbang');
 
 // 3 PRINTER STRUK
@@ -89,10 +89,9 @@ const cpS=screen(3.3,2.0,0,1.1,1.21,cp);
 cpS.paint((g,W,H,B)=>{bg(g,W,H);B(12,10,244,52,'Ambil uang',()=>{S.tab='ambil';redraw()},S.tab=='ambil'?'on':'n');B(260,10,240,52,'Status ('+S.tarik.length+')',()=>{S.tab='status';redraw()},S.tab=='status'?'on':'n');
  if(S.tab=='ambil'){tx(g,'Tersedia '+rp(avail()),W/2,102,28,'#f3c64f','center','700');
   B(12,116,92,76,'−',()=>{S.nom=Math.max(10000,S.nom-10000);redraw()});tx(g,rp(S.nom),W/2,170,54,'#fff','center');B(408,116,92,76,'+',()=>{S.nom=Math.min(Math.floor(avail()/10000)*10000,S.nom+10000);redraw()});
-  B(12,204,488,70,'Ambil uang',S.busy?null:doCapit,'r');tx(g,S.m.cp||'Uang disiapkan, ambil tunai di pengurus.',W/2,298,21,'#9fd9b8','center','700')}
+  B(12,204,488,70,'Ambil uang',S.busy?null:()=>doCapit(),'r');tx(g,S.m.cp||'Uang disiapkan, ambil tunai di pengurus.',W/2,298,21,'#9fd9b8','center','700')}
  else{if(!S.tarik.length){tx(g,'Belum ada pengajuan.',W/2,130,30,'#9fd9b8','center','700');tx(g,'Tekan tab “Ambil uang” dulu',W/2,172,24,'#9fd9b8','center','700')}
   S.tarik.slice(0,2).forEach((t,i)=>{const y=70+i*116;g.fillStyle='#ffffff10';rr(g,10,y,492,108,16);g.fill();tx(g,t.id,26,y+34,28,'#fff');tx(g,rp(t.v),W-26,y+34,28,'#8ef0be','right');tx(g,t.st=='Dicairkan'?'Dicairkan':''+t.st,26,y+64,22,t.st=='Dicairkan'?'#6fe0a2':'#f3c64f','left','700');
    if(t.st=='Menunggu'){B(26,y+54,110,46,'Batal',()=>aksi(t,'batal'),'r');B(148,y+54,340,46,'Pengurus: setujui',()=>aksi(t,'next'),'y')}
    if(t.st=='Disetujui')B(190,y+54,298,46,'Pengurus: beri tunai',()=>aksi(t,'next'),'g')})}});
 handOn(cpS,440,196,'capit',1.2,()=>S.tab=='ambil');lab(cp,0,4.85,0,'6','Ambil Uang',3.2,'capit');ring(cp,2.7,'capit');
-

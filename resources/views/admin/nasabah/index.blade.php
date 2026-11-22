@@ -67,12 +67,14 @@
                             @if(!str_starts_with($nasabah->nomor_nasabah, 'ANON-'))
                                 <a href="{{ route('admin.nasabah.edit', $nasabah) }}" class="btn o sm" style="text-decoration:none">Ubah</a>
 
-                                <form method="POST" action="{{ route('admin.nasabah.toggle-status', $nasabah->user) }}" style="margin:0">
-                                    @csrf
-                                    <button class="btn o sm" type="submit">
-                                        {{ $nasabah->user->status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan' }}
-                                    </button>
-                                </form>
+                                @if(in_array($nasabah->user->status, ['aktif', 'nonaktif']))
+                    <form method="POST" action="{{ route('admin.nasabah.toggle-status', $nasabah->user) }}" style="margin:0">
+                        @csrf
+                        <button class="btn o sm" type="submit">
+                            {{ $nasabah->user->status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan' }}
+                        </button>
+                    </form> @elseif($nasabah->user->status === 'menunggu')
+                    <a href="{{ route('admin.nasabah.pendaftar') }}" class="btn sm" style="text-decoration:none">Verifikasi</a> @endif
 
                                 @if($nasabah->user->status === 'nonaktif' && $nasabah->saldo == 0)
                                     <button class="btn o sm" type="button" onclick="bukaModalAnonim({{ $nasabah->id }}, '{{ addslashes($nasabah->nomor_nasabah) }}', '{{ addslashes($nasabah->user->name) }}')">
