@@ -132,7 +132,17 @@ if(!G){
  function pick(e){const r=R.domElement.getBoundingClientRect();mv.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mv,cam);
   const h=ray.intersectObjects(hit,true);for(const x of h){let o=x.object;while(o){if(o.userData&&o.userData.k&&TOOL[o.userData.k])return o.userData.k;o=o.parent}}return null}
  let d0=null;const cv=R.domElement;
- cv.addEventListener('pointerdown',e=>{d0={x:e.clientX,y:e.clientY,t:performance.now()}});
+ // ---------- geser latar: seret untuk memutar sudut pandang, klik dua kali / tombol untuk memusatkan ----------
+ const ORB={y:0,p:0,ty:0,tp:0},YMAX=.9,PMIN=-.18,PMAX=.4,pusat=$('pusat');let drag=null;
+ const orbSet=(y,p)=>{ORB.ty=cl(y,-YMAX,YMAX);ORB.tp=cl(p,PMIN,PMAX);pusat&&pusat.classList.toggle('on',Math.abs(ORB.ty)>.03||Math.abs(ORB.tp)>.03)};
+ pusat&&pusat.addEventListener('click',()=>orbSet(0,0));
+ cv.addEventListener('dblclick',()=>orbSet(0,0));
+ cv.addEventListener('pointerdown',e=>{d0={x:e.clientX,y:e.clientY,t:performance.now()};drag={x:e.clientX,y:e.clientY,by:ORB.ty,bp:ORB.tp,on:false,id:e.pointerId}});
+ cv.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  if(!drag.on){if(Math.hypot(dx,dy)<8)return;drag.on=true;cv.classList.add('drag');try{cv.setPointerCapture(e.pointerId)}catch(_){}}
+  orbSet(drag.by-dx*.006,drag.bp+dy*.004)});
+ const endDrag=()=>{if(drag&&drag.on)cv.classList.remove('drag');drag=null};
+ cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
  cv.addEventListener('pointerup',e=>{if(!d0)return;const m=Math.hypot(e.clientX-d0.x,e.clientY-d0.y),dt=performance.now()-d0.t;d0=null;if(m>10||dt>700)return;
   const k=pick(e),u=k&&G.links[k];if(!u)return;pulse[k]=performance.now();if(u.split('#')[0]===location.href.split('#')[0])return;setTimeout(()=>{location.href=u},260)});
  let hv=0;cv.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||hv)return;hv=1;requestAnimationFrame(()=>{hv=0;cv.style.cursor=pick(e)?'pointer':''})});
@@ -141,7 +151,9 @@ if(!G){
  (function loop(){requestAnimationFrame(loop);const now=performance.now(),t=(now-T0)/1e3,full=ROOT.classList.contains('lihat'),K=full||!VW[G.fokus]?VW.home:VW[G.fokus];
   const tp=[0,1,2].map(i=>K.t[i]),pp=[0,1,2].map(i=>K.t[i]+(K.p[i]-K.t[i])*pull);
   if(!cur.init||RM){cur.p=pp;cur.t=tp;cur.init=true}else for(let i=0;i<3;i++){cur.p[i]=lerp(cur.p[i],pp[i],.08);cur.t[i]=lerp(cur.t[i],tp[i],.08)}
-  const w=RM?0:1;cam.position.set(cur.p[0]+Math.sin(t/3)*.3*w,cur.p[1]+Math.cos(t/4)*.1*w,cur.p[2]);cam.lookAt(cur.t[0],cur.t[1],cur.t[2]);
+  ORB.y=lerp(ORB.y,ORB.ty,RM?1:.14);ORB.p=lerp(ORB.p,ORB.tp,RM?1:.14);
+  const vx=cur.p[0]-cur.t[0],vz=cur.p[2]-cur.t[2],cy=Math.cos(ORB.y),sy=Math.sin(ORB.y),hd=Math.hypot(vx,vz);
+  const w=RM?0:1;cam.position.set(cur.t[0]+vx*cy+vz*sy+Math.sin(t/3)*.3*w,cur.p[1]+hd*ORB.p+Math.cos(t/4)*.1*w,cur.t[2]-vx*sy+vz*cy);cam.lookAt(cur.t[0],cur.t[1],cur.t[2]);
   Object.keys(TOOL).forEach(k=>{const p=pulse[k];let s=1;if(p!=null){const q=(now-p)/1300;if(q>=1)delete pulse[k];else if(q>=0)s=1+.09*Math.sin(Math.PI*q)}TOOL[k].scale.setScalar(s)});
   RG.forEach(r=>{if(r.k===G.fokus)r.m.material.opacity=.3+.15*Math.sin(t*2.4)});
   R.render(sc,cam)})();

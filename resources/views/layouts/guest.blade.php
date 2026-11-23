@@ -6,13 +6,14 @@
     <meta name="robots" content="noindex">
     <title>{{ $title ?? 'Bank Sampah Sahabat Ibu' }}</title>
     <link rel="stylesheet" href="{{ asset('assets/style.css') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 </head>
 <body data-view="{{ $dataView ?? 'luar' }}">
     @include('partials.icons')
 
     <header id="top">
         <a class="brand g" href="{{ url('/') }}">
-            <i></i>
+            <img class="logo" src="{{ asset('assets/logo-mark.svg') }}" alt="" width="34" height="34">
             <div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div>
         </a>
         <a class="g tl" href="{{ url('/') }}">
@@ -44,6 +45,7 @@
         @yield('content')
     </main>
 
+    @include('partials.wa-admin')
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script defer src="{{ asset('assets/js/inti.js') }}"></script>
     <script defer src="{{ asset('assets/js/ruangan.js') }}"></script>

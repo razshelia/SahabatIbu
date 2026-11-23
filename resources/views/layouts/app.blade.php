@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex">
     <title>{{ $title ?? 'Portal Bank Sampah Sahabat Ibu' }}</title>
     <link rel="stylesheet" href="{{ asset('assets/style.css') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="stylesheet" href="{{ asset('assets/alat.css') }}">
 </head>
 <body data-view="{{ $dataView ?? 'home' }}" data-role="{{ auth()->user()->role }}">
@@ -36,7 +37,7 @@
 
     <aside id="side" class="g" aria-label="Menu utama">
         <a class="brand" href="{{ url('/') }}" style="text-decoration:none">
-            <i></i>
+            <img class="logo" src="{{ asset('assets/logo-mark.svg') }}" alt="" width="34" height="34">
             <div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div>
         </a>
         <nav id="keys">
@@ -133,6 +134,9 @@
     <script defer src="{{ asset('assets/js/latar.js') }}"></script>
     <script defer src="{{ asset('assets/js/sinkron.js') }}"></script>
     <button type="button" id="lihat" onclick="toggleLihat()" aria-pressed="false">Lihat ruangan penuh</button>
+    <button type="button" id="pusat" aria-label="Kembalikan sudut pandang ruangan">Pusatkan ruangan</button>
+    @include('partials.wa-admin')
+    <script defer src="{{ asset('assets/js/menu.js') }}"></script>
     <script>
         function toggleLihat() {
             const on = document.documentElement.classList.toggle('lihat');

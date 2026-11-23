@@ -157,3 +157,14 @@ html.g3d .pgm>*{pointer-events:auto}
 html.lihat main.pgm{display:none}
 @media(min-width:900px){html.g3d main.pgm{padding-right:calc(var(--col,0px) + 30px)}}
 @media(max-width:899px){html.g3d main.pgm{padding-top:calc(var(--win,0px) + 84px)}}
+/* ---- logo, tombol WhatsApp admin, geser latar 3D ---- */
+.logo{width:34px;height:34px;flex:none;display:block;object-fit:contain;filter:drop-shadow(0 0 10px #00d0f055)}
+#wa-admin{position:fixed;z-index:9;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:999px;background:#25d366;border-color:#ffffff40;color:#06260f;font:800 16px/1 'Trebuchet MS',sans-serif;text-decoration:none;box-shadow:0 10px 26px #0008;transition:transform .15s,filter .2s}
+#wa-admin svg{width:26px;height:26px;flex:none}
+#wa-admin:hover{filter:brightness(1.08);transform:translateY(-2px)}
+#wa-admin:active{transform:scale(.96)}
+@media(max-width:480px){#wa-admin{padding:0 16px 0 12px;font-size:15px}}
+@media print{#wa-admin,#pusat{display:none!important}}
+html.g3d canvas{cursor:grab}html.g3d canvas.drag{cursor:grabbing}
+#pusat{display:none;position:fixed;z-index:8;left:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));padding:10px 18px;border:0;border-radius:999px;background:#ffffffd9;color:#141c18;font:800 14px/1 'Trebuchet MS',sans-serif;box-shadow:0 8px 22px #0007;cursor:pointer}
+#pusat.on{display:block}

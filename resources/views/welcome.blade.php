@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bank Sampah Sahabat Ibu · Garasi 3D</title>
 <meta name="description" content="Setor sampah, saldo langsung naik. Bank Sampah Sahabat Ibu, Perumahan Taman Gading, Jember.">
-<link rel="stylesheet" href="{{ asset('assets/style.css') }}"></head><body>
+<link rel="stylesheet" href="{{ asset('assets/style.css') }}"><link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}"></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/></symbol>
 <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
@@ -46,7 +46,7 @@
 </div></header>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="cue" class="g"><i><svg class="i"><use href="#i-down"/></svg></i>Gulir ke bawah untuk masuk garasi</div>
-<aside id="side" class="g" aria-label="Menu utama"><div class="brand"><i></i><div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div></div><nav id="keys" aria-label="Menu"></nav><button class="fold" id="fold" onclick="toggleSide()" aria-label="Ciutkan atau perluas menu"><svg class="i"><use href="#i-chev"/></svg><span class="t">Ciutkan menu</span></button></aside><div id="scrim" onclick="toggleSide(false)"></div>
+<aside id="side" class="g" aria-label="Menu utama"><div class="brand"><img class="logo" src="{{ asset('assets/logo-mark.svg') }}" alt="" width="34" height="34"><div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div></div><nav id="keys" aria-label="Menu"></nav><button class="fold" id="fold" onclick="toggleSide()" aria-label="Ciutkan atau perluas menu"><svg class="i"><use href="#i-chev"/></svg><span class="t">Ciutkan menu</span></button></aside><div id="scrim" onclick="toggleSide(false)"></div>
 <i id="pg"></i>
 <main>
 <section class="sec" id="hero" data-k="luar"><div class="card g"><small class="kick">Final Project PBW · Kelompok 11</small><h1>Setor sampah, <em>saldo langsung naik</em>.</h1><p>Cek saldo, lihat harga sampah, dan ajukan pengambilan uang dari satu halaman. Masuk ke garasi, lalu coba tiap alat.</p>
@@ -82,4 +82,6 @@
 <script defer src="{{ asset('assets/js/aksi.js') }}"></script>
 <script defer src="{{ asset('assets/js/kamera-nav.js') }}"></script>
 <script defer src="{{ asset('assets/js/konten.js') }}"></script>
-<script defer src="{{ asset('assets/js/scroll.js') }}"></script></body></html>
+<script defer src="{{ asset('assets/js/scroll.js') }}"></script>
+@include('partials.wa-admin')
+<script defer src="{{ asset('assets/js/menu.js') }}"></script></body></html>
