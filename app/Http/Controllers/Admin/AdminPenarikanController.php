@@ -75,13 +75,26 @@ class AdminPenarikanController extends Controller
     }
 
     /**
-     * Admin konfirmasi pencairan dana tunai (F-30).
+     * Admin konfirmasi pencairan dana tunai / transfer (F-30).
      */
-    public function cairkan(PenarikanDana $penarikan): RedirectResponse
+    public function cairkan(Request $request, PenarikanDana $penarikan): RedirectResponse
     {
+        $request->validate([
+            'catatan_referensi' => ['nullable', 'string', 'max:255'],
+        ]);
+
         try {
-            $this->penarikanService->cairkanPenarikan($penarikan, Auth::user());
-            return back()->with('success', "Pencairan dana {$penarikan->kode} berhasil dikonfirmasi! Saldo nasabah telah dipotong secara permanen.");
+            $this->penarikanService->cairkanPenarikan(
+                $penarikan,
+                Auth::user(),
+                $request->input('catatan_referensi')
+            );
+
+            $pesan = $penarikan->metode === 'transfer'
+                ? "Pencairan dana transfer {$penarikan->kode} ke {$penarikan->nama_bank} ({$penarikan->nomor_rekening}) berhasil dikonfirmasi! Saldo nasabah telah dipotong permanen."
+                : "Pencairan dana tunai {$penarikan->kode} berhasil dikonfirmasi! Saldo nasabah telah dipotong secara permanen.";
+
+            return back()->with('success', $pesan);
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }

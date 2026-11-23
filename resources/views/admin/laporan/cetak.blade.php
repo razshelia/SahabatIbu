@@ -115,7 +115,9 @@
                 <th>Nama Nasabah</th>
                 <th>Kode</th>
                 <th>Tanggal Dicairkan</th>
-                <th class="text-right">Nominal Tunai</th>
+                <th>Metode</th>
+                <th class="text-right">Nominal (Rp)</th>
+                <th>Ref / Catatan</th>
             </tr>
         </thead>
         <tbody>
@@ -125,10 +127,12 @@
                     <td>{{ $p->nasabah->user->name }}</td>
                     <td>{{ $p->kode }}</td>
                     <td>{{ $p->dicairkan_pada?->format('d/m/Y H:i') }}</td>
+                    <td>{{ ucfirst($p->metode ?? 'tunai') }}</td>
                     <td class="text-right">Rp {{ number_format($p->nominal, 0, ',', '.') }}</td>
+                    <td>{{ $p->catatan_referensi ?? '-' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5" style="text-align: center; color: #999;">Tidak ada data penarikan.</td></tr>
+                <tr><td colspan="7" style="text-align: center; color: #999;">Tidak ada data penarikan.</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -32,15 +32,32 @@ class PenarikanDanaService
     /**
      * Nasabah mengajukan penarikan dana (F-25, F-26, BR-06, BR-07).
      */
-    public function ajukanPenarikan(Nasabah $nasabah, float $nominal): PenarikanDana
-    {
+    public function ajukanPenarikan(
+        Nasabah $nasabah,
+        float $nominal,
+        string $metode = 'tunai',
+        ?string $namaBank = null,
+        ?string $nomorRekening = null,
+        ?string $namaPemilik = null
+    ): PenarikanDana {
         if ($nominal <= 0) {
             throw new RuntimeException('Nominal penarikan harus lebih besar dari 0.');
         }
 
+        if ($metode === 'transfer') {
+            if (empty(trim($namaBank ?? '')) || empty(trim($nomorRekening ?? '')) || empty(trim($namaPemilik ?? ''))) {
+                throw new RuntimeException('Nama bank/e-wallet, nomor rekening, dan nama pemilik wajib diisi untuk penarikan transfer.');
+            }
+        } else {
+            $metode = 'tunai';
+            $namaBank = null;
+            $nomorRekening = null;
+            $namaPemilik = null;
+        }
+
         $nominalFormatted = number_format($nominal, 2, '.', '');
 
-        return DB::transaction(function () use ($nasabah, $nominalFormatted) {
+        return DB::transaction(function () use ($nasabah, $nominalFormatted, $metode, $namaBank, $nomorRekening, $namaPemilik) {
             $lockedNasabah = Nasabah::where('id', $nasabah->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedNasabah->user->status !== 'aktif') {
@@ -57,23 +74,45 @@ class PenarikanDanaService
             $lockedNasabah->saldo_ditahan = bcadd((string) $lockedNasabah->saldo_ditahan, $nominalFormatted, 2);
             $lockedNasabah->save();
 
-            $penarikan = PenarikanDana::create([
+            $penarikan = new PenarikanDana();
+            $penarikan->forceFill([
                 'kode' => self::generateKode(),
                 'nasabah_id' => $lockedNasabah->id,
                 'nominal' => $nominalFormatted,
+                'metode' => $metode,
+                'nama_bank' => $namaBank,
+                'nomor_rekening' => $nomorRekening,
+                'nama_pemilik' => $namaPemilik,
                 'status' => 'menunggu',
                 'diajukan_pada' => now(),
             ]);
+            $penarikan->save();
+
+            // Masking nomor rekening untuk log agar tidak menyimpan nomor rekening utuh (Privasi & Keamanan)
+            $maskedRekening = null;
+            if ($nomorRekening) {
+                $len = strlen($nomorRekening);
+                $maskedRekening = $len <= 4 ? '****' : str_repeat('*', $len - 4) . substr($nomorRekening, -4);
+            }
+
+            $keteranganLog = [
+                'kode' => $penarikan->kode,
+                'nominal' => $nominalFormatted,
+                'nomor_nasabah' => $lockedNasabah->nomor_nasabah,
+                'metode' => $metode,
+            ];
+
+            if ($metode === 'transfer') {
+                $keteranganLog['nama_bank'] = $namaBank;
+                $keteranganLog['nomor_rekening'] = $maskedRekening;
+                $keteranganLog['nama_pemilik'] = $namaPemilik;
+            }
 
             LogAktivitasService::catat(
                 aksi: 'pengajuan_penarikan_dana',
                 objekTipe: 'PenarikanDana',
                 objekId: $penarikan->id,
-                keterangan: [
-                    'kode' => $penarikan->kode,
-                    'nominal' => $nominalFormatted,
-                    'nomor_nasabah' => $lockedNasabah->nomor_nasabah,
-                ],
+                keterangan: $keteranganLog,
                 user: $lockedNasabah->user
             );
 
@@ -101,9 +140,9 @@ class PenarikanDanaService
             $lockedNasabah->saldo_ditahan = bcsub((string) $lockedNasabah->saldo_ditahan, (string) $penarikan->nominal, 2);
             $lockedNasabah->save();
 
-            $penarikan->update([
+            $penarikan->forceFill([
                 'status' => 'dibatalkan',
-            ]);
+            ])->save();
 
             LogAktivitasService::catat(
                 aksi: 'penarikan_dibatalkan_nasabah',
@@ -128,11 +167,11 @@ class PenarikanDanaService
         }
 
         DB::transaction(function () use ($penarikan, $admin) {
-            $penarikan->update([
+            $penarikan->forceFill([
                 'status' => 'disetujui',
                 'diproses_oleh' => $admin->id,
                 'diproses_pada' => now(),
-            ]);
+            ])->save();
 
             LogAktivitasService::catat(
                 aksi: 'penarikan_disetujui_admin',
@@ -167,12 +206,12 @@ class PenarikanDanaService
             $lockedNasabah->saldo_ditahan = bcsub((string) $lockedNasabah->saldo_ditahan, (string) $penarikan->nominal, 2);
             $lockedNasabah->save();
 
-            $penarikan->update([
+            $penarikan->forceFill([
                 'status' => 'ditolak',
                 'alasan_penolakan' => $alasan,
                 'diproses_oleh' => $admin->id,
                 'diproses_pada' => now(),
-            ]);
+            ])->save();
 
             LogAktivitasService::catat(
                 aksi: 'penarikan_ditolak_admin',
@@ -189,15 +228,15 @@ class PenarikanDanaService
     }
 
     /**
-     * Admin konfirmasi pencairan dana tunai setelah uang diserahkan (F-30, BR-06).
+     * Admin konfirmasi pencairan dana tunai / transfer (F-30, BR-06).
      */
-    public function cairkanPenarikan(PenarikanDana $penarikan, User $admin): void
+    public function cairkanPenarikan(PenarikanDana $penarikan, User $admin, ?string $catatanReferensi = null): void
     {
         if ($penarikan->status !== 'disetujui') {
             throw new RuntimeException('Hanya penarikan berstatus Disetujui yang dapat dicairkan.');
         }
 
-        DB::transaction(function () use ($penarikan, $admin) {
+        DB::transaction(function () use ($penarikan, $admin, $catatanReferensi) {
             $lockedNasabah = Nasabah::where('id', $penarikan->nasabah_id)->lockForUpdate()->firstOrFail();
 
             // Kurangi saldo utama dan saldo ditahan secara bersamaan
@@ -205,21 +244,33 @@ class PenarikanDanaService
             $lockedNasabah->saldo_ditahan = bcsub((string) $lockedNasabah->saldo_ditahan, (string) $penarikan->nominal, 2);
             $lockedNasabah->save();
 
-            $penarikan->update([
+            $updateData = [
                 'status' => 'dicairkan',
                 'dicairkan_pada' => now(),
-            ]);
+            ];
+            if ($catatanReferensi !== null && trim($catatanReferensi) !== '') {
+                $updateData['catatan_referensi'] = trim($catatanReferensi);
+            }
+
+            $penarikan->forceFill($updateData)->save();
+
+            $keteranganLog = [
+                'kode' => $penarikan->kode,
+                'nominal' => (string) $penarikan->nominal,
+                'metode' => $penarikan->metode,
+                'nomor_nasabah' => $lockedNasabah->nomor_nasabah,
+                'dicairkan_oleh' => $admin->email,
+            ];
+
+            if ($penarikan->catatan_referensi) {
+                $keteranganLog['catatan_referensi'] = $penarikan->catatan_referensi;
+            }
 
             LogAktivitasService::catat(
                 aksi: 'penarikan_dicairkan_admin',
                 objekTipe: 'PenarikanDana',
                 objekId: $penarikan->id,
-                keterangan: [
-                    'kode' => $penarikan->kode,
-                    'nominal' => (string) $penarikan->nominal,
-                    'nomor_nasabah' => $lockedNasabah->nomor_nasabah,
-                    'dicairkan_oleh' => $admin->email,
-                ],
+                keterangan: $keteranganLog,
                 user: $admin
             );
         });

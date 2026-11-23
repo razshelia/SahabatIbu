@@ -48,14 +48,33 @@ class NasabahPenarikanController extends Controller
 
         $request->validate([
             'nominal' => ['required', 'numeric', 'gt:0'],
+            'metode' => ['required', 'in:tunai,transfer'],
+            'nama_bank' => ['required_if:metode,transfer', 'nullable', 'string', 'max:100'],
+            'nomor_rekening' => ['required_if:metode,transfer', 'nullable', 'string', 'max:50'],
+            'nama_pemilik' => ['required_if:metode,transfer', 'nullable', 'string', 'max:100'],
         ], [
             'nominal.gt' => 'Nominal penarikan harus lebih besar dari 0.',
+            'metode.in' => 'Metode penarikan harus tunai atau transfer.',
+            'nama_bank.required_if' => 'Nama bank atau e-wallet wajib diisi untuk penarikan transfer.',
+            'nomor_rekening.required_if' => 'Nomor rekening atau nomor e-wallet wajib diisi untuk penarikan transfer.',
+            'nama_pemilik.required_if' => 'Nama pemilik rekening wajib diisi untuk penarikan transfer.',
         ]);
 
         try {
-            $penarikan = $this->penarikanService->ajukanPenarikan($nasabah, (float) $request->input('nominal'));
+            $penarikan = $this->penarikanService->ajukanPenarikan(
+                $nasabah,
+                (float) $request->input('nominal'),
+                $request->input('metode', 'tunai'),
+                $request->input('nama_bank'),
+                $request->input('nomor_rekening'),
+                $request->input('nama_pemilik')
+            );
 
-            return back()->with('success', "Pengajuan penarikan sebesar Rp " . number_format((float) $penarikan->nominal, 0, ',', '.') . " berhasil diajukan dengan kode {$penarikan->kode}. Saldo Anda telah ditahan sementara.");
+            $pesanMetode = $penarikan->metode === 'transfer'
+                ? "melalui transfer ke {$penarikan->nama_bank} ({$penarikan->nomor_rekening_masked})"
+                : "secara tunai";
+
+            return back()->with('success', "Pengajuan penarikan sebesar Rp " . number_format((float) $penarikan->nominal, 0, ',', '.') . " {$pesanMetode} berhasil diajukan dengan kode {$penarikan->kode}. Saldo Anda telah ditahan sementara.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }

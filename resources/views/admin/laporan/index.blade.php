@@ -110,7 +110,9 @@
                 <th>Kode</th>
                 <th>Waktu Pencairan</th>
                 <th>Nasabah</th>
+                <th>Metode</th>
                 <th>Nominal (Rp)</th>
+                <th>Catatan / Ref</th>
             </tr>
         </thead>
         <tbody>
@@ -119,10 +121,16 @@
                     <td><b>{{ $p->kode }}</b></td>
                     <td>{{ $p->dicairkan_pada?->format('d/m/Y H:i') ?? '-' }}</td>
                     <td>{{ $p->nasabah->user->name ?? '-' }}</td>
+                    <td>
+                        <span class="pill {{ $p->metode === 'transfer' ? 'ok' : '' }}">
+                            {{ ucfirst($p->metode ?? 'tunai') }}
+                        </span>
+                    </td>
                     <td><b>Rp {{ number_format($p->nominal, 0, ',', '.') }}</b></td>
+                    <td>{{ $p->catatan_referensi ?? '-' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="4">Belum ada penarikan dicairkan pada rentang tanggal ini.</td></tr>
+                <tr><td colspan="6">Belum ada penarikan dicairkan pada rentang tanggal ini.</td></tr>
             @endforelse
         </tbody>
     </table>

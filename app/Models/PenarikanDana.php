@@ -10,7 +10,17 @@ class PenarikanDana extends Model
     protected $table = 'penarikan_dana';
 
     // status dan kolom pemrosesan diubah lewat service (BR-08, BR-09).
-    protected $fillable = ['kode', 'nasabah_id', 'nominal', 'diajukan_pada'];
+    protected $fillable = [
+        'kode',
+        'nasabah_id',
+        'nominal',
+        'metode',
+        'nama_bank',
+        'nomor_rekening',
+        'nama_pemilik',
+        'catatan_referensi',
+        'diajukan_pada',
+    ];
 
     protected function casts(): array
     {
@@ -40,5 +50,22 @@ class PenarikanDana extends Model
     public function getNomorPenarikanAttribute(): ?string
     {
         return $this->kode;
+    }
+
+    /**
+     * Nomor rekening tersamar (masked) untuk keamanan log / tampilan umum.
+     */
+    public function getNomorRekeningMaskedAttribute(): ?string
+    {
+        if (empty($this->nomor_rekening)) {
+            return null;
+        }
+
+        $length = strlen($this->nomor_rekening);
+        if ($length <= 4) {
+            return str_repeat('*', $length);
+        }
+
+        return str_repeat('*', $length - 4) . substr($this->nomor_rekening, -4);
     }
 }

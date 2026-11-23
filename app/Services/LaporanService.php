@@ -127,16 +127,18 @@ class LaporanService
 
         $output = fopen('php://temp', 'r+');
 
-        fputcsv($output, ['Nomor Nasabah', 'Nama Nasabah', 'Kode Penarikan', 'Tanggal Dicairkan', 'Nominal (Rp)']);
+        fputcsv($output, ['Nomor Nasabah', 'Nama Nasabah', 'Kode Penarikan', 'Tanggal Dicairkan', 'Metode', 'Nominal (Rp)', 'Catatan Referensi']);
 
         foreach ($penarikan as $p) {
             $nomorNasabah = self::sanitizeCsvFormula($p->nasabah->nomor_nasabah);
             $namaNasabah = self::sanitizeCsvFormula($p->nasabah->user->name);
             $kode = self::sanitizeCsvFormula($p->kode);
             $tanggal = Carbon::parse($p->dicairkan_pada)->format('d/m/Y H:i');
+            $metode = ucfirst($p->metode ?? 'Tunai');
             $nominal = (string) $p->nominal;
+            $catatan = self::sanitizeCsvFormula($p->catatan_referensi ?? '-');
 
-            fputcsv($output, [$nomorNasabah, $namaNasabah, $kode, $tanggal, $nominal]);
+            fputcsv($output, [$nomorNasabah, $namaNasabah, $kode, $tanggal, $metode, $nominal, $catatan]);
         }
 
         rewind($output);

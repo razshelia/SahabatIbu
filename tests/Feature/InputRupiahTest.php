@@ -23,7 +23,8 @@ class InputRupiahTest extends TestCase
     {
         $u = new User();
         $u->forceFill(['name' => 'Siti', 'email' => 's@example.test', 'password' => 'Password123', 'role' => 'nasabah', 'status' => 'aktif', 'email_verified_at' => now()])->save();
-        Nasabah::create(['user_id' => $u->id, 'nomor_nasabah' => 'NSB-0001', 'telepon' => '0812', 'alamat' => 'Blok A No. 1, Perumahan Taman Gading', 'saldo' => 100000, 'saldo_ditahan' => 0]);
+        $n = new Nasabah();
+        $n->forceFill(['user_id' => $u->id, 'nomor_nasabah' => 'NSB-0001', 'telepon' => '0812', 'alamat' => 'Blok A No. 1, Perumahan Taman Gading', 'saldo' => 100000, 'saldo_ditahan' => 0])->save();
 
         return $u;
     }

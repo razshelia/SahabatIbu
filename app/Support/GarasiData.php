@@ -175,6 +175,7 @@ class GarasiData
                 'id' => $p->kode,
                 'v'  => (float) $p->nominal,
                 'st' => $p->status,
+                'metode' => $p->metode,
             ])->all(),
         ]];
     }
@@ -201,7 +202,7 @@ class GarasiData
 
         $antrian = PenarikanDana::with('nasabah.user')->whereIn('status', ['menunggu', 'disetujui'])
             ->orderBy('diajukan_pada')->limit(3)->get()->map(fn ($p) => [
-                'k' => $p->kode, 'who' => $p->nasabah?->user?->name, 'v' => (float) $p->nominal, 'st' => $p->status,
+                'k' => $p->kode, 'who' => $p->nasabah?->user?->name, 'v' => (float) $p->nominal, 'st' => $p->status, 'metode' => $p->metode,
             ])->all();
 
         return ['admin' => [
