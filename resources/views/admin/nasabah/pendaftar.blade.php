@@ -17,6 +17,7 @@
                 <th>Nama</th>
                 <th>Email</th>
                 <th>Telepon</th>
+                <th>Kategori</th>
                 <th>Alamat</th>
                 <th>Waktu Daftar</th>
                 <th>Aksi</th>
@@ -28,6 +29,7 @@
                     <td><b>{{ $pendaftar->name }}</b></td>
                     <td>{{ $pendaftar->email }}</td>
                     <td>{{ $pendaftar->nasabah->telepon ?? '-' }}</td>
+                    <td><span class="pill {{ ($pendaftar->nasabah->kategori ?? 'warga') === 'umum' ? 'no' : 'ok' }}">{{ ($pendaftar->nasabah->kategori ?? 'warga') === 'umum' ? 'Umum' : 'Warga' }}</span></td>
                     <td>{{ $pendaftar->nasabah->alamat ?? '-' }}</td>
                     <td>{{ $pendaftar->created_at->format('d/m/Y H:i') }}</td>
                     <td>
@@ -45,7 +47,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6">Tidak ada pendaftar yang menunggu verifikasi.</td></tr>
+                <tr><td colspan="7">Tidak ada pendaftar yang menunggu verifikasi.</td></tr>
             @endforelse
         </tbody>
     </table>

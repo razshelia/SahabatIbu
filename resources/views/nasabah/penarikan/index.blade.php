@@ -11,10 +11,7 @@
 <h2>Formulir pengajuan</h2>
 <form class="f frow" method="POST" action="{{ route('nasabah.penarikan.store') }}" style="margin-bottom:24px">
     @csrf
-    <label>
-        Nominal Penarikan (Rp)
-        <input name="nominal" type="number" min="1" max="{{ (int) $nasabah->saldo_tersedia }}" step="1000" required placeholder="Contoh: 50000" value="{{ old('nominal') }}">
-    </label>
+    @include('partials.rupiah-input', ['id' => 'nominal', 'name' => 'nominal', 'label' => 'Nominal Penarikan (Rp)', 'step' => 5000, 'max' => (int) $nasabah->saldo_tersedia, 'maxLabel' => 'Semua saldo'])
     <button class="btn sm" type="submit">Ajukan Penarikan</button>
 </form>
 @error('nominal')<p class="err" style="display:block;margin-top:-16px;margin-bottom:20px">{{ $message }}</p>@enderror

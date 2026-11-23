@@ -44,6 +44,7 @@
                 <th>Nama</th>
                 <th>Email</th>
                 <th>Telepon</th>
+                <th>Kategori</th>
                 <th>Saldo</th>
                 <th>Status</th>
                 <th>Aksi</th>
@@ -56,6 +57,7 @@
                     <td>{{ $nasabah->user->name }}</td>
                     <td>{{ $nasabah->user->email }}</td>
                     <td>{{ $nasabah->telepon }}</td>
+                    <td>{{ $nasabah->kategori === 'umum' ? 'Umum' : 'Warga' }}</td>
                     <td>Rp {{ number_format($nasabah->saldo, 0, ',', '.') }}</td>
                     <td>
                         <span class="pill {{ $nasabah->user->status === 'aktif' ? 'ok' : 'no' }}">
@@ -88,7 +90,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7">Tidak ada data nasabah yang sesuai.</td></tr>
+                <tr><td colspan="8">Tidak ada data nasabah yang sesuai.</td></tr>
             @endforelse
         </tbody>
     </table>

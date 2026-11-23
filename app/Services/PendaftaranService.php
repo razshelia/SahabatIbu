@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Nasabah;
 use App\Models\User;
+use App\Support\AlamatNasabah;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -35,7 +36,9 @@ class PendaftaranService
      */
     public function registerMandiri(array $data): User
     {
-        return DB::transaction(function () use ($data) {
+        $alamat = AlamatNasabah::normalisasi($data);
+
+        return DB::transaction(function () use ($data, $alamat) {
             $user = new User();
             $user->forceFill([
                 'name' => $data['name'],
@@ -51,7 +54,7 @@ class PendaftaranService
                 'user_id' => $user->id,
                 'nomor_nasabah' => self::generateNomorNasabah(),
                 'telepon' => $data['telepon'],
-                'alamat' => $data['alamat'],
+                ...$alamat,
                 'saldo' => 0,
                 'saldo_ditahan' => 0,
             ]);
@@ -63,6 +66,7 @@ class PendaftaranService
                 keterangan: [
                     'persetujuan_privasi' => true,
                     'nomor_nasabah' => $nasabah->nomor_nasabah,
+                    'kategori' => $nasabah->kategori,
                 ],
                 user: $user
             );
@@ -76,7 +80,9 @@ class PendaftaranService
      */
     public function lengkapiProfilGoogle(User $user, array $data): Nasabah
     {
-        return DB::transaction(function () use ($user, $data) {
+        $alamat = AlamatNasabah::normalisasi($data);
+
+        return DB::transaction(function () use ($user, $data, $alamat) {
             $nasabah = $user->nasabah;
 
             if (! $nasabah) {
@@ -84,14 +90,14 @@ class PendaftaranService
                     'user_id' => $user->id,
                     'nomor_nasabah' => self::generateNomorNasabah(),
                     'telepon' => $data['telepon'],
-                    'alamat' => $data['alamat'],
+                    ...$alamat,
                     'saldo' => 0,
                     'saldo_ditahan' => 0,
                 ]);
             } else {
                 $nasabah->update([
                     'telepon' => $data['telepon'],
-                    'alamat' => $data['alamat'],
+                    ...$alamat,
                 ]);
             }
 
@@ -115,7 +121,9 @@ class PendaftaranService
      */
     public function tambahNasabahLangsung(array $data, User $admin): User
     {
-        return DB::transaction(function () use ($data, $admin) {
+        $alamat = AlamatNasabah::normalisasi($data);
+
+        return DB::transaction(function () use ($data, $admin, $alamat) {
             $user = new User();
             $user->forceFill([
                 'name' => $data['name'],
@@ -133,7 +141,7 @@ class PendaftaranService
                 'user_id' => $user->id,
                 'nomor_nasabah' => self::generateNomorNasabah(),
                 'telepon' => $data['telepon'],
-                'alamat' => $data['alamat'],
+                ...$alamat,
                 'saldo' => 0,
                 'saldo_ditahan' => 0,
             ]);
@@ -264,6 +272,8 @@ class PendaftaranService
             $nasabah->update([
                 'telepon' => '-',
                 'alamat' => '-',
+                'blok' => null,
+                'nomor_rumah' => null,
             ]);
 
             // Kosongkan IP address dan User Agent pada log aktivitas akun ini untuk privasi (BR-18)

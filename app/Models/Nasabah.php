@@ -11,7 +11,7 @@ class Nasabah extends Model
     protected $table = 'nasabah';
 
     // saldo dan saldo_ditahan sengaja tidak fillable: hanya diubah oleh service (BR-06, NF-09).
-    protected $fillable = ['user_id', 'nomor_nasabah', 'telepon', 'alamat'];
+    protected $fillable = ['user_id', 'nomor_nasabah', 'telepon', 'kategori', 'blok', 'nomor_rumah', 'alamat'];
 
     protected function casts(): array
     {

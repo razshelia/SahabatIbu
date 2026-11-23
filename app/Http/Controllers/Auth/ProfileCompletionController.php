@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Services\PendaftaranService;
+use App\Support\AlamatNasabah;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,9 +41,10 @@ class ProfileCompletionController extends Controller
     {
         $validated = $request->validate([
             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
-            'alamat' => ['required', 'string', 'max:255'],
+            ...AlamatNasabah::rules(),
             'persetujuan_privasi' => ['accepted'],
         ], [
+            ...AlamatNasabah::pesan(),
             'telepon.regex' => 'Format nomor telepon hanya boleh berisi angka dan tanda +.',
             'persetujuan_privasi.accepted' => 'Anda wajib menyetujui Kebijakan Privasi dan pemrosesan data pribadi untuk melanjutkan.',
         ]);

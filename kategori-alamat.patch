@@ -1,0 +1,636 @@
+diff --git a/app/Http/Controllers/Admin/AdminNasabahController.php b/app/Http/Controllers/Admin/AdminNasabahController.php
+index ddcc099..9ca7cec 100644
+--- a/app/Http/Controllers/Admin/AdminNasabahController.php
++++ b/app/Http/Controllers/Admin/AdminNasabahController.php
+@@ -7,6 +7,7 @@
+ use App\Models\User;
+ use App\Services\LogAktivitasService;
+ use App\Services\PendaftaranService;
++use App\Support\AlamatNasabah;
+ use Illuminate\Http\RedirectResponse;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Auth;
+@@ -103,9 +104,10 @@ public function store(Request $request): RedirectResponse
+             'name' => ['required', 'string', 'max:100'],
+             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
+-            'alamat' => ['required', 'string', 'max:255'],
++            ...AlamatNasabah::rules(),
+             'password' => ['required', 'string', 'min:8', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
+         ], [
++            ...AlamatNasabah::pesan(),
+             'telepon.regex' => 'Nomor telepon hanya boleh memuat angka dan tanda +.',
+             'password.regex' => 'Kata sandi harus minimal 8 karakter dan memuat huruf serta angka.',
+         ]);
+@@ -134,20 +136,26 @@ public function update(Request $request, Nasabah $nasabah): RedirectResponse
+         $validated = $request->validate([
+             'name' => ['required', 'string', 'max:100'],
+             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
+-            'alamat' => ['required', 'string', 'max:255'],
+-        ]);
++            ...AlamatNasabah::rules(),
++        ], AlamatNasabah::pesan());
++
++        $alamatLama = $nasabah->only(['kategori', 'blok', 'nomor_rumah', 'alamat']);
++        $alamatBaru = AlamatNasabah::normalisasi($validated);
+ 
+         $nasabah->user->update(['name' => $validated['name']]);
+-        $nasabah->update([
+-            'telepon' => $validated['telepon'],
+-            'alamat' => $validated['alamat'],
+-        ]);
++        $nasabah->update(['telepon' => $validated['telepon'], ...$alamatBaru]);
+ 
+         LogAktivitasService::catat(
+             aksi: 'admin_ubah_nasabah',
+             objekTipe: 'Nasabah',
+             objekId: $nasabah->id,
+-            keterangan: ['nomor_nasabah' => $nasabah->nomor_nasabah],
++            // Teks alamat tidak ditulis ke log agar tidak tersisa setelah anonimisasi (BR-18).
++            keterangan: [
++                'nomor_nasabah' => $nasabah->nomor_nasabah,
++                'kategori_lama' => $alamatLama['kategori'],
++                'kategori_baru' => $alamatBaru['kategori'],
++                'alamat_berubah' => $alamatLama['alamat'] !== $alamatBaru['alamat'],
++            ],
+             user: Auth::user()
+         );
+ 
+diff --git a/app/Http/Controllers/Auth/ProfileCompletionController.php b/app/Http/Controllers/Auth/ProfileCompletionController.php
+index 56df3c2..bed8630 100644
+--- a/app/Http/Controllers/Auth/ProfileCompletionController.php
++++ b/app/Http/Controllers/Auth/ProfileCompletionController.php
+@@ -4,6 +4,7 @@
+ 
+ use App\Http\Controllers\Controller;
+ use App\Services\PendaftaranService;
++use App\Support\AlamatNasabah;
+ use Illuminate\Http\RedirectResponse;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Auth;
+@@ -40,9 +41,10 @@ public function store(Request $request): RedirectResponse
+     {
+         $validated = $request->validate([
+             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
+-            'alamat' => ['required', 'string', 'max:255'],
++            ...AlamatNasabah::rules(),
+             'persetujuan_privasi' => ['accepted'],
+         ], [
++            ...AlamatNasabah::pesan(),
+             'telepon.regex' => 'Format nomor telepon hanya boleh berisi angka dan tanda +.',
+             'persetujuan_privasi.accepted' => 'Anda wajib menyetujui Kebijakan Privasi dan pemrosesan data pribadi untuk melanjutkan.',
+         ]);
+diff --git a/app/Http/Controllers/Auth/RegisterController.php b/app/Http/Controllers/Auth/RegisterController.php
+index e7de819..aa7692c 100644
+--- a/app/Http/Controllers/Auth/RegisterController.php
++++ b/app/Http/Controllers/Auth/RegisterController.php
+@@ -4,6 +4,7 @@
+ 
+ use App\Http\Controllers\Controller;
+ use App\Services\PendaftaranService;
++use App\Support\AlamatNasabah;
+ use Illuminate\Http\RedirectResponse;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Auth;
+@@ -47,10 +48,11 @@ public function register(Request $request): RedirectResponse
+             'name' => ['required', 'string', 'max:100'],
+             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
+-            'alamat' => ['required', 'string', 'max:255'],
++            ...AlamatNasabah::rules(),
+             'password' => ['required', 'string', 'min:8', 'confirmed', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
+             'persetujuan_privasi' => ['accepted'],
+         ], [
++            ...AlamatNasabah::pesan(),
+             'name.required' => 'Nama lengkap wajib diisi.',
+             'email.unique' => 'Email ini sudah terdaftar.',
+             'telepon.regex' => 'Format nomor telepon hanya boleh berisi angka dan tanda +.',
+diff --git a/app/Http/Controllers/Nasabah/NasabahProfileController.php b/app/Http/Controllers/Nasabah/NasabahProfileController.php
+index a56b4fc..7be9bad 100644
+--- a/app/Http/Controllers/Nasabah/NasabahProfileController.php
++++ b/app/Http/Controllers/Nasabah/NasabahProfileController.php
+@@ -23,13 +23,12 @@ public function show(): View
+     }
+ 
+     /**
+-     * Perbarui data kontak nasabah (F-11).
++     * Perbarui data kontak nasabah (F-11). Alamat dan kategori hanya dapat diubah Admin (BR-19).
+      */
+     public function update(Request $request): RedirectResponse
+     {
+         $validated = $request->validate([
+             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
+-            'alamat' => ['required', 'string', 'max:255'],
+         ], [
+             'telepon.regex' => 'Nomor telepon hanya boleh memuat angka dan tanda +.',
+         ]);
+diff --git a/app/Models/Nasabah.php b/app/Models/Nasabah.php
+index 6b1a55a..58193cb 100644
+--- a/app/Models/Nasabah.php
++++ b/app/Models/Nasabah.php
+@@ -11,7 +11,7 @@ class Nasabah extends Model
+     protected $table = 'nasabah';
+ 
+     // saldo dan saldo_ditahan sengaja tidak fillable: hanya diubah oleh service (BR-06, NF-09).
+-    protected $fillable = ['user_id', 'nomor_nasabah', 'telepon', 'alamat'];
++    protected $fillable = ['user_id', 'nomor_nasabah', 'telepon', 'kategori', 'blok', 'nomor_rumah', 'alamat'];
+ 
+     protected function casts(): array
+     {
+diff --git a/app/Services/PendaftaranService.php b/app/Services/PendaftaranService.php
+index 36be0fe..ed44f9e 100644
+--- a/app/Services/PendaftaranService.php
++++ b/app/Services/PendaftaranService.php
+@@ -4,6 +4,7 @@
+ 
+ use App\Models\Nasabah;
+ use App\Models\User;
++use App\Support\AlamatNasabah;
+ use Illuminate\Support\Facades\DB;
+ use Illuminate\Support\Facades\Hash;
+ use Illuminate\Support\Str;
+@@ -35,7 +36,9 @@ public static function generateNomorNasabah(): string
+      */
+     public function registerMandiri(array $data): User
+     {
+-        return DB::transaction(function () use ($data) {
++        $alamat = AlamatNasabah::normalisasi($data);
++
++        return DB::transaction(function () use ($data, $alamat) {
+             $user = new User();
+             $user->forceFill([
+                 'name' => $data['name'],
+@@ -51,7 +54,7 @@ public function registerMandiri(array $data): User
+                 'user_id' => $user->id,
+                 'nomor_nasabah' => self::generateNomorNasabah(),
+                 'telepon' => $data['telepon'],
+-                'alamat' => $data['alamat'],
++                ...$alamat,
+                 'saldo' => 0,
+                 'saldo_ditahan' => 0,
+             ]);
+@@ -63,6 +66,7 @@ public function registerMandiri(array $data): User
+                 keterangan: [
+                     'persetujuan_privasi' => true,
+                     'nomor_nasabah' => $nasabah->nomor_nasabah,
++                    'kategori' => $nasabah->kategori,
+                 ],
+                 user: $user
+             );
+@@ -76,7 +80,9 @@ public function registerMandiri(array $data): User
+      */
+     public function lengkapiProfilGoogle(User $user, array $data): Nasabah
+     {
+-        return DB::transaction(function () use ($user, $data) {
++        $alamat = AlamatNasabah::normalisasi($data);
++
++        return DB::transaction(function () use ($user, $data, $alamat) {
+             $nasabah = $user->nasabah;
+ 
+             if (! $nasabah) {
+@@ -84,14 +90,14 @@ public function lengkapiProfilGoogle(User $user, array $data): Nasabah
+                     'user_id' => $user->id,
+                     'nomor_nasabah' => self::generateNomorNasabah(),
+                     'telepon' => $data['telepon'],
+-                    'alamat' => $data['alamat'],
++                    ...$alamat,
+                     'saldo' => 0,
+                     'saldo_ditahan' => 0,
+                 ]);
+             } else {
+                 $nasabah->update([
+                     'telepon' => $data['telepon'],
+-                    'alamat' => $data['alamat'],
++                    ...$alamat,
+                 ]);
+             }
+ 
+@@ -115,7 +121,9 @@ public function lengkapiProfilGoogle(User $user, array $data): Nasabah
+      */
+     public function tambahNasabahLangsung(array $data, User $admin): User
+     {
+-        return DB::transaction(function () use ($data, $admin) {
++        $alamat = AlamatNasabah::normalisasi($data);
++
++        return DB::transaction(function () use ($data, $admin, $alamat) {
+             $user = new User();
+             $user->forceFill([
+                 'name' => $data['name'],
+@@ -133,7 +141,7 @@ public function tambahNasabahLangsung(array $data, User $admin): User
+                 'user_id' => $user->id,
+                 'nomor_nasabah' => self::generateNomorNasabah(),
+                 'telepon' => $data['telepon'],
+-                'alamat' => $data['alamat'],
++                ...$alamat,
+                 'saldo' => 0,
+                 'saldo_ditahan' => 0,
+             ]);
+@@ -264,6 +272,8 @@ public function anonimisasi(Nasabah $nasabah, User $admin): void
+             $nasabah->update([
+                 'telepon' => '-',
+                 'alamat' => '-',
++                'blok' => null,
++                'nomor_rumah' => null,
+             ]);
+ 
+             // Kosongkan IP address dan User Agent pada log aktivitas akun ini untuk privasi (BR-18)
+diff --git a/app/Support/AlamatNasabah.php b/app/Support/AlamatNasabah.php
+new file mode 100644
+index 0000000..9107bd4
+--- /dev/null
++++ b/app/Support/AlamatNasabah.php
+@@ -0,0 +1,63 @@
++<?php
++
++namespace App\Support;
++
++/**
++ * Aturan alamat nasabah (BR-19).
++ * - warga: blok + nomor rumah di Perumahan Taman Gading (kolom alamat disusun otomatis).
++ * - umum : alamat teks bebas.
++ */
++class AlamatNasabah
++{
++    public const PERUMAHAN = 'Perumahan Taman Gading';
++
++    public const KATEGORI = ['warga', 'umum'];
++
++    public static function rules(): array
++    {
++        return [
++            'kategori' => ['required', 'in:warga,umum'],
++            'blok' => ['nullable', 'required_if:kategori,warga', 'string', 'max:10', 'regex:/^[A-Za-z0-9\-]+$/'],
++            'nomor_rumah' => ['nullable', 'required_if:kategori,warga', 'string', 'max:10', 'regex:/^[A-Za-z0-9\-\/]+$/'],
++            'alamat' => ['nullable', 'required_if:kategori,umum', 'string', 'max:255'],
++        ];
++    }
++
++    public static function pesan(): array
++    {
++        return [
++            'kategori.required' => 'Pilih status domisili: warga Taman Gading atau umum.',
++            'kategori.in' => 'Status domisili tidak valid.',
++            'blok.required_if' => 'Blok wajib diisi untuk warga Taman Gading.',
++            'blok.regex' => 'Blok hanya boleh berisi huruf, angka, dan tanda minus.',
++            'nomor_rumah.required_if' => 'Nomor rumah wajib diisi untuk warga Taman Gading.',
++            'nomor_rumah.regex' => 'Nomor rumah hanya boleh berisi huruf, angka, garis miring, dan tanda minus.',
++            'alamat.required_if' => 'Alamat lengkap wajib diisi untuk nasabah umum.',
++        ];
++    }
++
++    /**
++     * Ubah masukan form menjadi kolom basis data: kategori, blok, nomor_rumah, alamat.
++     */
++    public static function normalisasi(array $data): array
++    {
++        if (($data['kategori'] ?? 'warga') === 'umum') {
++            return [
++                'kategori' => 'umum',
++                'blok' => null,
++                'nomor_rumah' => null,
++                'alamat' => trim((string) ($data['alamat'] ?? '')),
++            ];
++        }
++
++        $blok = strtoupper(trim((string) $data['blok']));
++        $nomor = strtoupper(trim((string) $data['nomor_rumah']));
++
++        return [
++            'kategori' => 'warga',
++            'blok' => $blok,
++            'nomor_rumah' => $nomor,
++            'alamat' => "Blok {$blok} No. {$nomor}, ".self::PERUMAHAN,
++        ];
++    }
++}
+diff --git a/database/migrations/2026_11_23_000001_tambah_kategori_dan_alamat_terstruktur_ke_nasabah.php b/database/migrations/2026_11_23_000001_tambah_kategori_dan_alamat_terstruktur_ke_nasabah.php
+new file mode 100644
+index 0000000..30a9fcb
+--- /dev/null
++++ b/database/migrations/2026_11_23_000001_tambah_kategori_dan_alamat_terstruktur_ke_nasabah.php
+@@ -0,0 +1,28 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++return new class extends Migration
++{
++    public function up(): void
++    {
++        Schema::table('nasabah', function (Blueprint $table) {
++            // BR-19: kategori nasabah. Data lama dianggap warga Taman Gading.
++            $table->string('kategori', 10)->default('warga')->after('telepon');
++            // Alamat terstruktur khusus warga; nasabah umum memakai kolom alamat bebas.
++            $table->string('blok', 10)->nullable()->after('kategori');
++            $table->string('nomor_rumah', 10)->nullable()->after('blok');
++            $table->index('kategori');
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::table('nasabah', function (Blueprint $table) {
++            $table->dropIndex(['kategori']);
++            $table->dropColumn(['kategori', 'blok', 'nomor_rumah']);
++        });
++    }
++};
+diff --git a/database/seeders/NasabahDemoSeeder.php b/database/seeders/NasabahDemoSeeder.php
+index 09280b9..a17bf8b 100644
+--- a/database/seeders/NasabahDemoSeeder.php
++++ b/database/seeders/NasabahDemoSeeder.php
+@@ -37,7 +37,10 @@ public function run(): void
+                 'user_id'       => $user->id,
+                 'nomor_nasabah' => sprintf('NSB-%04d', $i + 1),
+                 'telepon'       => '0812000000' . ($i + 1),
+-                'alamat'        => 'Perumahan Taman Gading, Jember',
++                'kategori'      => 'warga',
++                'blok'          => chr(65 + $i % 5),
++                'nomor_rumah'   => (string) (10 + $i),
++                'alamat'        => 'Blok ' . chr(65 + $i % 5) . ' No. ' . (10 + $i) . ', Perumahan Taman Gading',
+             ]);
+         }
+     }
+diff --git a/resources/views/admin/nasabah/create.blade.php b/resources/views/admin/nasabah/create.blade.php
+index dbbb3d5..f467621 100644
+--- a/resources/views/admin/nasabah/create.blade.php
++++ b/resources/views/admin/nasabah/create.blade.php
+@@ -26,11 +26,7 @@
+         @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
+     </label>
+ 
+-    <label for="alamat">
+-        Alamat
+-        <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ old('alamat') }}" maxlength="255" required>
+-        @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
++    @include('partials.alamat-fields')
+ 
+     <label for="password">
+         Kata sandi awal (min. 8, kombinasi huruf &amp; angka)
+diff --git a/resources/views/admin/nasabah/edit.blade.php b/resources/views/admin/nasabah/edit.blade.php
+index 73253df..990c055 100644
+--- a/resources/views/admin/nasabah/edit.blade.php
++++ b/resources/views/admin/nasabah/edit.blade.php
+@@ -27,11 +27,7 @@
+         @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
+     </label>
+ 
+-    <label for="alamat">
+-        Alamat
+-        <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ old('alamat', $nasabah->alamat) }}" maxlength="255" required>
+-        @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
++    @include('partials.alamat-fields', ['nasabah' => $nasabah])
+ 
+     <div class="row" style="margin-top:16px;gap:8px">
+         <button class="btn" type="submit">Simpan Perubahan</button>
+diff --git a/resources/views/admin/nasabah/index.blade.php b/resources/views/admin/nasabah/index.blade.php
+index 040c2c1..2c47523 100644
+--- a/resources/views/admin/nasabah/index.blade.php
++++ b/resources/views/admin/nasabah/index.blade.php
+@@ -44,6 +44,7 @@
+                 <th>Nama</th>
+                 <th>Email</th>
+                 <th>Telepon</th>
++                <th>Kategori</th>
+                 <th>Saldo</th>
+                 <th>Status</th>
+                 <th>Aksi</th>
+@@ -56,6 +57,7 @@
+                     <td>{{ $nasabah->user->name }}</td>
+                     <td>{{ $nasabah->user->email }}</td>
+                     <td>{{ $nasabah->telepon }}</td>
++                    <td>{{ $nasabah->kategori === 'umum' ? 'Umum' : 'Warga' }}</td>
+                     <td>Rp {{ number_format($nasabah->saldo, 0, ',', '.') }}</td>
+                     <td>
+                         <span class="pill {{ $nasabah->user->status === 'aktif' ? 'ok' : 'no' }}">
+@@ -88,7 +90,7 @@
+                     </td>
+                 </tr>
+             @empty
+-                <tr><td colspan="7">Tidak ada data nasabah yang sesuai.</td></tr>
++                <tr><td colspan="8">Tidak ada data nasabah yang sesuai.</td></tr>
+             @endforelse
+         </tbody>
+     </table>
+diff --git a/resources/views/admin/nasabah/pendaftar.blade.php b/resources/views/admin/nasabah/pendaftar.blade.php
+index 0dbbfa5..894a3c2 100644
+--- a/resources/views/admin/nasabah/pendaftar.blade.php
++++ b/resources/views/admin/nasabah/pendaftar.blade.php
+@@ -17,6 +17,7 @@
+                 <th>Nama</th>
+                 <th>Email</th>
+                 <th>Telepon</th>
++                <th>Kategori</th>
+                 <th>Alamat</th>
+                 <th>Waktu Daftar</th>
+                 <th>Aksi</th>
+@@ -28,6 +29,7 @@
+                     <td><b>{{ $pendaftar->name }}</b></td>
+                     <td>{{ $pendaftar->email }}</td>
+                     <td>{{ $pendaftar->nasabah->telepon ?? '-' }}</td>
++                    <td><span class="pill {{ ($pendaftar->nasabah->kategori ?? 'warga') === 'umum' ? 'no' : 'ok' }}">{{ ($pendaftar->nasabah->kategori ?? 'warga') === 'umum' ? 'Umum' : 'Warga' }}</span></td>
+                     <td>{{ $pendaftar->nasabah->alamat ?? '-' }}</td>
+                     <td>{{ $pendaftar->created_at->format('d/m/Y H:i') }}</td>
+                     <td>
+@@ -45,7 +47,7 @@
+                     </td>
+                 </tr>
+             @empty
+-                <tr><td colspan="6">Tidak ada pendaftar yang menunggu verifikasi.</td></tr>
++                <tr><td colspan="7">Tidak ada pendaftar yang menunggu verifikasi.</td></tr>
+             @endforelse
+         </tbody>
+     </table>
+diff --git a/resources/views/auth/complete-profile.blade.php b/resources/views/auth/complete-profile.blade.php
+index 12e0c33..1cd6815 100644
+--- a/resources/views/auth/complete-profile.blade.php
++++ b/resources/views/auth/complete-profile.blade.php
+@@ -15,11 +15,7 @@
+             @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
+         </label>
+ 
+-        <label for="alamat">
+-            Alamat
+-            <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ old('alamat') }}" maxlength="255" required>
+-            @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-        </label>
++        @include('partials.alamat-fields')
+ 
+         <label class="ck" for="persetujuan_privasi">
+             <input id="persetujuan_privasi" name="persetujuan_privasi" type="checkbox" value="1" {{ old('persetujuan_privasi') ? 'checked' : '' }} required>
+diff --git a/resources/views/auth/register.blade.php b/resources/views/auth/register.blade.php
+index b5fd0d7..0945e78 100644
+--- a/resources/views/auth/register.blade.php
++++ b/resources/views/auth/register.blade.php
+@@ -33,11 +33,7 @@
+             @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
+         </label>
+ 
+-        <label for="alamat">
+-            Alamat
+-            <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ old('alamat') }}" maxlength="255" required>
+-            @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-        </label>
++        @include('partials.alamat-fields')
+ 
+         <label for="password" style="position:relative">
+             Kata sandi (min. 8, huruf dan angka)
+diff --git a/resources/views/nasabah/profile/show.blade.php b/resources/views/nasabah/profile/show.blade.php
+index 27cebfa..3b50134 100644
+--- a/resources/views/nasabah/profile/show.blade.php
++++ b/resources/views/nasabah/profile/show.blade.php
+@@ -32,9 +32,9 @@
+     </label>
+ 
+     <label for="alamat">
+-        Alamat Domisili
+-        <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ old('alamat', $nasabah->alamat) }}" maxlength="255" required>
+-        @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
++        Alamat Domisili ({{ $nasabah->kategori === 'umum' ? 'Umum' : 'Warga Taman Gading' }})
++        <input id="alamat" type="text" value="{{ $nasabah->alamat }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
++        <small style="color:var(--mu);margin-top:2px;display:block">Alamat dan status domisili diverifikasi pengurus. Untuk pindah alamat, hubungi pengurus.</small>
+     </label>
+ 
+     <button class="btn" type="submit">Simpan Kontak</button>
+diff --git a/resources/views/partials/alamat-fields.blade.php b/resources/views/partials/alamat-fields.blade.php
+new file mode 100644
+index 0000000..3e1ea9e
+--- /dev/null
++++ b/resources/views/partials/alamat-fields.blade.php
+@@ -0,0 +1,61 @@
++{{-- Isian alamat nasabah (BR-19). Variabel opsional: $nasabah (untuk nilai awal pada form ubah). --}}
++@php
++    $nsb = $nasabah ?? null;
++    $kat = old('kategori', $nsb->kategori ?? 'warga');
++    $blokV = old('blok', $nsb->blok ?? '');
++    $noV = old('nomor_rumah', $nsb->nomor_rumah ?? '');
++    $alamatV = old('alamat', ($nsb && $nsb->kategori === 'umum') ? $nsb->alamat : '');
++@endphp
++<fieldset class="alamat-grup" style="border:0;padding:0;margin:0 0 14px">
++    <legend style="padding:0;margin-bottom:6px;font-weight:700">Status domisili</legend>
++    <label style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
++        <input type="radio" name="kategori" value="warga" style="width:auto;margin:0" {{ $kat === 'warga' ? 'checked' : '' }}>
++        <span>Warga Perumahan Taman Gading</span>
++    </label>
++    <label style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
++        <input type="radio" name="kategori" value="umum" style="width:auto;margin:0" {{ $kat === 'umum' ? 'checked' : '' }}>
++        <span>Umum (bukan warga Taman Gading)</span>
++    </label>
++    @error('kategori')<span class="err" style="display:block">{{ $message }}</span>@enderror
++
++    <div data-grup="warga" style="margin-top:8px">
++        <div style="display:flex;gap:12px">
++            <label for="blok" style="flex:1">
++                Blok
++                <input id="blok" name="blok" type="text" value="{{ $blokV }}" maxlength="10" placeholder="Contoh: B" autocomplete="off">
++                @error('blok')<span class="err" style="display:block">{{ $message }}</span>@enderror
++            </label>
++            <label for="nomor_rumah" style="flex:1">
++                Nomor rumah
++                <input id="nomor_rumah" name="nomor_rumah" type="text" value="{{ $noV }}" maxlength="10" placeholder="Contoh: 12" autocomplete="off">
++                @error('nomor_rumah')<span class="err" style="display:block">{{ $message }}</span>@enderror
++            </label>
++        </div>
++        <small style="color:var(--mu);display:block;margin-top:2px">Pengurus akan mencocokkan blok dan nomor rumah saat verifikasi.</small>
++    </div>
++
++    <div data-grup="umum" style="margin-top:8px">
++        <label for="alamat">
++            Alamat lengkap
++            <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ $alamatV }}" maxlength="255">
++            @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
++        </label>
++        <small style="color:var(--mu);display:block;margin-top:2px">Pendaftar umum disetujui pengurus satu per satu.</small>
++    </div>
++</fieldset>
++<script>
++(function () {
++    var f = document.currentScript.closest('form');
++    if (!f) return;
++    function pasang() {
++        var k = (f.querySelector('input[name="kategori"]:checked') || {}).value || 'warga';
++        f.querySelectorAll('[data-grup]').forEach(function (g) {
++            var on = g.getAttribute('data-grup') === k;
++            g.hidden = !on;
++            g.querySelectorAll('input').forEach(function (i) { i.disabled = !on; });
++        });
++    }
++    f.querySelectorAll('input[name="kategori"]').forEach(function (r) { r.addEventListener('change', pasang); });
++    pasang();
++})();
++</script>
+diff --git a/tests/Feature/KategoriAlamatNasabahTest.php b/tests/Feature/KategoriAlamatNasabahTest.php
+new file mode 100644
+index 0000000..050dea8
+--- /dev/null
++++ b/tests/Feature/KategoriAlamatNasabahTest.php
+@@ -0,0 +1,65 @@
++<?php
++
++namespace Tests\Feature;
++
++use App\Models\Nasabah;
++use App\Models\User;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Tests\TestCase;
++
++class KategoriAlamatNasabahTest extends TestCase
++{
++    use RefreshDatabase;
++
++    private function data(array $o = []): array
++    {
++        return array_merge([
++            'name' => 'Siti Aminah', 'email' => 'siti@example.test', 'telepon' => '081234567890',
++            'password' => 'Password123', 'password_confirmation' => 'Password123', 'persetujuan_privasi' => '1',
++        ], $o);
++    }
++
++    public function test_warga_daftar_dengan_blok_dan_nomor_rumah(): void
++    {
++        $this->post('/register', $this->data(['kategori' => 'warga', 'blok' => 'b', 'nomor_rumah' => '12']))->assertRedirect();
++        $n = Nasabah::firstOrFail();
++        $this->assertSame('warga', $n->kategori);
++        $this->assertSame('B', $n->blok);
++        $this->assertSame('Blok B No. 12, Perumahan Taman Gading', $n->alamat);
++    }
++
++    public function test_warga_tanpa_blok_ditolak(): void
++    {
++        $this->post('/register', $this->data(['kategori' => 'warga']))->assertSessionHasErrors(['blok', 'nomor_rumah']);
++        $this->assertSame(0, Nasabah::count());
++    }
++
++    public function test_umum_daftar_dengan_alamat_bebas(): void
++    {
++        $this->post('/register', $this->data(['kategori' => 'umum', 'alamat' => 'Jl. Mawar 5, Sumbersari']))->assertRedirect();
++        $n = Nasabah::firstOrFail();
++        $this->assertSame('umum', $n->kategori);
++        $this->assertNull($n->blok);
++        $this->assertSame('Jl. Mawar 5, Sumbersari', $n->alamat);
++        $this->assertSame('menunggu', $n->user->status);
++    }
++
++    public function test_umum_tanpa_alamat_ditolak(): void
++    {
++        $this->post('/register', $this->data(['kategori' => 'umum']))->assertSessionHasErrors('alamat');
++    }
++
++    public function test_nasabah_tidak_bisa_mengubah_alamat_lewat_profil(): void
++    {
++        $this->post('/register', $this->data(['kategori' => 'warga', 'blok' => 'A', 'nomor_rumah' => '1']));
++        $u = User::where('email', 'siti@example.test')->firstOrFail();
++        $u->forceFill(['status' => 'aktif'])->save();
++        $this->actingAs($u)->put(route('nasabah.profile.update'), [
++            'telepon' => '081111111111', 'alamat' => 'Jl. Luar 99', 'kategori' => 'umum',
++        ])->assertSessionHasNoErrors();
++        $n = $u->nasabah->fresh();
++        $this->assertSame('081111111111', $n->telepon);
++        $this->assertSame('Blok A No. 1, Perumahan Taman Gading', $n->alamat);
++        $this->assertSame('warga', $n->kategori);
++    }
++}

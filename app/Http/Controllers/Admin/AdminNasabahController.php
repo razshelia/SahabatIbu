@@ -7,6 +7,7 @@ use App\Models\Nasabah;
 use App\Models\User;
 use App\Services\LogAktivitasService;
 use App\Services\PendaftaranService;
+use App\Support\AlamatNasabah;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -103,9 +104,10 @@ class AdminNasabahController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
-            'alamat' => ['required', 'string', 'max:255'],
+            ...AlamatNasabah::rules(),
             'password' => ['required', 'string', 'min:8', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
         ], [
+            ...AlamatNasabah::pesan(),
             'telepon.regex' => 'Nomor telepon hanya boleh memuat angka dan tanda +.',
             'password.regex' => 'Kata sandi harus minimal 8 karakter dan memuat huruf serta angka.',
         ]);
@@ -134,20 +136,26 @@ class AdminNasabahController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
-            'alamat' => ['required', 'string', 'max:255'],
-        ]);
+            ...AlamatNasabah::rules(),
+        ], AlamatNasabah::pesan());
+
+        $alamatLama = $nasabah->only(['kategori', 'blok', 'nomor_rumah', 'alamat']);
+        $alamatBaru = AlamatNasabah::normalisasi($validated);
 
         $nasabah->user->update(['name' => $validated['name']]);
-        $nasabah->update([
-            'telepon' => $validated['telepon'],
-            'alamat' => $validated['alamat'],
-        ]);
+        $nasabah->update(['telepon' => $validated['telepon'], ...$alamatBaru]);
 
         LogAktivitasService::catat(
             aksi: 'admin_ubah_nasabah',
             objekTipe: 'Nasabah',
             objekId: $nasabah->id,
-            keterangan: ['nomor_nasabah' => $nasabah->nomor_nasabah],
+            // Teks alamat tidak ditulis ke log agar tidak tersisa setelah anonimisasi (BR-18).
+            keterangan: [
+                'nomor_nasabah' => $nasabah->nomor_nasabah,
+                'kategori_lama' => $alamatLama['kategori'],
+                'kategori_baru' => $alamatBaru['kategori'],
+                'alamat_berubah' => $alamatLama['alamat'] !== $alamatBaru['alamat'],
+            ],
             user: Auth::user()
         );
 

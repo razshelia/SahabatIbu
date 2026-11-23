@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Services\PendaftaranService;
+use App\Support\AlamatNasabah;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,10 +48,11 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
-            'alamat' => ['required', 'string', 'max:255'],
+            ...AlamatNasabah::rules(),
             'password' => ['required', 'string', 'min:8', 'confirmed', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
             'persetujuan_privasi' => ['accepted'],
         ], [
+            ...AlamatNasabah::pesan(),
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.unique' => 'Email ini sudah terdaftar.',
             'telepon.regex' => 'Format nomor telepon hanya boleh berisi angka dan tanda +.',

@@ -6,7 +6,7 @@
 <p class="lead">Atur pembaruan harga per kg yang berlaku harian (BR-03, BR-04).</p>
 
 <h2>Atur harga baru</h2>
-<form class="f frow" method="POST" action="{{ route('admin.katalog.store-harga') }}" style="margin-bottom:24px">
+<form class="f frow" method="POST" action="{{ route('admin.katalog.harga.store') }}" style="margin-bottom:24px">
     @csrf
     <label>
         Jenis Sampah
@@ -16,10 +16,7 @@
             @endforeach
         </select>
     </label>
-    <label>
-        Harga/kg (Rp)
-        <input name="harga_per_kg" type="number" min="1" step="100" required placeholder="Contoh: 3000">
-    </label>
+    @include('partials.rupiah-input', ['id' => 'harga_per_kg', 'name' => 'harga_per_kg', 'label' => 'Harga/kg (Rp)', 'step' => 500, 'placeholder' => 'Contoh: 3000'])
     <label>
         Berlaku Mulai
         <input name="berlaku_mulai" type="date" required value="{{ date('Y-m-d') }}">
@@ -58,7 +55,7 @@
                         </span>
                     </td>
                     <td>
-                        <form method="POST" action="{{ route('admin.katalog.update-jenis', $j) }}" style="display:inline">
+                        <form method="POST" action="{{ route('admin.katalog.jenis.update', $j) }}" style="display:inline">
                             @csrf
                             @method('PUT')
                             <input type="hidden" name="nama" value="{{ $j->nama }}">

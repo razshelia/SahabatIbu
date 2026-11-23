@@ -32,9 +32,9 @@
     </label>
 
     <label for="alamat">
-        Alamat Domisili
-        <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ old('alamat', $nasabah->alamat) }}" maxlength="255" required>
-        @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
+        Alamat Domisili ({{ $nasabah->kategori === 'umum' ? 'Umum' : 'Warga Taman Gading' }})
+        <input id="alamat" type="text" value="{{ $nasabah->alamat }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
+        <small style="color:var(--mu);margin-top:2px;display:block">Alamat dan status domisili diverifikasi pengurus. Untuk pindah alamat, hubungi pengurus.</small>
     </label>
 
     <button class="btn" type="submit">Simpan Kontak</button>

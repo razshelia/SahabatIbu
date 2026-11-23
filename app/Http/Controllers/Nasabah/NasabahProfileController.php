@@ -23,13 +23,12 @@ class NasabahProfileController extends Controller
     }
 
     /**
-     * Perbarui data kontak nasabah (F-11).
+     * Perbarui data kontak nasabah (F-11). Alamat dan kategori hanya dapat diubah Admin (BR-19).
      */
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'telepon' => ['required', 'string', 'max:20', 'regex:/^[0-9+]+$/'],
-            'alamat' => ['required', 'string', 'max:255'],
         ], [
             'telepon.regex' => 'Nomor telepon hanya boleh memuat angka dan tanda +.',
         ]);

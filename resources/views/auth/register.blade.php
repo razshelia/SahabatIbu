@@ -33,11 +33,7 @@
             @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
         </label>
 
-        <label for="alamat">
-            Alamat
-            <input id="alamat" name="alamat" type="text" autocomplete="street-address" value="{{ old('alamat') }}" maxlength="255" required>
-            @error('alamat')<span class="err" style="display:block">{{ $message }}</span>@enderror
-        </label>
+        @include('partials.alamat-fields')
 
         <label for="password" style="position:relative">
             Kata sandi (min. 8, huruf dan angka)

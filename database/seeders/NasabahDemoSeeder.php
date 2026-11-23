@@ -37,7 +37,10 @@ class NasabahDemoSeeder extends Seeder
                 'user_id'       => $user->id,
                 'nomor_nasabah' => sprintf('NSB-%04d', $i + 1),
                 'telepon'       => '0812000000' . ($i + 1),
-                'alamat'        => 'Perumahan Taman Gading, Jember',
+                'kategori'      => 'warga',
+                'blok'          => chr(65 + $i % 5),
+                'nomor_rumah'   => (string) (10 + $i),
+                'alamat'        => 'Blok ' . chr(65 + $i % 5) . ' No. ' . (10 + $i) . ', Perumahan Taman Gading',
             ]);
         }
     }
