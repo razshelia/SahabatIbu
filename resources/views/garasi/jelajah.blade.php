@@ -81,12 +81,23 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;background:radi
 <button class="fold" onclick="this.parentNode.classList.toggle('min')" aria-label="Ciutkan atau perluas tombol alat">▾</button></div>
 <div id="pad" class="g" role="group" aria-label="Kendali jalan dan zoom"><div id="joy" role="application" aria-label="Joystick: geser ke segala arah untuk berjalan"><i class="a u">&#9650;</i><i class="a d">&#9660;</i><i class="a l">&#9664;</i><i class="a r">&#9654;</i><div id="knob"></div></div><div class="zm"><button data-h="zi" aria-label="Zoom masuk"><b>+</b></button><button data-h="zo" aria-label="Zoom keluar"><b>&minus;</b></button></div></div>
 <div id="hint">Garasi masih tertutup. Ketuk pintu atau panel di sampingnya untuk membuka.</div><div id="note" role="status" aria-live="polite"></div>
+@php
+    $curUser = auth()->user();
+    $nasabah = $curUser?->nasabah;
+    $namaNasabah = $nasabah ? $curUser->name : ($curUser?->role === 'admin' ? 'Ibu Ani (Demo)' : ($curUser?->name ?? 'Ani'));
+    $nomorNasabah = $nasabah?->nomor_nasabah ?? 'NSB-0842';
+    $saldoAwal = ($nasabah && (float)$nasabah->saldo_tersedia >= 10000) 
+        ? (float)$nasabah->saldo_tersedia 
+        : 50000;
+@endphp
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+const USER_NAME = @js($namaNasabah);
+const USER_NO = @js($nomorNasabah);
 const rp=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
 const fmt=k=>k.toFixed(2).replace('.',',');
 const J={Plastik:{h:3000,c:0x6fb4e6,d:'Botol PET bersih, tanpa tutup dan label.'},Kertas:{h:2000,c:0xd9b27a,d:'Kertas dan kardus kering, diikat per tumpuk.'},Logam:{h:5000,c:0xaab3bb,d:'Kaleng dan besi, sisa isi dibersihkan.'}};
-const S={stok:{Plastik:1.5,Kertas:1,Logam:.5},dompet:0,sync:0,bs:0,bt:0,saldo:0,tahan:0,riw:[],cart:[],tarik:[],n:1,tn:1,sel:'Plastik',kg:1,nom:0,busy:false,f:'all',m:{}};
+const S={stok:{Plastik:2.5,Kertas:2,Logam:1},dompet:0,sync:0,bs:{{ $saldoAwal }},bt:0,saldo:{{ $saldoAwal }},tahan:0,riw:[],cart:[],tarik:[],n:1,tn:1,sel:'Plastik',kg:1,nom:{{ $saldoAwal >= 10000 ? 10000 : 0 }},busy:false,f:'all',m:{}};
 const avail=()=>S.saldo-S.tahan;
 const $=id=>document.getElementById(id);
 
@@ -162,7 +173,7 @@ box(2.7,.35,2.2,cream,0,.18,0,tm);cyl(.9,.12,M(0xb4bcc4,.3,.8),0,.46,.1,tm,40);
 box(2.2,2.3,.5,cream,0,1.45,-.8,tm);const tmS=screen(1.9,1.55,0,1.5,-.54,tm);
 screen(2.5,.28,0,.2,1.12,tm).paint((g,W,H)=>{bg(g,W,H,'#f1ead8');tx(g,'TIMBANGAN CATAT SETORAN',W/2,H*.72,40,'#26332d','center')});
 tag(tm,'timbang');let wShow=0;
-tmS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Transaksi baru',24,42,24,'#9fd9b8','left','600');tx(g,'NSB-0842 / Ani',W-24,42,24,'#fff','right');if(S.m.tm)tx(g,S.m.tm,24,76,19,'#f3c64f','left','600');tx(g,fmt(wShow)+' kg',24,146,62);
+tmS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Transaksi baru',24,42,24,'#9fd9b8','left','600');tx(g,USER_NO+' / '+USER_NAME,W-24,42,24,'#fff','right');if(S.m.tm)tx(g,S.m.tm,24,76,19,'#f3c64f','left','600');tx(g,fmt(wShow)+' kg',24,146,62);
  {const L=S.cart,rh=34,vt=170,vb=H-120,vh=vb-vt,ov=L.length*rh>vh,mx=Math.max(0,L.length*rh-vh);S.tmMax=mx;S.tmOff=Math.max(0,Math.min(mx,S.tmOff||0));const xr=ov?W-100:W-24;
   if(L.length)tx(g,L.length+' baris',W-24,146,22,'#9fd9b8','right','600');
   if(!L.length){tx(g,'Keranjang kosong.',24,206,24,'#9fd9b8','left','700');tx(g,'Pilih sampah di rak katalog.',24,238,22,'#9fd9b8','left','600')}
@@ -179,7 +190,7 @@ const prS=screen(1.5,.5,0,.4,.66,pr);
 const paper=screen(1.1,1.5,0,.9,.2,pr);paper.scale.y=.01;paper.rotation.x=-.25;
 tag(pr,'struk');let lastR=null,paperOut=false;
 prS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,lastR?lastR.k+' · '+rp(lastR.v):'Belum ada struk',20,52,30,'#fff');B(20,H-86,230,62,'Cetak ulang',lastR&&!S.busy?()=>printRcpt(lastR):null,'y');tx(g,paperOut?'Ketuk struk: sobek!':lastR?'Saldo '+rp(lastR.s):'Catat setoran dulu',W-20,H-44,24,paperOut?'#f3c64f':'#9fd9b8','right','800')});
-function rcptDraw(r){paper.paint((g,W,H)=>{g.fillStyle='#fff';g.fillRect(0,0,W,H);const L=r?[['BANK SAMPAH SAHABAT IBU','c'],[r.k+' · '+r.t,'c'],['-'],...r.rows,['-'],['TOTAL',rp(r.v)],['Saldo '+rp(r.s)],['Terima kasih, Ani','c']]:[['Belum ada struk','c']];L.forEach((l,i)=>{const y=60+i*44;if(l[0]=='-'){g.fillStyle='#999';g.fillRect(20,y-14,W-40,2)}else if(l[1]=='c')tx(g,l[0],W/2,y,26,'#222','center');else{tx(g,l[0],26,y,25,'#222','left','600');if(l[1])tx(g,l[1],W-26,y,25,'#222','right')}})})}
+function rcptDraw(r){paper.paint((g,W,H)=>{g.fillStyle='#fff';g.fillRect(0,0,W,H);const L=r?[['BANK SAMPAH SAHABAT IBU','c'],[r.k+' · '+r.t,'c'],['-'],...r.rows,['-'],['TOTAL',rp(r.v)],['Saldo '+rp(r.s)],['Terima kasih, '+USER_NAME,'c']]:[['Belum ada struk','c']];L.forEach((l,i)=>{const y=60+i*44;if(l[0]=='-'){g.fillStyle='#999';g.fillRect(20,y-14,W-40,2)}else if(l[1]=='c')tx(g,l[0],W/2,y,26,'#222','center');else{tx(g,l[0],26,y,25,'#222','left','600');if(l[1])tx(g,l[1],W-26,y,25,'#222','right')}})})}
 
 // 4 BUKU RIWAYAT (meja baca di kiri, terbuka dari depan)
 const bk=new THREE.Group();bk.position.set(5,0,0);row.add(bk);
@@ -193,7 +204,7 @@ tag(bk,'riwayat');
 let wr=null;
 const nNew=()=>S.riw.length-S.sync;
 const flt=()=>S.riw.slice(S.riw.length-(wr?S.riw.length:S.sync)).filter(r=>S.f=='all'||(S.f=='set'&&r.v>0)||(S.f=='tar'&&r.v<0));
-bL.paint((g,W,H,B)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,H);tx(g,'BUKU TABUNGAN',W/2,60,36,'#3a2f1e','center');tx(g,'Ani · NSB-0842',W/2,96,24,'#6b5a3d','center','600');
+bL.paint((g,W,H,B)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,H);tx(g,'BUKU TABUNGAN',W/2,60,36,'#3a2f1e','center');tx(g,USER_NAME+' · '+USER_NO,W/2,96,24,'#6b5a3d','center','600');
  tx(g,'Saldo tercatat',40,150,24,'#6b5a3d','left','600');tx(g,rp(S.bs-S.bt),40,206,50,'#1f6b46');tx(g,'Ditahan '+rp(S.bt),40,246,24,'#a0701a','left','600');tx(g,flt().length+' catatan ditampilkan',40,284,22,'#6b5a3d','left','600');
  [['all','Semua'],['set','Setoran'],['tar','Tarikan']].forEach((f,i)=>B(40,312+i*62,432,52,f[1],()=>{if(!S.wrt){S.f=f[0];redraw()}},S.f==f[0]?'pon':'p'));
  B(40,530,432,96,nNew()>0?'Perbarui ('+nNew()+' baru)':'Perbarui buku',S.wrt?null:writeBook,'g');
@@ -280,7 +291,30 @@ tag(cp,'capit');
 cpS.paint((g,W,H,B)=>{bg(g,W,H,'#1b2a22');const ph=Math.floor(performance.now()/350)%2;
  for(let i=0;i<20;i++){const x=20+i*(W-40)/19;g.fillStyle=(i+ph)%2?'#f3c64f':'#ff8a7a';g.beginPath();g.arc(x,12,6,0,7);g.fill();g.beginPath();g.arc(x,H-12,6,0,7);g.fill()}
  tx(g,'AMBIL UANG',24,66,46,'#f3c64f','left','900');tx(g,'Saldo '+rp(avail()),W-24,66,34,'#8ef0be','right','800');
- B(24,86,130,104,'−',()=>{S.nom=Math.max(0,S.nom-10000);redraw()});tx(g,rp(S.nom),W/2,160,62,'#fff','center','900');B(W-154,86,130,104,'+',()=>{S.nom=Math.min(Math.floor(avail()/10000)*10000,S.nom+10000);redraw()});
+ B(24,86,130,104,'−',()=>{
+  if(S.nom>10000){
+   S.nom-=10000;
+  }else{
+   S.nom=0;
+  }
+  redraw();
+ });
+ tx(g,rp(S.nom),W/2,160,62,'#fff','center','900');
+ B(W-154,86,130,104,'+',()=>{
+  const maxNom=Math.floor(avail()/10000)*10000;
+  if(avail()<10000){
+   S.m.cp='Saldo belum cukup (minimal Rp 10.000). Setor sampah dulu, Bu.';
+   note('Saldo belum cukup untuk penarikan (minimal Rp 10.000). Setor sampah di Timbangan dulu!');
+   redraw();
+   return;
+  }
+  if(S.nom+10000>maxNom){
+   note('Nominal sudah mencapai batas saldo tersedia ('+rp(maxNom)+').');
+   return;
+  }
+  S.nom+=10000;
+  redraw();
+ });
  B(24,206,W-48,112,'TARIK UANG',S.busy?null:doCapit,'r');
  tx(g,S.m.cp||(avail()<10000?'Saldo belum cukup. Setor sampah dulu, Bu.':'Admin setuju = capit berhasil. Ditolak = capit gagal.'),W/2,364,26,avail()<10000&&!S.m.cp?'#ff8a7a':'#cfe9da','center','800')});
 bS.paint((g,W,H,B)=>{bg(g,W,H,'#12201a');g.fillStyle='#f3c64f';g.fillRect(0,0,W,84);tx(g,'PENGAJUAN TARIK',W/2,58,40,'#2b1f00','center','900');
