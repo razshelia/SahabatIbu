@@ -73,6 +73,7 @@ class GarasiData
         }
 
         return match (true) {
+            $rute === 'nasabah.dashboard'                => 'scan',
             str_starts_with($rute, 'nasabah.setoran.')   => 'riwayat',
             str_starts_with($rute, 'nasabah.penarikan.') => 'capit',
             str_starts_with($rute, 'nasabah.katalog.')   => 'rak',

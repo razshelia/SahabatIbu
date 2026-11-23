@@ -5,30 +5,32 @@
 <h1>Halo, <em>{{ $user->name }}</em></h1>
 <p class="lead">Nomor Nasabah: <b>{{ $nasabah->nomor_nasabah }}</b></p>
 
-<div class="kpi">
-    <div class="g">
+<x-alat tool="scan" plat="Cek Saldo">
+    <x-slot:layar>
         <small>Uang bisa diambil</small>
-        <b>Rp {{ number_format($nasabah->saldo_tersedia, 0, ',', '.') }}</b>
-    </div>
-    <div class="g">
-        <small>Sedang ditahan</small>
-        <b>Rp {{ number_format($nasabah->saldo_ditahan, 0, ',', '.') }}</b>
-    </div>
-    <div class="g">
-        <small>Total sampah</small>
-        <b>{{ number_format($totalBeratSetoran, 2, ',', '.') }} kg</b>
-    </div>
-    <div class="g">
-        <small>Total setoran</small>
-        <b>Rp {{ number_format($totalNilaiSetoran, 0, ',', '.') }}</b>
-    </div>
-</div>
+        <b class="angka">Rp {{ number_format($nasabah->saldo_tersedia, 0, ',', '.') }}</b>
+        <div class="kisi" style="margin-top:14px">
+            <div>
+                <small>Sedang ditahan</small>
+                <b class="angka kecil kuning">Rp {{ number_format($nasabah->saldo_ditahan, 0, ',', '.') }}</b>
+            </div>
+            <div>
+                <small>Total sampah</small>
+                <b class="angka kecil">{{ number_format($totalBeratSetoran, 2, ',', '.') }} kg</b>
+            </div>
+            <div>
+                <small>Total setoran</small>
+                <b class="angka kecil">Rp {{ number_format($totalNilaiSetoran, 0, ',', '.') }}</b>
+            </div>
+        </div>
+    </x-slot:layar>
 
-<div class="row" style="margin-bottom:24px;gap:8px">
-    <a href="{{ route('nasabah.penarikan.index') }}" class="btn sm" style="text-decoration:none">Ajukan Penarikan Uang</a>
-    <a href="{{ route('nasabah.setoran.index') }}" class="btn o sm" style="text-decoration:none">Riwayat Setoran Lengkap</a>
-    <a href="{{ route('nasabah.katalog.index') }}" class="btn o sm" style="text-decoration:none">Lihat Harga Hari Ini</a>
-</div>
+    <div class="deret">
+        <a href="{{ route('nasabah.penarikan.index') }}" class="key r besar">Ambil uang</a>
+        <a href="{{ route('nasabah.setoran.index') }}" class="key p">Riwayat setoran</a>
+        <a href="{{ route('nasabah.katalog.index') }}" class="key p">Harga hari ini</a>
+    </div>
+</x-alat>
 
 <h2>Setoran terbaru</h2>
 <div class="tbl">

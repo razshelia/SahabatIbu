@@ -5,24 +5,76 @@
 <h1>Harga sampah <em>harian</em></h1>
 <p class="lead">Atur pembaruan harga per kg yang berlaku harian (BR-03, BR-04).</p>
 
-<h2>Atur harga baru</h2>
-<form class="f frow" method="POST" action="{{ route('admin.katalog.harga.store') }}" style="margin-bottom:24px">
+<form method="POST" action="{{ route('admin.katalog.harga.store') }}" id="form-harga">
     @csrf
-    <label>
-        Jenis Sampah
-        <select name="jenis_sampah_id" required>
-            @foreach($jenisList as $j)
-                <option value="{{ $j->id }}">{{ $j->nama }} ({{ $j->satuan }})</option>
-            @endforeach
-        </select>
-    </label>
-    @include('partials.rupiah-input', ['id' => 'harga_per_kg', 'name' => 'harga_per_kg', 'label' => 'Harga/kg (Rp)', 'step' => 500, 'placeholder' => 'Contoh: 3000'])
-    <label>
-        Berlaku Mulai
-        <input name="berlaku_mulai" type="date" required value="{{ date('Y-m-d') }}">
-    </label>
-    <button class="btn sm" type="submit">Simpan Harga</button>
+    <x-alat tool="rak" plat="Katalog Harga">
+        <x-slot:layar>
+            <small id="lcd-jenis">Harga sekarang</small>
+            <b class="angka" id="lcd-lama">-</b>
+            <p class="baca">Harga baru: <b id="lcd-baru">belum diisi</b> <span id="lcd-selisih"></span></p>
+        </x-slot:layar>
+
+        <label for="jenis_sampah_id">
+            Jenis sampah
+            <select id="jenis_sampah_id" name="jenis_sampah_id" required>
+                @foreach($jenisList as $j)
+                    <option value="{{ $j->id }}" data-nama="{{ $j->nama }}" data-satuan="{{ $j->satuan }}" data-sekarang="{{ (int) ($j->harga_berlaku->harga_per_kg ?? 0) }}">{{ $j->nama }} ({{ $j->satuan }})</option>
+                @endforeach
+            </select>
+        </label>
+
+        @include('partials.rupiah-input', ['id' => 'harga_per_kg', 'name' => 'harga_per_kg', 'label' => 'Harga baru per kg', 'step' => 500, 'placeholder' => '0'])
+
+        <label for="berlaku_mulai">
+            Berlaku mulai
+            <input id="berlaku_mulai" name="berlaku_mulai" type="date" required value="{{ date('Y-m-d') }}">
+        </label>
+
+        <div class="deret">
+            <button class="key g besar" type="submit">Simpan harga</button>
+        </div>
+
+        <x-slot:nampan>
+            <p>Harga baru berlaku untuk setoran yang ditimbang mulai tanggal di atas. Setoran lama tidak berubah.</p>
+        </x-slot:nampan>
+    </x-alat>
 </form>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const pilih = document.getElementById('jenis_sampah_id');
+        const lcdJenis = document.getElementById('lcd-jenis');
+        const lcdLama = document.getElementById('lcd-lama');
+        const lcdBaru = document.getElementById('lcd-baru');
+        const lcdSel = document.getElementById('lcd-selisih');
+        const inp = document.getElementById('harga_per_kg');
+        const rp = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+
+        function segarkan() {
+            const o = pilih.selectedOptions[0];
+            if (!o) { return; }
+            const lama = parseInt(o.dataset.sekarang || '0', 10) || 0;
+            const baru = parseInt(inp.value || '0', 10) || 0;
+            const sat = o.dataset.satuan || 'kg';
+            lcdJenis.textContent = 'Harga sekarang · ' + o.dataset.nama;
+            lcdLama.textContent = lama > 0 ? rp(lama) + '/' + sat : 'Belum diatur';
+            lcdBaru.textContent = baru > 0 ? rp(baru) + '/' + sat : 'belum diisi';
+            lcdSel.className = '';
+            lcdSel.textContent = '';
+            if (baru > 0 && lama > 0 && baru !== lama) {
+                lcdSel.textContent = (baru > lama ? '▲ naik ' : '▼ turun ') + rp(Math.abs(baru - lama));
+                lcdSel.className = baru > lama ? 'ok' : 'merah';
+            }
+            if (window.ALAT) { window.ALAT.set('rak', { n: o.dataset.nama, h: baru }); }
+        }
+
+        pilih.addEventListener('change', segarkan);
+        document.getElementById('form-harga').addEventListener('rupiah', segarkan);
+        segarkan();
+    });
+</script>
+@endpush
 
 <h2>Harga yang berlaku saat ini</h2>
 <div class="tbl">

@@ -22,14 +22,16 @@ if(!G){
  const tf=(g,s,x,y,sz,col,a,wt,mw)=>{s=String(s==null?'':s);wt=wt||'800';while(sz>14){g.font=wt+' '+sz+'px Trebuchet MS';if(g.measureText(s).width<=mw)break;sz-=2}tx(g,s,x,y,sz,col,a,wt)};
  const foot=(g,W,H,s,c='#9fd9b8')=>tx(g,s,W/2,H-14,20,c,'center','700');
  const kg=v=>fmt(v)+' kg';
+ const DR={};// draf dari isian form di halaman (lihat sinkron.js)
  const arrow=(g,x,y,up)=>{g.fillStyle=up?'#6fe0a2':'#ff8a7a';g.beginPath();up?(g.moveTo(x,y-14),g.lineTo(x+13,y+6),g.lineTo(x-13,y+6)):(g.moveTo(x,y+6),g.lineTo(x+13,y-14),g.lineTo(x-13,y-14));g.closePath();g.fill()};
 
  // ---------- isi layar tiap alat ----------
  const harga=(g,W,Hh)=>{bg(g,W,Hh);tx(g,'Harga hari ini',20,36,26,'#9fd9b8','left','700');tx(g,'per kg',W-20,36,22,'#9fd9b8','right','700');
   if(!H.length)tx(g,'Belum ada harga.',20,120,30,'#eef5f0','left','700');
   H.slice(0,6).forEach((j,i)=>{const y=82+i*56;g.fillStyle='#ffffff12';rr(g,12,y-34,W-24,48,14);g.fill();tf(g,j.n,24,y,30,'#fff','left','800',250);
-   tx(g,rp(j.h),W-52,y,30,'#8ef0be','right');if(j.p!=null&&j.p!==j.h)arrow(g,W-30,y-8,j.h>j.p)});
-  foot(g,W,Hh,'Ketuk untuk buka '+L.rak)};
+   const dj=DR.rak&&DR.rak.n===j.n&&DR.rak.h>0?DR.rak:null;tx(g,rp(dj?dj.h:j.h),W-52,y,30,dj?'#f3c64f':'#8ef0be','right');
+   if(dj){if(dj.h!==j.h)arrow(g,W-30,y-8,dj.h>j.h)}else if(j.p!=null&&j.p!==j.h)arrow(g,W-30,y-8,j.h>j.p)});
+  foot(g,W,Hh,DR.rak&&DR.rak.h>0?'Harga baru, belum disimpan':'Ketuk untuk buka '+L.rak)};
  kS.paint(harga);
 
  if(!ADM){
@@ -54,7 +56,7 @@ if(!G){
    l.slice(0,4).forEach((r,i)=>{const y=126+i*98;g.fillStyle='#d9cfb5';g.fillRect(40,y-26,W-80,3);tx(g,r.k+' · '+r.t,40,y+10,28,'#3a2f1e');tx(g,'+'+Math.round(r.v).toLocaleString('id-ID'),W-40,y+10,34,'#1f6b46','right');
     tf(g,r.rows.map(x=>x.j+' '+kg(x.kg)).join(', '),40,y+46,24,'#6b5a3d','left','700',W-80)});tx(g,'Halaman 1',W/2,Hh-18,22,'#9a8a68','center','700')});
   cpS.paint((g,W,Hh)=>{bg(g,W,Hh);tf(g,'Uang bisa diambil',24,48,26,'#9fd9b8','left','700',230);tf(g,rp(N.tersedia||0),24,122,60,'#8ef0be','left','800',230);
-   tf(g,N.tahan>0?'Ditahan '+rp(N.tahan):'Tidak ada yang ditahan',24,164,24,'#f3c64f','left','700',230);
+   tf(g,DR.capit>0?'Akan diajukan '+rp(DR.capit):(N.tahan>0?'Ditahan '+rp(N.tahan):'Tidak ada yang ditahan'),24,164,24,DR.capit>0?'#ffffff':'#f3c64f','left','700',230);
    tx(g,'Pengajuan terakhir',268,48,24,'#9fd9b8','left','700');if(!tr.length)tx(g,'Belum ada pengajuan',268,100,24,'#eef5f0','left','700');
    tr.slice(0,3).forEach((t,i)=>{const y=96+i*62,s=st(t.st);g.fillStyle='#ffffff10';rr(g,262,y-30,W-274,54,14);g.fill();tf(g,rp(t.v),274,y,28,'#fff','left','800',130);tx(g,s[0],W-26,y,24,s[1],'right','700')});
    foot(g,W,Hh,'Ketuk untuk buka '+L.capit)});
@@ -62,7 +64,9 @@ if(!G){
   const dpl=A.terbaru,ln=A.log||[],gr=A.grafik||[],aq=A.antrian||[];
   pmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Menunggu verifikasi',24,46,28,'#9fd9b8','left','700');tx(g,(A.pendaftar||0)+' orang',24,122,66,A.pendaftar>0?'#f3c64f':'#8ef0be');
    tx(g,'Aktif '+(A.aktif||0)+' · Nonaktif '+(A.nonaktif||0),24,168,26,'#eef5f0','left','700');foot(g,W,Hh,'Ketuk untuk buka '+L.scan)});
-  tmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Setoran hari ini',24,46,30,'#9fd9b8','left','700');tx(g,(A.hari_n||0)+' transaksi',24,132,66);
+  tmS.paint((g,W,Hh)=>{if(DR.timbang){bg(g,W,Hh);tx(g,'Sedang ditimbang',24,46,30,'#9fd9b8','left','700');tf(g,kg(DR.timbang.kg),24,142,78,'#fff','left','800',W-48);
+   tf(g,DR.timbang.nama||'Pilih nasabah dulu',24,190,26,'#f3c64f','left','700',W-48);tf(g,rp(DR.timbang.v),24,Hh-78,44,'#8ef0be','left','800',W-48);foot(g,W,Hh,'Belum disimpan');return}
+   bg(g,W,Hh);tx(g,'Setoran hari ini',24,46,30,'#9fd9b8','left','700');tx(g,(A.hari_n||0)+' transaksi',24,132,66);
    tx(g,kg(A.hari_kg||0)+' · '+rp(A.hari_rp||0),24,178,26,'#f3c64f','left','700');tx(g,'Bulan ini',24,238,26,'#9fd9b8','left','700');
    tx(g,(A.bulan_n||0)+' transaksi · '+kg(A.bulan_kg||0),24,276,26,'#eef5f0','left','700');tf(g,rp(A.bulan_rp||0),24,Hh-78,40,'#f3c64f','left','800',W-48);foot(g,W,Hh,'Ketuk untuk buka '+L.timbang)});
   prS.paint((g,W,Hh)=>{bg(g,W,Hh);tf(g,G.nama,20,52,34,'#fff','left','800',W-40);tx(g,'Admin · '+ln.length+' aktivitas terbaru',20,100,24,'#9fd9b8','left','700');foot(g,W,Hh,'Ketuk untuk buka '+L.struk)});
@@ -99,6 +103,7 @@ if(!G){
  const KEY='garasi_sig_'+G.role+'_'+G.uid,pulse={};let prev=null;
  try{prev=JSON.parse(localStorage.getItem(KEY)||'null');localStorage.setItem(KEY,JSON.stringify(G.sig))}catch(e){}
  const fresh={};
+ window.ALAT={set(k,v){DR[k]=v;const m={capit:cpS,timbang:tmS,rak:kS}[k];m&&m.render()},pulse(k){if(TOOL[k])pulse[k]=performance.now()}};
  if(prev&&G.sig){const d=(a,b)=>a!==b;
   if(d(prev.setoran,G.sig.setoran)){['timbang','struk','riwayat'].forEach(k=>fresh[k]=1)}
   if(d(prev.tarik,G.sig.tarik))fresh.capit=1;

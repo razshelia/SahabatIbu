@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex">
     <title>{{ $title ?? 'Portal Bank Sampah Sahabat Ibu' }}</title>
     <link rel="stylesheet" href="{{ asset('assets/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/alat.css') }}">
 </head>
 <body data-view="{{ $dataView ?? 'home' }}" data-role="{{ auth()->user()->role }}">
     @include('partials.icons')
@@ -130,6 +131,7 @@
     <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
     <script defer src="{{ asset('assets/js/aksi.js') }}"></script>
     <script defer src="{{ asset('assets/js/latar.js') }}"></script>
+    <script defer src="{{ asset('assets/js/sinkron.js') }}"></script>
     <button type="button" id="lihat" onclick="toggleLihat()" aria-pressed="false">Lihat ruangan penuh</button>
     <script>
         function toggleLihat() {

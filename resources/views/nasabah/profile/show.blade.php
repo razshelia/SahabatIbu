@@ -8,60 +8,80 @@
     <span class="pill ok" style="margin-left:8px">{{ ucfirst($user->status) }}</span>
 </p>
 
-<h2>Perbarui informasi kontak</h2>
-<form class="f" method="POST" action="{{ route('nasabah.profile.update') }}" style="max-width:540px" novalidate>
+<form method="POST" action="{{ route('nasabah.profile.update') }}" novalidate>
     @csrf
     @method('PUT')
+    <x-alat tool="struk" plat="Profil Saya">
+        <x-slot:layar>
+            <small>Nama</small>
+            <b class="angka kecil">{{ $user->name }}</b>
+            <div class="kisi" style="margin-top:12px">
+                <div>
+                    <small>Nomor nasabah</small>
+                    <b class="angka kecil kuning">{{ $nasabah->nomor_nasabah }}</b>
+                </div>
+                <div>
+                    <small>Telepon / WhatsApp</small>
+                    <b class="angka kecil kuning" data-ikut="telepon" data-kosong="-">{{ $nasabah->telepon }}</b>
+                </div>
+            </div>
+        </x-slot:layar>
 
-    <label for="name">
-        Nama
-        <input id="name" type="text" value="{{ $user->name }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
-        <small style="color:var(--mu);margin-top:2px;display:block">Perubahan nama silakan hubungi pengurus.</small>
-    </label>
+        <label for="name">
+            Nama
+            <input id="name" type="text" value="{{ $user->name }}" readonly disabled>
+            <small>Perubahan nama silakan hubungi pengurus.</small>
+        </label>
 
-    <label for="email">
-        Email
-        <input id="email" type="email" value="{{ $user->email }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
-        <small style="color:var(--mu);margin-top:2px;display:block">Email akun terikat dan dilindungi.</small>
-    </label>
+        <label for="email">
+            Email
+            <input id="email" type="email" value="{{ $user->email }}" readonly disabled>
+            <small>Email akun terikat dan dilindungi.</small>
+        </label>
 
-    <label for="telepon">
-        Telepon / WhatsApp
-        <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required autofocus>
-        @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
-    </label>
+        <label for="telepon">
+            Telepon / WhatsApp
+            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required autofocus>
+            @error('telepon')<span class="err">{{ $message }}</span>@enderror
+        </label>
 
-    <label for="alamat">
-        Alamat Domisili ({{ $nasabah->kategori === 'umum' ? 'Umum' : 'Warga Taman Gading' }})
-        <input id="alamat" type="text" value="{{ $nasabah->alamat }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
-        <small style="color:var(--mu);margin-top:2px;display:block">Alamat dan status domisili diverifikasi pengurus. Untuk pindah alamat, hubungi pengurus.</small>
-    </label>
+        <label for="alamat">
+            Alamat domisili ({{ $nasabah->kategori === 'umum' ? 'Umum' : 'Warga Taman Gading' }})
+            <input id="alamat" type="text" value="{{ $nasabah->alamat }}" readonly disabled>
+            <small>Alamat dan status domisili diverifikasi pengurus. Untuk pindah alamat, hubungi pengurus.</small>
+        </label>
 
-    <button class="btn" type="submit">Simpan Kontak</button>
+        <div class="deret">
+            <button class="key g besar" type="submit">Simpan kontak</button>
+        </div>
+    </x-alat>
 </form>
 
-<h2>Ganti kata sandi</h2>
-<form class="f" method="POST" action="{{ route('password.change.update') }}" style="max-width:540px;margin-top:16px" novalidate>
+<form method="POST" action="{{ route('password.change.update') }}" novalidate>
     @csrf
+    <x-alat tool="struk" plat="Ganti Kata Sandi">
+        <label for="current_password">
+            Kata sandi saat ini
+            <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
+            @error('current_password')<span class="err">{{ $message }}</span>@enderror
+        </label>
 
-    <label for="current_password">
-        Kata sandi saat ini
-        <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
-        @error('current_password')<span class="err" style="display:block">{{ $message }}</span>@enderror
-    </label>
+        <label for="password">
+            Kata sandi baru
+            <input id="password" name="password" type="password" autocomplete="new-password" required>
+            <small>Minimal 8 karakter, kombinasi huruf dan angka.</small>
+            @error('password')<span class="err">{{ $message }}</span>@enderror
+        </label>
 
-    <label for="password">
-        Kata sandi baru (min. 8 karakter, kombinasi huruf &amp; angka)
-        <input id="password" name="password" type="password" autocomplete="new-password" required>
-        @error('password')<span class="err" style="display:block">{{ $message }}</span>@enderror
-    </label>
+        <label for="password_confirmation">
+            Ulangi kata sandi baru
+            <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
+        </label>
 
-    <label for="password_confirmation">
-        Ulangi kata sandi baru
-        <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
-    </label>
-
-    <button class="btn" type="submit">Simpan Kata Sandi</button>
+        <div class="deret">
+            <button class="key g besar" type="submit">Simpan kata sandi</button>
+        </div>
+    </x-alat>
 </form>
 
 <p class="sub" style="margin-top:24px">

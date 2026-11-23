@@ -3,36 +3,54 @@
 @section('content')
 <small class="kick">Pendaftar &amp; nasabah</small>
 <h1>Ubah data <em>{{ $nasabah->user->name }}</em></h1>
-<p class="lead">{{ $nasabah->nomor_nasabah }} · Saldo dan riwayat transaksi tidak ikut berubah.</p>
+<p class="lead">Saldo dan riwayat transaksi tidak ikut berubah.</p>
 
-<form class="f" method="POST" action="{{ route('admin.nasabah.update', $nasabah) }}" style="max-width:560px" novalidate>
+<form method="POST" action="{{ route('admin.nasabah.update', $nasabah) }}" novalidate>
     @csrf
     @method('PUT')
 
-    <label for="name">
-        Nama lengkap
-        <input id="name" name="name" type="text" autocomplete="name" value="{{ old('name', $nasabah->user->name) }}" maxlength="100" required>
-        @error('name')<span class="err" style="display:block">{{ $message }}</span>@enderror
-    </label>
+    <x-alat tool="scan" plat="Kartu Nasabah">
+        <x-slot:layar>
+            <div class="baris">
+                <div>
+                    <small>Nomor nasabah</small>
+                    <b class="angka kecil">{{ $nasabah->nomor_nasabah }}</b>
+                </div>
+                <div class="kanan">
+                    <small>Domisili</small>
+                    <b class="angka kecil kuning" data-ikut="kategori" data-peta="warga=Warga|umum=Umum" data-kosong="-">-</b>
+                </div>
+            </div>
+            <small style="margin-top:12px">Nama</small>
+            <b class="angka kecil" data-ikut="name" data-kosong="Belum diisi">Belum diisi</b>
+            <p class="baca" data-ikut-alamat data-kosong="Alamat belum diisi">Alamat belum diisi</p>
+        </x-slot:layar>
 
-    <label for="email">
-        Email
-        <input id="email" type="email" value="{{ $nasabah->user->email }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
-        <small style="color:var(--mu);margin-top:2px;display:block">Email akun tidak dapat diubah sembarangan.</small>
-    </label>
+        <label for="name">
+            Nama lengkap
+            <input id="name" name="name" type="text" autocomplete="name" value="{{ old('name', $nasabah->user->name) }}" maxlength="100" required>
+            @error('name')<span class="err">{{ $message }}</span>@enderror
+        </label>
 
-    <label for="telepon">
-        Telepon
-        <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required>
-        @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
-    </label>
+        <label for="email">
+            Email
+            <input id="email" type="email" value="{{ $nasabah->user->email }}" readonly disabled>
+            <small>Email akun tidak dapat diubah sembarangan.</small>
+        </label>
 
-    @include('partials.alamat-fields', ['nasabah' => $nasabah])
+        <label for="telepon">
+            Telepon
+            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required>
+            @error('telepon')<span class="err">{{ $message }}</span>@enderror
+        </label>
 
-    <div class="row" style="margin-top:16px;gap:8px">
-        <button class="btn" type="submit">Simpan Perubahan</button>
-        <a href="{{ route('admin.nasabah.index') }}" class="btn o" style="text-decoration:none">Batal</a>
-    </div>
+        @include('partials.alamat-fields', ['nasabah' => $nasabah])
+
+        <div class="deret">
+            <button class="key g besar" type="submit">Simpan perubahan</button>
+            <a href="{{ route('admin.nasabah.index') }}" class="key p">Batal</a>
+        </div>
+    </x-alat>
 </form>
 
 <p class="sub" style="margin-top:24px"><a class="lk" href="{{ route('admin.nasabah.index') }}">&larr; Kembali ke daftar nasabah</a></p>

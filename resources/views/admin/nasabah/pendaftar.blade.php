@@ -5,10 +5,16 @@
 <h1>Verifikasi <em>pendaftar</em></h1>
 <p class="lead">Daftar calon nasabah baru yang menunggu verifikasi pengurus.</p>
 
-<div class="row" style="margin-bottom:20px">
-    <a href="{{ route('admin.nasabah.index') }}" class="btn o sm" style="text-decoration:none">&larr; Daftar Nasabah</a>
-    <a href="{{ route('admin.nasabah.create') }}" class="btn sm" style="text-decoration:none">+ Tambah Nasabah Langsung</a>
-</div>
+<x-alat tool="scan" plat="Verifikasi Pendaftar">
+    <x-slot:layar>
+        <small>Menunggu verifikasi</small>
+        <b class="angka {{ $pendaftarList->total() > 0 ? 'kuning' : '' }}">{{ $pendaftarList->total() }} orang</b>
+    </x-slot:layar>
+    <div class="deret">
+        <a href="{{ route('admin.nasabah.create') }}" class="key g">+ Tambah nasabah langsung</a>
+        <a href="{{ route('admin.nasabah.index') }}" class="key p">&larr; Daftar nasabah</a>
+    </div>
+</x-alat>
 
 <div class="tbl">
     <table>
@@ -57,30 +63,32 @@
     {{ $pendaftarList->links() }}
 </div>
 
-<dialog id="modal-tolak">
-    <form method="POST" id="form-tolak" class="f" style="min-width:320px">
-        @csrf
-        <h3>Tolak Pendaftar</h3>
-        <p class="lead" id="nama-pendaftar-tolak" style="margin-bottom:12px"></p>
-        <input type="hidden" name="aksi" value="tolak">
-        
-        <label for="alasan">
-            Alasan penolakan (wajib)
-            <input id="alasan" name="alasan" type="text" maxlength="255" required placeholder="Contoh: Bukan warga wilayah jangkauan RT/RW">
-        </label>
-
-        <div class="row" style="margin-top:14px;gap:8px">
-            <button class="btn" type="submit" style="background:#dc2626;border-color:#b91c1c">Kirim Penolakan</button>
-            <button class="btn o" type="button" onclick="document.getElementById('modal-tolak').close()">Batal</button>
-        </div>
-    </form>
+<dialog id="modal-tolak" class="dlg-alat">
+    <x-alat tool="scan" plat="Tolak Pendaftar">
+        <x-slot:layar>
+            <small>Calon nasabah</small>
+            <b class="angka kecil kuning" id="nama-pendaftar-tolak">-</b>
+        </x-slot:layar>
+        <form method="POST" id="form-tolak" style="display:grid;gap:16px">
+            @csrf
+            <input type="hidden" name="aksi" value="tolak">
+            <label for="alasan">
+                Alasan penolakan (wajib)
+                <input id="alasan" name="alasan" type="text" maxlength="255" required placeholder="Contoh: Bukan warga wilayah jangkauan RT/RW">
+            </label>
+            <div class="deret">
+                <button class="key r besar" type="submit">Kirim penolakan</button>
+                <button class="key p" type="button" onclick="document.getElementById('modal-tolak').close()">Batal</button>
+            </div>
+        </form>
+    </x-alat>
 </dialog>
 
 <script>
     function bukaModalTolak(id, nama) {
         const modal = document.getElementById('modal-tolak');
         const form = document.getElementById('form-tolak');
-        document.getElementById('nama-pendaftar-tolak').textContent = 'Calon Nasabah: ' + nama;
+        document.getElementById('nama-pendaftar-tolak').textContent = nama;
         form.action = "{{ url('admin/nasabah') }}/" + id + "/verifikasi";
         modal.showModal();
     }

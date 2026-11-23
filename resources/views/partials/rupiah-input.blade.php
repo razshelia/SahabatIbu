@@ -1,38 +1,34 @@
 {{--
     Isian nominal rupiah dengan pintasan (hanya angka, tidak bisa minus).
+    Tampil sebagai layar angka + papan tombol (gaya panel alat, lihat public/assets/alat.css).
     Variabel: $id, $name, $label, $step (kelipatan tombol +/−), $max (opsional), $value (opsional),
-              $placeholder (opsional), $maxLabel (opsional, teks tombol "isi maksimum").
+              $placeholder (opsional), $maxLabel (opsional, teks tombol "isi maksimum"),
+              $draf (opsional: kunci alat 3D yang ikut menampilkan angka ini, mis. 'capit').
+    Setiap perubahan mengirim event 'rupiah' (detail = angka) yang ditangkap public/assets/js/sinkron.js.
 --}}
 @php
     $rpValue = old($name, $value ?? '');
     $rpStep = (int) ($step ?? 1000);
 @endphp
-@once
-    <style>
-        .rp-b{min-height:48px;min-width:56px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:#ffffff14;color:var(--ink);font:inherit;font-weight:800;font-size:16px;cursor:pointer}
-        .rp-b:active{transform:translateY(1px)}
-        .rp-b.rp-hapus{margin-left:auto}
-        .rp-bar{display:flex;flex-wrap:wrap;gap:8px}
-        .rp-tampil{font-weight:800;font-size:15px;color:var(--green,#6fe0a2)}
-    </style>
-@endonce
-<div class="rp-field" style="display:grid;gap:6px;min-width:240px">
-    <label for="{{ $id }}" style="font-weight:700;font-size:14.5px">{{ $label }}</label>
-    <div data-rupiah data-step="{{ $rpStep }}" @if(!empty($max)) data-max="{{ (int) $max }}" @endif style="display:grid;gap:8px">
-        <input id="{{ $id }}" name="{{ $name }}" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="12" required
-               placeholder="{{ $placeholder ?? 'Contoh: 50000' }}" value="{{ $rpValue }}" style="font-size:20px;font-weight:800">
-        <div class="rp-bar">
-            <button type="button" class="rp-b" data-aksi="kurang" aria-label="Kurangi {{ number_format($rpStep, 0, ',', '.') }}">−</button>
-            <button type="button" class="rp-b" data-aksi="tambah" aria-label="Tambah {{ number_format($rpStep, 0, ',', '.') }}">+</button>
-            <button type="button" class="rp-b" data-aksi="nol2" aria-label="Tambah dua angka nol">00</button>
-            <button type="button" class="rp-b" data-aksi="nol3" aria-label="Tambah tiga angka nol">000</button>
-            @if(!empty($max))
-                <button type="button" class="rp-b" data-aksi="max">{{ $maxLabel ?? 'Maksimum' }}</button>
-            @endif
-            <button type="button" class="rp-b rp-hapus" data-aksi="hapus">Hapus</button>
+<div class="rp-field">
+    <label for="{{ $id }}">{{ $label }}</label>
+    <div data-rupiah data-nama="{{ $id }}" data-step="{{ $rpStep }}" @if(!empty($max)) data-max="{{ (int) $max }}" @endif @if(!empty($draf)) data-draf="{{ $draf }}" @endif style="display:grid;gap:12px">
+        <div class="rp-lcd">
+            <input id="{{ $id }}" class="rp-input" name="{{ $name }}" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="12" required
+                   placeholder="{{ $placeholder ?? '0' }}" value="{{ $rpValue }}">
         </div>
-        <span class="rp-tampil" data-tampil aria-live="polite"></span>
-        <small style="color:var(--mu)">Tombol + dan − bergeser Rp {{ number_format($rpStep, 0, ',', '.') }}. Nilai tidak bisa kurang dari 0.</small>
+        <div class="rp-papan">
+            <button type="button" class="key p" data-aksi="kurang" aria-label="Kurangi {{ number_format($rpStep, 0, ',', '.') }}">−</button>
+            <button type="button" class="key p" data-aksi="tambah" aria-label="Tambah {{ number_format($rpStep, 0, ',', '.') }}">+</button>
+            <button type="button" class="key y" data-aksi="nol2" aria-label="Tambah dua angka nol">00</button>
+            <button type="button" class="key y" data-aksi="nol3" aria-label="Tambah tiga angka nol">000</button>
+            @if(!empty($max))
+                <button type="button" class="key g" data-aksi="max">{{ $maxLabel ?? 'Maksimum' }}</button>
+            @endif
+            <button type="button" class="key rp-hapus" data-aksi="hapus">Hapus</button>
+        </div>
+        <output class="sr" data-tampil aria-live="polite"></output>
+        <small>Tombol + dan − bergeser Rp {{ number_format($rpStep, 0, ',', '.') }}. Nilai tidak bisa kurang dari 0.</small>
     </div>
 </div>
 @once
@@ -50,6 +46,7 @@
                 if (max !== null && n > max) n = max;
                 inp.value = n > 0 ? String(n) : '';
                 tampil.textContent = n > 0 ? fmt(n) : '';
+                w.dispatchEvent(new CustomEvent('rupiah', { bubbles: true, detail: n }));
             }
             inp.addEventListener('input', function () {
                 var d = inp.value.replace(/\D+/g, '').replace(/^0+/, '');
@@ -71,7 +68,7 @@
                 else if (a === 'hapus') tulis(0);
                 inp.focus();
             });
-            tulis(nilai());
+            tampil.textContent = nilai() > 0 ? fmt(nilai()) : '';
         });
     })();
     </script>

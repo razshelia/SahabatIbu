@@ -1,0 +1,1503 @@
+diff --git a/app/Support/GarasiData.php b/app/Support/GarasiData.php
+index 157eda7..17e8dbe 100644
+--- a/app/Support/GarasiData.php
++++ b/app/Support/GarasiData.php
+@@ -73,6 +73,7 @@ private static function fokus(string $rute, bool $admin): string
+         }
+ 
+         return match (true) {
++            $rute === 'nasabah.dashboard'                => 'scan',
+             str_starts_with($rute, 'nasabah.setoran.')   => 'riwayat',
+             str_starts_with($rute, 'nasabah.penarikan.') => 'capit',
+             str_starts_with($rute, 'nasabah.katalog.')   => 'rak',
+diff --git a/public/assets/alat.css b/public/assets/alat.css
+new file mode 100644
+index 0000000..2af01c3
+--- /dev/null
++++ b/public/assets/alat.css
+@@ -0,0 +1,185 @@
++/* ==========================================================================
++   PANEL ALAT — form menjadi badan alat yang sama dengan alat di ruangan 3D.
++   Warna dan huruf diambil dari alat 3D (public/assets/js/alat.js):
++   badan krem #f1ead8, rangka #26332d, layar gelap + angka hijau muda,
++   papan nama berwarna per alat, tombol tebal yang bisa "ditekan".
++   Dimuat setelah style.css di layouts/app.blade.php.
++   ========================================================================== */
++
++:root{
++  --krem:#f1ead8; --rangka:#26332d; --kertas:#f6f0df; --tinta:#3a2f1e;
++  --mu:#b8cbbd; --em:#8ef0be; /* dulu dipakai view tapi belum pernah didefinisikan */
++}
++
++/* kolom grid boleh menyusut (tanpa ini <select> berisi teks panjang dan tabel melebarkan halaman di HP) */
++.pgm{grid-template-columns:minmax(0,1fr)}
++.alat-badan,.alat label,.alat fieldset{grid-template-columns:minmax(0,1fr)}
++.alat label,.alat fieldset{min-width:0}
++.alat select{max-width:100%;text-overflow:ellipsis}
++
++/* ---------- badan alat ---------- */
++.alat{
++  --papan:#2f7d5b; --teks-papan:#fff;
++  position:relative; margin:20px 0 28px; max-width:720px;
++  border-radius:28px; border:4px solid var(--rangka);
++  background:var(--krem); color:var(--rangka);
++  box-shadow:0 20px 44px #000a, inset 0 3px 0 #fff9, inset 0 -8px 0 #0000001a;
++  overflow:hidden;
++}
++.alat[data-alat="capit"]{--papan:#e5594b}
++.alat[data-alat="rak"],.alat[data-alat="scan"]{--papan:#2f7d5b}
++.alat[data-alat="timbang"]{--papan:#26332d}
++.alat[data-alat="struk"]{--papan:#3b4a43}
++.alat[data-alat="riwayat"]{--papan:#5a3d28}
++
++/* papan nama di atas alat (sama dengan label di ruangan) */
++.alat-plat{
++  display:flex; align-items:center; gap:14px; padding:14px 20px;
++  background:var(--papan); color:var(--teks-papan); border-bottom:4px solid var(--rangka);
++}
++.alat-plat:before{ /* lampu "alat menyala" */
++  content:""; flex:none; width:22px; height:22px; border-radius:50%;
++  background:#f3c64f; box-shadow:0 0 0 4px #ffffff55, 0 0 14px #f3c64f;
++}
++.alat .alat-plat h2{
++  margin:0; color:inherit; text-transform:uppercase; letter-spacing:.03em;
++  font:800 clamp(22px,3.4vw,30px)/1.05 "Trebuchet MS","Segoe UI",sans-serif;
++}
++.alat-plat .sambung{
++  display:none; margin-left:auto; text-align:right; max-width:210px;
++  font:700 13px/1.25 Inter,"Segoe UI",sans-serif; opacity:.92;
++}
++html.g3d .alat-plat .sambung{display:block}
++
++/* ---------- layar LCD ---------- */
++.layar{
++  margin:18px 18px 0; padding:16px 20px 18px; border-radius:16px;
++  background:linear-gradient(#12201a,#0b1511); color:#eef5f0;
++  border:4px solid var(--rangka); box-shadow:inset 0 0 26px #000b, 0 2px 0 #fff9;
++  font-family:"Trebuchet MS","Segoe UI",sans-serif;
++}
++.layar small,.alat .layar small{display:block;color:#9fd9b8;font-weight:700;font-size:16px;line-height:1.3}
++.layar .baris{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 24px}
++.layar .angka{display:block;color:#8ef0be;font-weight:800;font-size:clamp(34px,7vw,54px);line-height:1.1;overflow-wrap:anywhere}
++.layar .angka.kecil{font-size:clamp(24px,4.6vw,32px)}
++.layar .kuning{color:#f3c64f}
++.layar .merah{color:#ff8a7a}
++.layar .baca{margin:10px 0 0;font-size:19px;font-weight:700;line-height:1.4;color:#eef5f0}
++.layar .baca b{font-size:1.15em;color:#f3c64f}
++.layar .baca .ok{color:#8ef0be;font-size:.95em}
++.layar .baca .merah{font-size:.95em}
++.layar .kanan{text-align:right}
++.layar .kisi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}
++.layar .daftar{display:grid;gap:8px;margin-top:10px}
++.layar .daftar div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 14px;border-radius:12px;background:#ffffff12;font-weight:800;font-size:clamp(19px,3.6vw,24px)}
++.layar .daftar span{color:#8ef0be}
++
++/* ---------- isi alat: kolom isian + tombol ---------- */
++.alat-badan{padding:18px 20px 22px;display:grid;gap:16px}
++.alat label,.alat legend{display:grid;gap:6px;font-weight:800;font-size:17px;line-height:1.3;color:var(--rangka)}
++.alat legend{display:block;padding:0;margin-bottom:6px}
++.alat small{color:#5b5645;font-weight:600;font-size:14.5px;line-height:1.45}
++.alat .err{color:#b03a2d;font-size:15px;font-weight:700}
++.alat :is(input,select,textarea):not([type=checkbox]):not([type=radio]){
++  width:100%; min-height:56px; padding:10px 16px; border-radius:14px;
++  border:3px solid var(--rangka); background:#fff; color:#1b241f;
++  font:700 19px/1.3 Inter,"Segoe UI",sans-serif; box-shadow:inset 0 3px 0 #0000001a;
++}
++.alat :is(input,select,textarea)::placeholder{color:#8a8470;font-weight:600}
++.alat :is(input,select,textarea):focus-visible{outline:4px solid #f3c64f;outline-offset:2px}
++.alat :is(input,select)[readonly],.alat :is(input,select)[disabled]{background:#e4dcc6;color:#5d5a50;opacity:1;cursor:not-allowed}
++.alat input[type=radio],.alat input[type=checkbox]{width:26px!important;height:26px!important;flex:none;accent-color:#2f7d5b}
++.alat [aria-invalid=true]{border-color:#b03a2d!important}
++
++/* ---------- tombol tebal (sama dengan tombol di layar alat 3D) ---------- */
++.key{
++  --tebal:#0b1511;
++  display:inline-flex; align-items:center; justify-content:center; gap:8px;
++  min-height:58px; min-width:58px; padding:0 22px; border:0; border-radius:18px;
++  background:#2c3b34; color:#eef5f0; text-decoration:none; cursor:pointer;
++  font:800 19px/1 "Trebuchet MS","Segoe UI",sans-serif;
++  box-shadow:0 6px 0 var(--tebal), 0 12px 18px #0004;
++  transition:transform .08s, box-shadow .08s, filter .15s;
++}
++.key:hover{filter:brightness(1.12)}
++.key:active,.key.tekan{transform:translateY(5px);box-shadow:0 1px 0 var(--tebal),0 3px 6px #0004}
++.key.g{background:#6fe0a2;color:#0d2a1b;--tebal:#2f7d5b}
++.key.r{background:#e5594b;color:#fff;--tebal:#8e2a20}
++.key.y{background:#f3c64f;color:#2b1f00;--tebal:#a47a12}
++.key.p{background:#e3d7bd;color:#3a2f1e;--tebal:#a89870}
++.key.on{background:#fff;color:#16201b;--tebal:#26332d;outline:3px solid #f3c64f}
++.key.sm{min-height:46px;min-width:46px;padding:0 16px;font-size:16px}
++.key[disabled],.key[aria-disabled=true]{opacity:.45;pointer-events:none}
++.deret{display:flex;flex-wrap:wrap;gap:14px 12px;align-items:center}
++.deret .key.besar{flex:1 1 220px;min-height:68px;font-size:22px}
++.alat .key:focus-visible{outline:4px solid #f3c64f;outline-offset:3px}
++
++/* ---------- nampan keluaran (bagian bawah alat) ---------- */
++.nampan{
++  padding:16px 20px 20px; background:#e0d6bb; border-top:4px solid var(--rangka);
++  box-shadow:inset 0 8px 14px #0000001f; font-size:16px; line-height:1.5; font-weight:600;
++}
++.nampan p{margin:0;color:#3a2f1e}
++
++/* ---------- isian rupiah: kolom angka = layar mesin ---------- */
++.rp-field{display:grid;gap:8px}
++.rp-field>label{font-weight:800;font-size:17px}
++.rp-lcd{position:relative}
++.rp-lcd:before{content:"Rp";position:absolute;left:18px;top:50%;transform:translateY(-50%);font:800 24px "Trebuchet MS",sans-serif;color:#9fd9b8;pointer-events:none}
++.alat .rp-lcd input.rp-input{
++  min-height:80px; padding:8px 18px 8px 66px; text-align:right; border:4px solid var(--rangka);
++  background:linear-gradient(#12201a,#0b1511); color:#8ef0be;
++  font:800 clamp(32px,7vw,46px)/1 "Trebuchet MS","Segoe UI",sans-serif;
++  box-shadow:inset 0 0 26px #000b;
++}
++.alat .rp-lcd input.rp-input::placeholder{color:#4f7d66;font-weight:700}
++.rp-papan{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:12px 10px}
++.rp-papan .key{min-width:0;padding:0 10px}
++.rp-papan .rp-hapus{--tebal:#8e2a20;background:#ff8a7a;color:#3a0f09}
++.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
++
++/* ---------- baki timbangan: satu baris per jenis sampah ---------- */
++.baki{display:grid;gap:12px}
++.baki-baris{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 14px;align-items:center;padding:12px 14px;border-radius:18px;background:#e8dfc6;border:2px dashed #a89870}
++.baki-nama{display:grid;gap:2px}
++.baki-nama label{font-size:20px}
++.langkah{display:flex;align-items:center;gap:8px}
++.langkah input{width:118px!important;text-align:center;font-size:22px!important}
++.langkah .key{min-width:54px;min-height:54px;padding:0;font-size:28px}
++@media(max-width:560px){.baki-baris{grid-template-columns:1fr}.langkah{justify-content:space-between}.langkah input{flex:1;width:auto!important}}
++
++/* ---------- kertas: tabel di semua halaman seperti buku tabungan / struk ---------- */
++#isi .tbl{
++  --mu:#6b5a3d; --em:#1f6b46;
++  background:var(--kertas); color:var(--tinta); border:3px solid #d9cfb5; border-radius:18px;
++  padding:6px 12px; box-shadow:0 10px 24px #0005;
++}
++#isi .tbl th{color:#7a5200}
++#isi .tbl th,#isi .tbl td{border-bottom:1px solid #d9cfb5}
++#isi .tbl tr:last-child td{border-bottom:0}
++#isi .tbl b{color:inherit}
++#isi .tbl a:not(.btn){color:#1f6b46;font-weight:700}
++#isi .tbl [style*="#f87171"]{color:#b03a2d!important}
++#isi .tbl .pill{background:#fbefc9;border-color:#d1a63a;color:#7a5200}
++#isi .tbl .pill.ok{background:#d6efdf;border-color:#2f7d5b;color:#14573a}
++#isi .tbl .pill.no{background:#fbe0dc;border-color:#c0584b;color:#9a2a1c}
++#isi .tbl .btn{background:#6fe0a2;color:#0d2a1b;box-shadow:0 4px 0 #2f7d5b}
++#isi .tbl .btn.o{background:#2c3b34;color:#eef5f0;box-shadow:0 4px 0 #0b1511}
++#isi .tbl .btn:hover{box-shadow:0 4px 0 #2f7d5b;filter:brightness(1.07)}
++
++/* ---------- jendela (dialog) tolak: tetap berupa alat ---------- */
++dialog.dlg-alat{padding:0;border:0;background:transparent;width:min(560px,94vw);overflow:visible;max-height:none}
++dialog.dlg-alat .alat{margin:0;max-width:none}
++
++/* ---------- layar kecil ---------- */
++@media(max-width:560px){
++  .alat{border-radius:22px;margin-left:-4px;margin-right:-4px}
++  .alat-plat{padding:12px 14px}.alat-plat .sambung{display:none!important}
++  .layar{margin:14px 12px 0;padding:14px 14px 16px}
++  .alat-badan{padding:16px 14px 20px}
++  .nampan{padding:14px}
++  .layar .kisi{grid-template-columns:1fr}
++  .layar .kanan{text-align:left}
++}
++@media(prefers-reduced-motion:reduce){.key{transition:none}}
++@media print{.alat{box-shadow:none;border-color:#000}.alat-plat{background:#fff!important;color:#000!important}}
+diff --git a/public/assets/js/latar.js b/public/assets/js/latar.js
+index 7a44c08..a2fff82 100644
+--- a/public/assets/js/latar.js
++++ b/public/assets/js/latar.js
+@@ -22,14 +22,16 @@ if(!G){
+  const tf=(g,s,x,y,sz,col,a,wt,mw)=>{s=String(s==null?'':s);wt=wt||'800';while(sz>14){g.font=wt+' '+sz+'px Trebuchet MS';if(g.measureText(s).width<=mw)break;sz-=2}tx(g,s,x,y,sz,col,a,wt)};
+  const foot=(g,W,H,s,c='#9fd9b8')=>tx(g,s,W/2,H-14,20,c,'center','700');
+  const kg=v=>fmt(v)+' kg';
++ const DR={};// draf dari isian form di halaman (lihat sinkron.js)
+  const arrow=(g,x,y,up)=>{g.fillStyle=up?'#6fe0a2':'#ff8a7a';g.beginPath();up?(g.moveTo(x,y-14),g.lineTo(x+13,y+6),g.lineTo(x-13,y+6)):(g.moveTo(x,y+6),g.lineTo(x+13,y-14),g.lineTo(x-13,y-14));g.closePath();g.fill()};
+ 
+  // ---------- isi layar tiap alat ----------
+  const harga=(g,W,Hh)=>{bg(g,W,Hh);tx(g,'Harga hari ini',20,36,26,'#9fd9b8','left','700');tx(g,'per kg',W-20,36,22,'#9fd9b8','right','700');
+   if(!H.length)tx(g,'Belum ada harga.',20,120,30,'#eef5f0','left','700');
+   H.slice(0,6).forEach((j,i)=>{const y=82+i*56;g.fillStyle='#ffffff12';rr(g,12,y-34,W-24,48,14);g.fill();tf(g,j.n,24,y,30,'#fff','left','800',250);
+-   tx(g,rp(j.h),W-52,y,30,'#8ef0be','right');if(j.p!=null&&j.p!==j.h)arrow(g,W-30,y-8,j.h>j.p)});
+-  foot(g,W,Hh,'Ketuk untuk buka '+L.rak)};
++   const dj=DR.rak&&DR.rak.n===j.n&&DR.rak.h>0?DR.rak:null;tx(g,rp(dj?dj.h:j.h),W-52,y,30,dj?'#f3c64f':'#8ef0be','right');
++   if(dj){if(dj.h!==j.h)arrow(g,W-30,y-8,dj.h>j.h)}else if(j.p!=null&&j.p!==j.h)arrow(g,W-30,y-8,j.h>j.p)});
++  foot(g,W,Hh,DR.rak&&DR.rak.h>0?'Harga baru, belum disimpan':'Ketuk untuk buka '+L.rak)};
+  kS.paint(harga);
+ 
+  if(!ADM){
+@@ -54,7 +56,7 @@ if(!G){
+    l.slice(0,4).forEach((r,i)=>{const y=126+i*98;g.fillStyle='#d9cfb5';g.fillRect(40,y-26,W-80,3);tx(g,r.k+' · '+r.t,40,y+10,28,'#3a2f1e');tx(g,'+'+Math.round(r.v).toLocaleString('id-ID'),W-40,y+10,34,'#1f6b46','right');
+     tf(g,r.rows.map(x=>x.j+' '+kg(x.kg)).join(', '),40,y+46,24,'#6b5a3d','left','700',W-80)});tx(g,'Halaman 1',W/2,Hh-18,22,'#9a8a68','center','700')});
+   cpS.paint((g,W,Hh)=>{bg(g,W,Hh);tf(g,'Uang bisa diambil',24,48,26,'#9fd9b8','left','700',230);tf(g,rp(N.tersedia||0),24,122,60,'#8ef0be','left','800',230);
+-   tf(g,N.tahan>0?'Ditahan '+rp(N.tahan):'Tidak ada yang ditahan',24,164,24,'#f3c64f','left','700',230);
++   tf(g,DR.capit>0?'Akan diajukan '+rp(DR.capit):(N.tahan>0?'Ditahan '+rp(N.tahan):'Tidak ada yang ditahan'),24,164,24,DR.capit>0?'#ffffff':'#f3c64f','left','700',230);
+    tx(g,'Pengajuan terakhir',268,48,24,'#9fd9b8','left','700');if(!tr.length)tx(g,'Belum ada pengajuan',268,100,24,'#eef5f0','left','700');
+    tr.slice(0,3).forEach((t,i)=>{const y=96+i*62,s=st(t.st);g.fillStyle='#ffffff10';rr(g,262,y-30,W-274,54,14);g.fill();tf(g,rp(t.v),274,y,28,'#fff','left','800',130);tx(g,s[0],W-26,y,24,s[1],'right','700')});
+    foot(g,W,Hh,'Ketuk untuk buka '+L.capit)});
+@@ -62,7 +64,9 @@ if(!G){
+   const dpl=A.terbaru,ln=A.log||[],gr=A.grafik||[],aq=A.antrian||[];
+   pmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Menunggu verifikasi',24,46,28,'#9fd9b8','left','700');tx(g,(A.pendaftar||0)+' orang',24,122,66,A.pendaftar>0?'#f3c64f':'#8ef0be');
+    tx(g,'Aktif '+(A.aktif||0)+' · Nonaktif '+(A.nonaktif||0),24,168,26,'#eef5f0','left','700');foot(g,W,Hh,'Ketuk untuk buka '+L.scan)});
+-  tmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Setoran hari ini',24,46,30,'#9fd9b8','left','700');tx(g,(A.hari_n||0)+' transaksi',24,132,66);
++  tmS.paint((g,W,Hh)=>{if(DR.timbang){bg(g,W,Hh);tx(g,'Sedang ditimbang',24,46,30,'#9fd9b8','left','700');tf(g,kg(DR.timbang.kg),24,142,78,'#fff','left','800',W-48);
++   tf(g,DR.timbang.nama||'Pilih nasabah dulu',24,190,26,'#f3c64f','left','700',W-48);tf(g,rp(DR.timbang.v),24,Hh-78,44,'#8ef0be','left','800',W-48);foot(g,W,Hh,'Belum disimpan');return}
++   bg(g,W,Hh);tx(g,'Setoran hari ini',24,46,30,'#9fd9b8','left','700');tx(g,(A.hari_n||0)+' transaksi',24,132,66);
+    tx(g,kg(A.hari_kg||0)+' · '+rp(A.hari_rp||0),24,178,26,'#f3c64f','left','700');tx(g,'Bulan ini',24,238,26,'#9fd9b8','left','700');
+    tx(g,(A.bulan_n||0)+' transaksi · '+kg(A.bulan_kg||0),24,276,26,'#eef5f0','left','700');tf(g,rp(A.bulan_rp||0),24,Hh-78,40,'#f3c64f','left','800',W-48);foot(g,W,Hh,'Ketuk untuk buka '+L.timbang)});
+   prS.paint((g,W,Hh)=>{bg(g,W,Hh);tf(g,G.nama,20,52,34,'#fff','left','800',W-40);tx(g,'Admin · '+ln.length+' aktivitas terbaru',20,100,24,'#9fd9b8','left','700');foot(g,W,Hh,'Ketuk untuk buka '+L.struk)});
+@@ -99,6 +103,7 @@ if(!G){
+  const KEY='garasi_sig_'+G.role+'_'+G.uid,pulse={};let prev=null;
+  try{prev=JSON.parse(localStorage.getItem(KEY)||'null');localStorage.setItem(KEY,JSON.stringify(G.sig))}catch(e){}
+  const fresh={};
++ window.ALAT={set(k,v){DR[k]=v;const m={capit:cpS,timbang:tmS,rak:kS}[k];m&&m.render()},pulse(k){if(TOOL[k])pulse[k]=performance.now()}};
+  if(prev&&G.sig){const d=(a,b)=>a!==b;
+   if(d(prev.setoran,G.sig.setoran)){['timbang','struk','riwayat'].forEach(k=>fresh[k]=1)}
+   if(d(prev.tarik,G.sig.tarik))fresh.capit=1;
+diff --git a/public/assets/js/sinkron.js b/public/assets/js/sinkron.js
+new file mode 100644
+index 0000000..6052256
+--- /dev/null
++++ b/public/assets/js/sinkron.js
+@@ -0,0 +1,92 @@
++/* Penghubung form panel alat (.alat) <-> layar alat di ruangan 3D.
++   - [data-ikut="nama_field"]     : teks di layar LCD halaman mengikuti isian form (radio/teks).
++   - [data-ikut-alamat]           : ringkasan alamat (Blok X No. Y, atau alamat bebas untuk nasabah umum).
++   - [data-ikut-rp="id"]          : teks "Rp ..." mengikuti isian rupiah (partials/rupiah-input).
++   - wrapper rupiah dengan data-draf="capit|rak|timbang" juga mengirim angkanya ke layar alat 3D.
++   - tombol .key yang ditekan membuat alat di ruangan "bergerak" sedikit.
++   Semua aman dijalankan tanpa 3D (window.ALAT belum ada / WebGL gagal). */
++(function () {
++    'use strict';
++
++    var rp = function (n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); };
++    var alat3d = function () { return window.ALAT || null; };
++
++    // 1. tombol ditekan -> alat 3D bereaksi
++    document.addEventListener('click', function (e) {
++        var b = e.target.closest ? e.target.closest('.alat .key') : null;
++        if (!b || !alat3d()) { return; }
++        var a = b.closest('.alat');
++        if (a && a.dataset.alat) { alat3d().pulse(a.dataset.alat); }
++    });
++
++    // 2. isian rupiah
++    document.addEventListener('rupiah', function (e) {
++        var w = e.target, n = e.detail || 0, id = w.dataset.nama;
++        document.querySelectorAll('[data-ikut-rp="' + id + '"]').forEach(function (el) {
++            el.textContent = n > 0 ? rp(n) : (el.dataset.kosong || 'Belum diisi');
++            el.classList.toggle('kosong', n <= 0);
++        });
++        if (w.dataset.draf && alat3d()) { alat3d().set(w.dataset.draf, n); }
++    });
++
++    // 3. teks layar yang mengikuti isian form
++    function nilai(scope, nm) {
++        var els = scope.querySelectorAll('[name="' + nm + '"]');
++        if (!els.length) { return ''; }
++        if (els[0].type === 'radio') {
++            var c = scope.querySelector('[name="' + nm + '"]:checked');
++            return c ? c.value : '';
++        }
++        return (els[0].value || '').trim();
++    }
++
++    function peta(el, v) {
++        if (!el.dataset.peta) { return v; }
++        var out = v;
++        el.dataset.peta.split('|').forEach(function (p) {
++            var kv = p.split('=');
++            if (kv[0] === v) { out = kv[1]; }
++        });
++        return out;
++    }
++
++    function segarkan(scope) {
++        scope.querySelectorAll('[data-ikut]').forEach(function (el) {
++            var v = peta(el, nilai(scope, el.dataset.ikut));
++            el.textContent = v || el.dataset.kosong || '-';
++            el.classList.toggle('kosong', !v);
++        });
++        scope.querySelectorAll('[data-ikut-alamat]').forEach(function (el) {
++            var umum = nilai(scope, 'kategori') === 'umum', t;
++            if (umum) {
++                t = nilai(scope, 'alamat');
++            } else {
++                var b = nilai(scope, 'blok'), n = nilai(scope, 'nomor_rumah');
++                t = (b || n) ? ('Blok ' + (b || '?') + ' No. ' + (n || '?')) : '';
++            }
++            el.textContent = t || el.dataset.kosong || 'Alamat belum diisi';
++            el.classList.toggle('kosong', !t);
++        });
++    }
++
++    function pasang() {
++        // isian rupiah yang sudah berisi (mis. setelah validasi gagal) disampaikan sekali di awal
++        document.querySelectorAll('[data-rupiah]').forEach(function (w) {
++            var i = w.querySelector('input');
++            w.dispatchEvent(new CustomEvent('rupiah', { bubbles: true, detail: parseInt((i && i.value) || '0', 10) || 0 }));
++        });
++        document.querySelectorAll('.alat').forEach(function (scope) {
++            if (!scope.querySelector('[data-ikut],[data-ikut-alamat]')) { return; }
++            var f = function () { segarkan(scope); };
++            scope.addEventListener('input', f);
++            scope.addEventListener('change', f);
++            f();
++        });
++    }
++
++    if (document.readyState === 'loading') {
++        document.addEventListener('DOMContentLoaded', pasang);
++    } else {
++        pasang();
++    }
++})();
+diff --git a/resources/views/admin/katalog/index.blade.php b/resources/views/admin/katalog/index.blade.php
+index e3dbbff..272638d 100644
+--- a/resources/views/admin/katalog/index.blade.php
++++ b/resources/views/admin/katalog/index.blade.php
+@@ -5,25 +5,77 @@
+ <h1>Harga sampah <em>harian</em></h1>
+ <p class="lead">Atur pembaruan harga per kg yang berlaku harian (BR-03, BR-04).</p>
+ 
+-<h2>Atur harga baru</h2>
+-<form class="f frow" method="POST" action="{{ route('admin.katalog.harga.store') }}" style="margin-bottom:24px">
++<form method="POST" action="{{ route('admin.katalog.harga.store') }}" id="form-harga">
+     @csrf
+-    <label>
+-        Jenis Sampah
+-        <select name="jenis_sampah_id" required>
+-            @foreach($jenisList as $j)
+-                <option value="{{ $j->id }}">{{ $j->nama }} ({{ $j->satuan }})</option>
+-            @endforeach
+-        </select>
+-    </label>
+-    @include('partials.rupiah-input', ['id' => 'harga_per_kg', 'name' => 'harga_per_kg', 'label' => 'Harga/kg (Rp)', 'step' => 500, 'placeholder' => 'Contoh: 3000'])
+-    <label>
+-        Berlaku Mulai
+-        <input name="berlaku_mulai" type="date" required value="{{ date('Y-m-d') }}">
+-    </label>
+-    <button class="btn sm" type="submit">Simpan Harga</button>
++    <x-alat tool="rak" plat="Katalog Harga">
++        <x-slot:layar>
++            <small id="lcd-jenis">Harga sekarang</small>
++            <b class="angka" id="lcd-lama">-</b>
++            <p class="baca">Harga baru: <b id="lcd-baru">belum diisi</b> <span id="lcd-selisih"></span></p>
++        </x-slot:layar>
++
++        <label for="jenis_sampah_id">
++            Jenis sampah
++            <select id="jenis_sampah_id" name="jenis_sampah_id" required>
++                @foreach($jenisList as $j)
++                    <option value="{{ $j->id }}" data-nama="{{ $j->nama }}" data-satuan="{{ $j->satuan }}" data-sekarang="{{ (int) ($j->harga_berlaku->harga_per_kg ?? 0) }}">{{ $j->nama }} ({{ $j->satuan }})</option>
++                @endforeach
++            </select>
++        </label>
++
++        @include('partials.rupiah-input', ['id' => 'harga_per_kg', 'name' => 'harga_per_kg', 'label' => 'Harga baru per kg', 'step' => 500, 'placeholder' => '0'])
++
++        <label for="berlaku_mulai">
++            Berlaku mulai
++            <input id="berlaku_mulai" name="berlaku_mulai" type="date" required value="{{ date('Y-m-d') }}">
++        </label>
++
++        <div class="deret">
++            <button class="key g besar" type="submit">Simpan harga</button>
++        </div>
++
++        <x-slot:nampan>
++            <p>Harga baru berlaku untuk setoran yang ditimbang mulai tanggal di atas. Setoran lama tidak berubah.</p>
++        </x-slot:nampan>
++    </x-alat>
+ </form>
+ 
++@push('scripts')
++<script>
++    document.addEventListener('DOMContentLoaded', () => {
++        const pilih = document.getElementById('jenis_sampah_id');
++        const lcdJenis = document.getElementById('lcd-jenis');
++        const lcdLama = document.getElementById('lcd-lama');
++        const lcdBaru = document.getElementById('lcd-baru');
++        const lcdSel = document.getElementById('lcd-selisih');
++        const inp = document.getElementById('harga_per_kg');
++        const rp = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
++
++        function segarkan() {
++            const o = pilih.selectedOptions[0];
++            if (!o) { return; }
++            const lama = parseInt(o.dataset.sekarang || '0', 10) || 0;
++            const baru = parseInt(inp.value || '0', 10) || 0;
++            const sat = o.dataset.satuan || 'kg';
++            lcdJenis.textContent = 'Harga sekarang · ' + o.dataset.nama;
++            lcdLama.textContent = lama > 0 ? rp(lama) + '/' + sat : 'Belum diatur';
++            lcdBaru.textContent = baru > 0 ? rp(baru) + '/' + sat : 'belum diisi';
++            lcdSel.className = '';
++            lcdSel.textContent = '';
++            if (baru > 0 && lama > 0 && baru !== lama) {
++                lcdSel.textContent = (baru > lama ? '▲ naik ' : '▼ turun ') + rp(Math.abs(baru - lama));
++                lcdSel.className = baru > lama ? 'ok' : 'merah';
++            }
++            if (window.ALAT) { window.ALAT.set('rak', { n: o.dataset.nama, h: baru }); }
++        }
++
++        pilih.addEventListener('change', segarkan);
++        document.getElementById('form-harga').addEventListener('rupiah', segarkan);
++        segarkan();
++    });
++</script>
++@endpush
++
+ <h2>Harga yang berlaku saat ini</h2>
+ <div class="tbl">
+     <table>
+diff --git a/resources/views/admin/nasabah/create.blade.php b/resources/views/admin/nasabah/create.blade.php
+index f467621..8c0cfc1 100644
+--- a/resources/views/admin/nasabah/create.blade.php
++++ b/resources/views/admin/nasabah/create.blade.php
+@@ -5,38 +5,56 @@
+ <h1>Tambah <em>nasabah baru</em></h1>
+ <p class="lead">Nasabah yang didaftarkan langsung oleh pengurus akan otomatis berstatus <em>Aktif</em>.</p>
+ 
+-<form class="f" method="POST" action="{{ route('admin.nasabah.store') }}" style="max-width:560px" novalidate>
++<form method="POST" action="{{ route('admin.nasabah.store') }}" novalidate>
+     @csrf
+ 
+-    <label for="name">
+-        Nama lengkap
+-        <input id="name" name="name" type="text" autocomplete="name" value="{{ old('name') }}" maxlength="100" required>
+-        @error('name')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
+-
+-    <label for="email">
+-        Email
+-        <input id="email" name="email" type="email" autocomplete="email" value="{{ old('email') }}" maxlength="255" required>
+-        @error('email')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
+-
+-    <label for="telepon">
+-        Telepon (angka / tanda +)
+-        <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon') }}" maxlength="20" required>
+-        @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
+-
+-    @include('partials.alamat-fields')
+-
+-    <label for="password">
+-        Kata sandi awal (min. 8, kombinasi huruf &amp; angka)
+-        <input id="password" name="password" type="password" autocomplete="new-password" required>
+-        @error('password')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
+-
+-    <div class="row" style="margin-top:16px;gap:8px">
+-        <button class="btn" type="submit">Tambah Nasabah</button>
+-        <a href="{{ route('admin.nasabah.index') }}" class="btn o" style="text-decoration:none">Batal</a>
+-    </div>
++    <x-alat tool="scan" plat="Kartu Nasabah Baru">
++        <x-slot:layar>
++            <small>Nama</small>
++            <b class="angka kecil" data-ikut="name" data-kosong="Belum diisi">Belum diisi</b>
++            <div class="kisi" style="margin-top:12px">
++                <div>
++                    <small>Telepon</small>
++                    <b class="angka kecil kuning" data-ikut="telepon" data-kosong="-">-</b>
++                </div>
++                <div>
++                    <small>Domisili</small>
++                    <b class="angka kecil kuning" data-ikut="kategori" data-peta="warga=Warga|umum=Umum" data-kosong="-">-</b>
++                </div>
++            </div>
++            <p class="baca" data-ikut-alamat data-kosong="Alamat belum diisi">Alamat belum diisi</p>
++        </x-slot:layar>
++
++        <label for="name">
++            Nama lengkap
++            <input id="name" name="name" type="text" autocomplete="name" value="{{ old('name') }}" maxlength="100" required>
++            @error('name')<span class="err">{{ $message }}</span>@enderror
++        </label>
++
++        <label for="email">
++            Email
++            <input id="email" name="email" type="email" autocomplete="email" value="{{ old('email') }}" maxlength="255" required>
++            @error('email')<span class="err">{{ $message }}</span>@enderror
++        </label>
++
++        <label for="telepon">
++            Telepon (angka / tanda +)
++            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon') }}" maxlength="20" required>
++            @error('telepon')<span class="err">{{ $message }}</span>@enderror
++        </label>
++
++        @include('partials.alamat-fields')
++
++        <label for="password">
++            Kata sandi awal (min. 8, kombinasi huruf &amp; angka)
++            <input id="password" name="password" type="password" autocomplete="new-password" required>
++            @error('password')<span class="err">{{ $message }}</span>@enderror
++        </label>
++
++        <div class="deret">
++            <button class="key g besar" type="submit">Tambah nasabah</button>
++            <a href="{{ route('admin.nasabah.index') }}" class="key p">Batal</a>
++        </div>
++    </x-alat>
+ </form>
+ @endsection
+diff --git a/resources/views/admin/nasabah/edit.blade.php b/resources/views/admin/nasabah/edit.blade.php
+index 990c055..3c4651d 100644
+--- a/resources/views/admin/nasabah/edit.blade.php
++++ b/resources/views/admin/nasabah/edit.blade.php
+@@ -3,36 +3,54 @@
+ @section('content')
+ <small class="kick">Pendaftar &amp; nasabah</small>
+ <h1>Ubah data <em>{{ $nasabah->user->name }}</em></h1>
+-<p class="lead">{{ $nasabah->nomor_nasabah }} · Saldo dan riwayat transaksi tidak ikut berubah.</p>
++<p class="lead">Saldo dan riwayat transaksi tidak ikut berubah.</p>
+ 
+-<form class="f" method="POST" action="{{ route('admin.nasabah.update', $nasabah) }}" style="max-width:560px" novalidate>
++<form method="POST" action="{{ route('admin.nasabah.update', $nasabah) }}" novalidate>
+     @csrf
+     @method('PUT')
+ 
+-    <label for="name">
+-        Nama lengkap
+-        <input id="name" name="name" type="text" autocomplete="name" value="{{ old('name', $nasabah->user->name) }}" maxlength="100" required>
+-        @error('name')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
+-
+-    <label for="email">
+-        Email
+-        <input id="email" type="email" value="{{ $nasabah->user->email }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
+-        <small style="color:var(--mu);margin-top:2px;display:block">Email akun tidak dapat diubah sembarangan.</small>
+-    </label>
+-
+-    <label for="telepon">
+-        Telepon
+-        <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required>
+-        @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
+-
+-    @include('partials.alamat-fields', ['nasabah' => $nasabah])
+-
+-    <div class="row" style="margin-top:16px;gap:8px">
+-        <button class="btn" type="submit">Simpan Perubahan</button>
+-        <a href="{{ route('admin.nasabah.index') }}" class="btn o" style="text-decoration:none">Batal</a>
+-    </div>
++    <x-alat tool="scan" plat="Kartu Nasabah">
++        <x-slot:layar>
++            <div class="baris">
++                <div>
++                    <small>Nomor nasabah</small>
++                    <b class="angka kecil">{{ $nasabah->nomor_nasabah }}</b>
++                </div>
++                <div class="kanan">
++                    <small>Domisili</small>
++                    <b class="angka kecil kuning" data-ikut="kategori" data-peta="warga=Warga|umum=Umum" data-kosong="-">-</b>
++                </div>
++            </div>
++            <small style="margin-top:12px">Nama</small>
++            <b class="angka kecil" data-ikut="name" data-kosong="Belum diisi">Belum diisi</b>
++            <p class="baca" data-ikut-alamat data-kosong="Alamat belum diisi">Alamat belum diisi</p>
++        </x-slot:layar>
++
++        <label for="name">
++            Nama lengkap
++            <input id="name" name="name" type="text" autocomplete="name" value="{{ old('name', $nasabah->user->name) }}" maxlength="100" required>
++            @error('name')<span class="err">{{ $message }}</span>@enderror
++        </label>
++
++        <label for="email">
++            Email
++            <input id="email" type="email" value="{{ $nasabah->user->email }}" readonly disabled>
++            <small>Email akun tidak dapat diubah sembarangan.</small>
++        </label>
++
++        <label for="telepon">
++            Telepon
++            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required>
++            @error('telepon')<span class="err">{{ $message }}</span>@enderror
++        </label>
++
++        @include('partials.alamat-fields', ['nasabah' => $nasabah])
++
++        <div class="deret">
++            <button class="key g besar" type="submit">Simpan perubahan</button>
++            <a href="{{ route('admin.nasabah.index') }}" class="key p">Batal</a>
++        </div>
++    </x-alat>
+ </form>
+ 
+ <p class="sub" style="margin-top:24px"><a class="lk" href="{{ route('admin.nasabah.index') }}">&larr; Kembali ke daftar nasabah</a></p>
+diff --git a/resources/views/admin/nasabah/pendaftar.blade.php b/resources/views/admin/nasabah/pendaftar.blade.php
+index 894a3c2..29a4491 100644
+--- a/resources/views/admin/nasabah/pendaftar.blade.php
++++ b/resources/views/admin/nasabah/pendaftar.blade.php
+@@ -5,10 +5,16 @@
+ <h1>Verifikasi <em>pendaftar</em></h1>
+ <p class="lead">Daftar calon nasabah baru yang menunggu verifikasi pengurus.</p>
+ 
+-<div class="row" style="margin-bottom:20px">
+-    <a href="{{ route('admin.nasabah.index') }}" class="btn o sm" style="text-decoration:none">&larr; Daftar Nasabah</a>
+-    <a href="{{ route('admin.nasabah.create') }}" class="btn sm" style="text-decoration:none">+ Tambah Nasabah Langsung</a>
+-</div>
++<x-alat tool="scan" plat="Verifikasi Pendaftar">
++    <x-slot:layar>
++        <small>Menunggu verifikasi</small>
++        <b class="angka {{ $pendaftarList->total() > 0 ? 'kuning' : '' }}">{{ $pendaftarList->total() }} orang</b>
++    </x-slot:layar>
++    <div class="deret">
++        <a href="{{ route('admin.nasabah.create') }}" class="key g">+ Tambah nasabah langsung</a>
++        <a href="{{ route('admin.nasabah.index') }}" class="key p">&larr; Daftar nasabah</a>
++    </div>
++</x-alat>
+ 
+ <div class="tbl">
+     <table>
+@@ -57,30 +63,32 @@
+     {{ $pendaftarList->links() }}
+ </div>
+ 
+-<dialog id="modal-tolak">
+-    <form method="POST" id="form-tolak" class="f" style="min-width:320px">
+-        @csrf
+-        <h3>Tolak Pendaftar</h3>
+-        <p class="lead" id="nama-pendaftar-tolak" style="margin-bottom:12px"></p>
+-        <input type="hidden" name="aksi" value="tolak">
+-        
+-        <label for="alasan">
+-            Alasan penolakan (wajib)
+-            <input id="alasan" name="alasan" type="text" maxlength="255" required placeholder="Contoh: Bukan warga wilayah jangkauan RT/RW">
+-        </label>
+-
+-        <div class="row" style="margin-top:14px;gap:8px">
+-            <button class="btn" type="submit" style="background:#dc2626;border-color:#b91c1c">Kirim Penolakan</button>
+-            <button class="btn o" type="button" onclick="document.getElementById('modal-tolak').close()">Batal</button>
+-        </div>
+-    </form>
++<dialog id="modal-tolak" class="dlg-alat">
++    <x-alat tool="scan" plat="Tolak Pendaftar">
++        <x-slot:layar>
++            <small>Calon nasabah</small>
++            <b class="angka kecil kuning" id="nama-pendaftar-tolak">-</b>
++        </x-slot:layar>
++        <form method="POST" id="form-tolak" style="display:grid;gap:16px">
++            @csrf
++            <input type="hidden" name="aksi" value="tolak">
++            <label for="alasan">
++                Alasan penolakan (wajib)
++                <input id="alasan" name="alasan" type="text" maxlength="255" required placeholder="Contoh: Bukan warga wilayah jangkauan RT/RW">
++            </label>
++            <div class="deret">
++                <button class="key r besar" type="submit">Kirim penolakan</button>
++                <button class="key p" type="button" onclick="document.getElementById('modal-tolak').close()">Batal</button>
++            </div>
++        </form>
++    </x-alat>
+ </dialog>
+ 
+ <script>
+     function bukaModalTolak(id, nama) {
+         const modal = document.getElementById('modal-tolak');
+         const form = document.getElementById('form-tolak');
+-        document.getElementById('nama-pendaftar-tolak').textContent = 'Calon Nasabah: ' + nama;
++        document.getElementById('nama-pendaftar-tolak').textContent = nama;
+         form.action = "{{ url('admin/nasabah') }}/" + id + "/verifikasi";
+         modal.showModal();
+     }
+diff --git a/resources/views/admin/penarikan/index.blade.php b/resources/views/admin/penarikan/index.blade.php
+index 4e227fb..61e73ba 100644
+--- a/resources/views/admin/penarikan/index.blade.php
++++ b/resources/views/admin/penarikan/index.blade.php
+@@ -5,23 +5,45 @@
+ <h1>Pengajuan <em>penarikan uang</em></h1>
+ <p class="lead">Kelola persetujuan dan pencairan dana tunai kepada nasabah (BR-07, BR-08, BR-09).</p>
+ 
+-<form class="f frow" method="GET" action="{{ route('admin.penarikan.index') }}" style="margin-bottom:20px">
+-    <label>
+-        Status
+-        <select name="status">
+-            <option value="">Semua Status</option>
+-            <option value="menunggu" {{ request('status') === 'menunggu' ? 'selected' : '' }}>Menunggu Persetujuan</option>
+-            <option value="disetujui" {{ request('status') === 'disetujui' ? 'selected' : '' }}>Disetujui (Siap Dicairkan)</option>
+-            <option value="dicairkan" {{ request('status') === 'dicairkan' ? 'selected' : '' }}>Dicairkan (Selesai)</option>
+-            <option value="ditolak" {{ request('status') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+-            <option value="dibatalkan" {{ request('status') === 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+-        </select>
+-    </label>
+-    <button class="btn sm" type="submit">Filter</button>
+-    @if(request('status'))
+-        <a href="{{ route('admin.penarikan.index') }}" class="btn o sm" style="text-decoration:none">Reset</a>
+-    @endif
+-</form>
++@php
++    $statusTombol = [
++        '' => 'Semua',
++        'menunggu' => 'Menunggu',
++        'disetujui' => 'Disetujui',
++        'dicairkan' => 'Dicairkan',
++        'ditolak' => 'Ditolak',
++        'dibatalkan' => 'Dibatalkan',
++    ];
++@endphp
++<x-alat tool="capit" plat="Penarikan">
++    <x-slot:layar>
++        <div class="baris">
++            <div>
++                <small>Pengajuan yang tampil</small>
++                <b class="angka">{{ $penarikanList->total() }}</b>
++            </div>
++            <div class="kanan">
++                <small>Saring status</small>
++                <b class="angka kecil kuning">{{ $statusTombol[(string) request('status')] ?? 'Semua' }}</b>
++            </div>
++        </div>
++    </x-slot:layar>
++
++    <div>
++        <p style="font-weight:800;font-size:17px;margin:0 0 10px">Tekan status untuk menyaring daftar</p>
++        <div class="deret" role="group" aria-label="Saring menurut status">
++            @foreach($statusTombol as $nilai => $nama)
++                <a href="{{ route('admin.penarikan.index', $nilai === '' ? [] : ['status' => $nilai]) }}"
++                   class="key sm {{ (string) request('status') === (string) $nilai ? 'on' : 'p' }}"
++                   @if((string) request('status') === (string) $nilai) aria-current="true" @endif>{{ $nama }}</a>
++            @endforeach
++        </div>
++    </div>
++
++    <x-slot:nampan>
++        <p>Setujui dulu pengajuan yang masuk. Setelah uang tunai diserahkan langsung ke nasabah, tekan Cairkan Tunai.</p>
++    </x-slot:nampan>
++</x-alat>
+ 
+ <div class="tbl">
+     <table>
+@@ -87,25 +109,25 @@
+     {{ $penarikanList->links() }}
+ </div>
+ 
+-<dialog id="modal-tolak-penarikan">
+-    <form method="POST" id="form-tolak-penarikan" class="f" style="min-width:320px">
+-        @csrf
+-        <h3>Tolak Pengajuan Penarikan</h3>
+-        <p class="lead" id="ket-tolak-penarikan" style="margin-bottom:12px"></p>
+-        <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
+-            Penolakan akan mengembalikan saldo yang ditahan ke saldo tersedia nasabah.
+-        </p>
+-
+-        <label for="alasan_penolakan">
+-            Alasan penolakan (wajib)
+-            <input id="alasan_penolakan" name="alasan_penolakan" type="text" maxlength="255" required placeholder="Contoh: Kas fisik belum tersedia hari ini">
+-        </label>
+-
+-        <div class="row" style="margin-top:14px;gap:8px">
+-            <button class="btn" type="submit" style="background:#dc2626;border-color:#b91c1c">Kirim Penolakan</button>
+-            <button class="btn o" type="button" onclick="document.getElementById('modal-tolak-penarikan').close()">Batal</button>
+-        </div>
+-    </form>
++<dialog id="modal-tolak-penarikan" class="dlg-alat">
++    <x-alat tool="capit" plat="Tolak Pengajuan">
++        <x-slot:layar>
++            <small>Pengajuan yang ditolak</small>
++            <b class="angka kecil kuning" id="ket-tolak-penarikan">-</b>
++        </x-slot:layar>
++        <form method="POST" id="form-tolak-penarikan" style="display:grid;gap:16px">
++            @csrf
++            <small>Penolakan mengembalikan saldo yang ditahan ke saldo tersedia nasabah.</small>
++            <label for="alasan_penolakan">
++                Alasan penolakan (wajib)
++                <input id="alasan_penolakan" name="alasan_penolakan" type="text" maxlength="255" required placeholder="Contoh: Kas fisik belum tersedia hari ini">
++            </label>
++            <div class="deret">
++                <button class="key r besar" type="submit">Kirim penolakan</button>
++                <button class="key p" type="button" onclick="document.getElementById('modal-tolak-penarikan').close()">Batal</button>
++            </div>
++        </form>
++    </x-alat>
+ </dialog>
+ 
+ <script>
+diff --git a/resources/views/admin/setoran/create.blade.php b/resources/views/admin/setoran/create.blade.php
+index c79fb56..d7cbb15 100644
+--- a/resources/views/admin/setoran/create.blade.php
++++ b/resources/views/admin/setoran/create.blade.php
+@@ -3,94 +3,141 @@
+ @section('content')
+ <small class="kick">Setoran</small>
+ <h1>Catat <em>setoran sampah</em></h1>
+-<p class="lead">Timbang dan masukkan berat sampah yang disetorkan oleh nasabah (BR-01, BR-05).</p>
++<p class="lead">Pilih nasabah, lalu isi berat tiap jenis sampah yang ditimbang (BR-01, BR-05). Layar timbangan di bawah menghitung nilainya.</p>
+ 
+-<form class="f" method="POST" action="{{ route('admin.setoran.store') }}" style="max-width:680px" novalidate id="form-setoran">
++<form method="POST" action="{{ route('admin.setoran.store') }}" novalidate id="form-setoran">
+     @csrf
+ 
+-    <label for="nasabah_id">
+-        Pilih Nasabah Aktif
+-        <select id="nasabah_id" name="nasabah_id" required autofocus>
+-            <option value="">-- Pilih Nasabah --</option>
+-            @foreach($nasabahList as $nasabah)
+-                <option value="{{ $nasabah->id }}" {{ old('nasabah_id') == $nasabah->id ? 'selected' : '' }}>
+-                    {{ $nasabah->nomor_nasabah }} · {{ $nasabah->user->name }} (Saldo: Rp {{ number_format($nasabah->saldo, 0, ',', '.') }})
+-                </option>
+-            @endforeach
+-        </select>
+-        @error('nasabah_id')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
++    <x-alat tool="timbang" plat="Timbang Sampah">
++        <x-slot:layar>
++            <div class="baris">
++                <div>
++                    <small>Berat total</small>
++                    <b class="angka" id="lcd-kg">0,00 kg</b>
++                </div>
++                <div class="kanan">
++                    <small>Nasabah</small>
++                    <b class="angka kecil kuning" id="lcd-nasabah">Belum dipilih</b>
++                </div>
++            </div>
++            <p class="baca">Estimasi nilai: <b id="lcd-rp">Rp 0</b></p>
++        </x-slot:layar>
++
++        <label for="nasabah_id">
++            Pilih nasabah aktif
++            <select id="nasabah_id" name="nasabah_id" required autofocus>
++                <option value="">-- Pilih nasabah --</option>
++                @foreach($nasabahList as $nasabah)
++                    <option value="{{ $nasabah->id }}" data-nama="{{ $nasabah->user->name }}" {{ old('nasabah_id') == $nasabah->id ? 'selected' : '' }}>
++                        {{ $nasabah->nomor_nasabah }} · {{ $nasabah->user->name }} (Saldo: Rp {{ number_format($nasabah->saldo, 0, ',', '.') }})
++                    </option>
++                @endforeach
++            </select>
++            @error('nasabah_id')<span class="err">{{ $message }}</span>@enderror
++        </label>
+ 
+-    <h2 style="margin-top:20px;font-size:16px">Timbangan Sampah (kg)</h2>
+-    <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
+-        Isi berat untuk jenis sampah yang disetorkan (kosongkan jika tidak ada). Gunakan titik atau koma untuk desimal (maks. 2 desimal).
+-    </p>
++        <div>
++            <p style="font-weight:800;font-size:17px;margin:0 0 4px">Letakkan sampah di timbangan</p>
++            <small>Kosongkan jenis yang tidak disetor. Tombol + dan − bergeser 0,25. Boleh juga ketik angka, pakai koma atau titik (maks. 2 angka di belakang koma).</small>
++        </div>
+ 
+-    <div class="frow" style="flex-wrap:wrap">
+-        @foreach($jenisList as $index => $jenis)
+-            <label style="flex:1 1 200px">
+-                {{ $jenis->nama }} ({{ $jenis->satuan }})
+-                <br>
+-                <small style="color:var(--em)">@ Rp {{ number_format($jenis->harga_saat_ini, 0, ',', '.') }} / {{ $jenis->satuan }}</small>
+-                
+-                <input type="hidden" name="items[{{ $index }}][jenis_sampah_id]" value="{{ $jenis->id }}">
+-                <input type="text"
+-                       name="items[{{ $index }}][berat_kg]"
+-                       class="input-berat"
+-                       data-harga="{{ $jenis->harga_saat_ini }}"
+-                       inputmode="decimal"
+-                       placeholder="0,00"
+-                       value="{{ old("items.{$index}.berat_kg") }}">
+-            </label>
+-        @endforeach
+-    </div>
+-    @error('items')<span class="err" style="display:block">{{ $message }}</span>@enderror
++        <div class="baki">
++            @foreach($jenisList as $index => $jenis)
++                <div class="baki-baris">
++                    <div class="baki-nama">
++                        <label for="berat-{{ $index }}">{{ $jenis->nama }}</label>
++                        <small>@ Rp {{ number_format($jenis->harga_saat_ini, 0, ',', '.') }} / {{ $jenis->satuan }}</small>
++                    </div>
++                    <div class="langkah">
++                        <button type="button" class="key p sm" data-langkah="-0.25" aria-label="Kurangi 0,25 {{ $jenis->satuan }} {{ $jenis->nama }}">−</button>
++                        <input type="hidden" name="items[{{ $index }}][jenis_sampah_id]" value="{{ $jenis->id }}">
++                        <input type="text"
++                               id="berat-{{ $index }}"
++                               name="items[{{ $index }}][berat_kg]"
++                               class="input-berat"
++                               data-harga="{{ $jenis->harga_saat_ini }}"
++                               inputmode="decimal"
++                               autocomplete="off"
++                               placeholder="0,00"
++                               value="{{ old("items.{$index}.berat_kg") }}">
++                        <button type="button" class="key g sm" data-langkah="0.25" aria-label="Tambah 0,25 {{ $jenis->satuan }} {{ $jenis->nama }}">+</button>
++                    </div>
++                </div>
++            @endforeach
++        </div>
++        @error('items')<span class="err">{{ $message }}</span>@enderror
+ 
+-    <div class="box g" style="margin:20px 0;padding:16px;background:rgba(255,255,255,0.03)">
+-        <p class="lead" id="preview-total" style="font-size:18px;margin:0">
+-            Total Estimasi Nilai: <b>Rp 0</b> (0,00 kg)
+-        </p>
+-    </div>
++        <div class="deret">
++            <button class="key g besar" type="submit">Simpan setoran</button>
++            <a href="{{ route('admin.setoran.index') }}" class="key p">Batal</a>
++        </div>
+ 
+-    <div class="row" style="gap:8px">
+-        <button class="btn" type="submit">Simpan Setoran</button>
+-        <a href="{{ route('admin.setoran.index') }}" class="btn o" style="text-decoration:none">Batal</a>
+-    </div>
++        <x-slot:nampan>
++            <p>Setelah disimpan, struk setoran tercetak dan saldo nasabah bertambah.</p>
++        </x-slot:nampan>
++    </x-alat>
+ </form>
+ 
++@push('scripts')
+ <script>
+     document.addEventListener('DOMContentLoaded', () => {
+-        const inputs = document.querySelectorAll('.input-berat');
+-        const preview = document.getElementById('preview-total');
++        const form = document.getElementById('form-setoran');
++        const inputs = form.querySelectorAll('.input-berat');
++        const pilih = document.getElementById('nasabah_id');
++        const lcdKg = document.getElementById('lcd-kg');
++        const lcdRp = document.getElementById('lcd-rp');
++        const lcdNsb = document.getElementById('lcd-nasabah');
++
++        const ke = (v) => {
++            const n = parseFloat(String(v || '').replace(',', '.').trim());
++            return isNaN(n) || n < 0 ? 0 : n;
++        };
+ 
+         function hitungTotal() {
+             let totalNilai = 0;
+             let totalBerat = 0;
+-
+             inputs.forEach(inp => {
+-                const valStr = (inp.value || '').replace(',', '.').trim();
+-                const berat = parseFloat(valStr);
++                const berat = ke(inp.value);
+                 const harga = parseFloat(inp.dataset.harga || 0);
+-
+-                if (!isNaN(berat) && berat > 0) {
++                if (berat > 0) {
+                     totalBerat += berat;
+                     totalNilai += Math.round(berat * harga);
+                 }
+             });
+-
+-            const nilaiFmt = new Intl.NumberFormat('id-ID').format(totalNilai);
+-            const beratFmt = totalBerat.toFixed(2).replace('.', ',');
+-            preview.innerHTML = `Total Estimasi Nilai: <b>Rp ${nilaiFmt}</b> (${beratFmt} kg)`;
++            const nama = pilih.selectedOptions[0] && pilih.value ? pilih.selectedOptions[0].dataset.nama : '';
++            lcdKg.textContent = totalBerat.toFixed(2).replace('.', ',') + ' kg';
++            lcdRp.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalNilai);
++            lcdNsb.textContent = nama || 'Belum dipilih';
++            if (window.ALAT) {
++                window.ALAT.set('timbang', { kg: totalBerat, v: totalNilai, nama: nama });
++            }
+         }
+ 
+         inputs.forEach(inp => {
+-            inp.addEventListener('input', hitungTotal);
++            // hanya angka, koma, titik: tanda minus dan huruf tidak diterima
++            inp.addEventListener('input', () => {
++                const bersih = inp.value.replace(/[^0-9.,]/g, '');
++                if (bersih !== inp.value) { inp.value = bersih; }
++                hitungTotal();
++            });
++        });
++        pilih.addEventListener('change', hitungTotal);
++
++        // tombol + dan − bergeser 0,25 dan tidak pernah di bawah 0
++        form.querySelectorAll('[data-langkah]').forEach(tombol => {
++            tombol.addEventListener('click', () => {
++                const inp = tombol.closest('.langkah').querySelector('.input-berat');
++                const baru = Math.max(0, Math.round((ke(inp.value) + parseFloat(tombol.dataset.langkah)) * 100) / 100);
++                inp.value = baru > 0 ? baru.toFixed(2).replace('.', ',') : '';
++                hitungTotal();
++                inp.focus();
++            });
+         });
+ 
+         hitungTotal();
+ 
+         // Ganti koma ke titik saat submit
+-        document.getElementById('form-setoran').addEventListener('submit', function() {
++        form.addEventListener('submit', function () {
+             inputs.forEach(inp => {
+                 if (inp.value) {
+                     inp.value = inp.value.replace(',', '.').trim();
+@@ -99,4 +146,5 @@ function hitungTotal() {
+         });
+     });
+ </script>
++@endpush
+ @endsection
+diff --git a/resources/views/components/alat.blade.php b/resources/views/components/alat.blade.php
+new file mode 100644
+index 0000000..7ec9fe9
+--- /dev/null
++++ b/resources/views/components/alat.blade.php
+@@ -0,0 +1,25 @@
++{{--
++    Badan alat: bungkus form/isi halaman supaya tampil sebagai alat yang sama dengan di ruangan 3D.
++    Pemakaian:
++        <x-alat tool="capit" plat="Ambil Uang">
++            <x-slot:layar> ...isi layar LCD... </x-slot:layar>
++            ...isian dan tombol (slot utama)...
++            <x-slot:nampan> ...keterangan di nampan bawah... </x-slot:nampan>
++        </x-alat>
++    tool : scan | rak | timbang | struk | riwayat | capit  (kunci yang sama dengan alat di latar.js / GarasiData)
++    plat : tulisan di papan nama (samakan dengan label alat di ruangan)
++--}}
++@props(['tool', 'plat'])
++<section {{ $attributes->merge(['class' => 'alat', 'data-alat' => $tool, 'aria-label' => $plat]) }}>
++    <header class="alat-plat">
++        <h2>{{ $plat }}</h2>
++        <span class="sambung">Layar alat di ruangan ikut berubah</span>
++    </header>
++    @isset($layar)
++        <div class="layar" aria-live="polite">{{ $layar }}</div>
++    @endisset
++    <div class="alat-badan">{{ $slot }}</div>
++    @isset($nampan)
++        <div class="nampan">{{ $nampan }}</div>
++    @endisset
++</section>
+diff --git a/resources/views/layouts/app.blade.php b/resources/views/layouts/app.blade.php
+index f619f1d..8ffb982 100644
+--- a/resources/views/layouts/app.blade.php
++++ b/resources/views/layouts/app.blade.php
+@@ -6,6 +6,7 @@
+     <meta name="robots" content="noindex">
+     <title>{{ $title ?? 'Portal Bank Sampah Sahabat Ibu' }}</title>
+     <link rel="stylesheet" href="{{ asset('assets/style.css') }}">
++    <link rel="stylesheet" href="{{ asset('assets/alat.css') }}">
+ </head>
+ <body data-view="{{ $dataView ?? 'home' }}" data-role="{{ auth()->user()->role }}">
+     @include('partials.icons')
+@@ -130,6 +131,7 @@
+     <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
+     <script defer src="{{ asset('assets/js/aksi.js') }}"></script>
+     <script defer src="{{ asset('assets/js/latar.js') }}"></script>
++    <script defer src="{{ asset('assets/js/sinkron.js') }}"></script>
+     <button type="button" id="lihat" onclick="toggleLihat()" aria-pressed="false">Lihat ruangan penuh</button>
+     <script>
+         function toggleLihat() {
+diff --git a/resources/views/nasabah/dashboard.blade.php b/resources/views/nasabah/dashboard.blade.php
+index c414646..8392125 100644
+--- a/resources/views/nasabah/dashboard.blade.php
++++ b/resources/views/nasabah/dashboard.blade.php
+@@ -5,30 +5,32 @@
+ <h1>Halo, <em>{{ $user->name }}</em></h1>
+ <p class="lead">Nomor Nasabah: <b>{{ $nasabah->nomor_nasabah }}</b></p>
+ 
+-<div class="kpi">
+-    <div class="g">
++<x-alat tool="scan" plat="Cek Saldo">
++    <x-slot:layar>
+         <small>Uang bisa diambil</small>
+-        <b>Rp {{ number_format($nasabah->saldo_tersedia, 0, ',', '.') }}</b>
+-    </div>
+-    <div class="g">
+-        <small>Sedang ditahan</small>
+-        <b>Rp {{ number_format($nasabah->saldo_ditahan, 0, ',', '.') }}</b>
+-    </div>
+-    <div class="g">
+-        <small>Total sampah</small>
+-        <b>{{ number_format($totalBeratSetoran, 2, ',', '.') }} kg</b>
+-    </div>
+-    <div class="g">
+-        <small>Total setoran</small>
+-        <b>Rp {{ number_format($totalNilaiSetoran, 0, ',', '.') }}</b>
+-    </div>
+-</div>
++        <b class="angka">Rp {{ number_format($nasabah->saldo_tersedia, 0, ',', '.') }}</b>
++        <div class="kisi" style="margin-top:14px">
++            <div>
++                <small>Sedang ditahan</small>
++                <b class="angka kecil kuning">Rp {{ number_format($nasabah->saldo_ditahan, 0, ',', '.') }}</b>
++            </div>
++            <div>
++                <small>Total sampah</small>
++                <b class="angka kecil">{{ number_format($totalBeratSetoran, 2, ',', '.') }} kg</b>
++            </div>
++            <div>
++                <small>Total setoran</small>
++                <b class="angka kecil">Rp {{ number_format($totalNilaiSetoran, 0, ',', '.') }}</b>
++            </div>
++        </div>
++    </x-slot:layar>
+ 
+-<div class="row" style="margin-bottom:24px;gap:8px">
+-    <a href="{{ route('nasabah.penarikan.index') }}" class="btn sm" style="text-decoration:none">Ajukan Penarikan Uang</a>
+-    <a href="{{ route('nasabah.setoran.index') }}" class="btn o sm" style="text-decoration:none">Riwayat Setoran Lengkap</a>
+-    <a href="{{ route('nasabah.katalog.index') }}" class="btn o sm" style="text-decoration:none">Lihat Harga Hari Ini</a>
+-</div>
++    <div class="deret">
++        <a href="{{ route('nasabah.penarikan.index') }}" class="key r besar">Ambil uang</a>
++        <a href="{{ route('nasabah.setoran.index') }}" class="key p">Riwayat setoran</a>
++        <a href="{{ route('nasabah.katalog.index') }}" class="key p">Harga hari ini</a>
++    </div>
++</x-alat>
+ 
+ <h2>Setoran terbaru</h2>
+ <div class="tbl">
+diff --git a/resources/views/nasabah/katalog/index.blade.php b/resources/views/nasabah/katalog/index.blade.php
+index 14aeed0..9b291bb 100644
+--- a/resources/views/nasabah/katalog/index.blade.php
++++ b/resources/views/nasabah/katalog/index.blade.php
+@@ -5,36 +5,30 @@
+ <h1>Harga sampah <em>hari ini</em></h1>
+ <p class="lead">Daftar harga pembelian sampah per kg yang berlaku di Bank Sampah Sahabat Ibu.</p>
+ 
+-<div class="tbl">
+-    <table>
+-        <thead>
+-            <tr>
+-                <th>Jenis Sampah</th>
+-                <th>Satuan</th>
+-                <th>Harga Berlaku Saat Ini</th>
+-            </tr>
+-        </thead>
+-        <tbody>
+-            @forelse($katalog as $item)
+-                <tr>
+-                    <td><b>{{ $item['nama'] }}</b></td>
+-                    <td>{{ $item['satuan'] }}</td>
+-                    <td>
++<x-alat tool="rak" plat="Daftar Harga">
++    <x-slot:layar>
++        <small>Harga beli per kg, berlaku hari ini</small>
++        @if(count($katalog))
++            <div class="daftar">
++                @foreach($katalog as $item)
++                    <div>
++                        <span style="color:#eef5f0">{{ $item['nama'] }}</span>
+                         @if($item['harga_per_kg'] > 0)
+-                            <b>Rp {{ number_format($item['harga_per_kg'], 0, ',', '.') }}</b> / {{ $item['satuan'] }}
++                            <span>Rp {{ number_format($item['harga_per_kg'], 0, ',', '.') }}/{{ $item['satuan'] }}</span>
+                         @else
+-                            <span style="color:var(--mu)">Belum ditetapkan</span>
++                            <span class="kuning" style="color:#f3c64f">Belum ditetapkan</span>
+                         @endif
+-                    </td>
+-                </tr>
+-            @empty
+-                <tr><td colspan="3">Katalog harga sampah belum tersedia.</td></tr>
+-            @endforelse
+-        </tbody>
+-    </table>
+-</div>
++                    </div>
++                @endforeach
++            </div>
++        @else
++            <b class="angka kecil kuning">Harga belum tersedia</b>
++        @endif
++    </x-slot:layar>
++    <p style="margin:0;font-weight:700;font-size:17px">Timbang dulu, nilainya dihitung dari harga di atas.</p>
++</x-alat>
+ 
+-<p class="lead" style="margin-top:20px;font-size:13px">
++<p class="lead" style="margin-top:20px;font-size:15px">
+     Harga dapat diperbarui oleh pengurus secara berkala sesuai dinamika harga pasar pengepul. Nilai yang digunakan untuk transaksi setoran Ibu selalu mengacu pada harga yang berlaku pada hari setoran ditimbang.
+ </p>
+ @endsection
+diff --git a/resources/views/nasabah/penarikan/index.blade.php b/resources/views/nasabah/penarikan/index.blade.php
+index d185fa1..7a84a3f 100644
+--- a/resources/views/nasabah/penarikan/index.blade.php
++++ b/resources/views/nasabah/penarikan/index.blade.php
+@@ -3,18 +3,36 @@
+ @section('content')
+ <small class="kick">Penarikan dana</small>
+ <h1>Ajukan <em>ambil uang</em></h1>
+-<p class="lead">
+-    Tersedia: <b>Rp {{ number_format($nasabah->saldo_tersedia, 0, ',', '.') }}</b> · 
+-    Sedang ditahan: <b>Rp {{ number_format($nasabah->saldo_ditahan, 0, ',', '.') }}</b>
+-</p>
++<p class="lead">Isi jumlah uang yang ingin Ibu ambil, lalu tekan tombol merah. Uangnya ditahan dulu sampai pengurus menyiapkan tunai.</p>
+ 
+-<h2>Formulir pengajuan</h2>
+-<form class="f frow" method="POST" action="{{ route('nasabah.penarikan.store') }}" style="margin-bottom:24px">
+-    @csrf
+-    @include('partials.rupiah-input', ['id' => 'nominal', 'name' => 'nominal', 'label' => 'Nominal Penarikan (Rp)', 'step' => 5000, 'max' => (int) $nasabah->saldo_tersedia, 'maxLabel' => 'Semua saldo'])
+-    <button class="btn sm" type="submit">Ajukan Penarikan</button>
+-</form>
+-@error('nominal')<p class="err" style="display:block;margin-top:-16px;margin-bottom:20px">{{ $message }}</p>@enderror
++<x-alat tool="capit" plat="Ambil Uang">
++    <x-slot:layar>
++        <div class="baris">
++            <div>
++                <small>Uang bisa diambil</small>
++                <b class="angka">Rp {{ number_format($nasabah->saldo_tersedia, 0, ',', '.') }}</b>
++            </div>
++            <div class="kanan">
++                <small>Sedang ditahan</small>
++                <b class="angka kecil kuning">Rp {{ number_format($nasabah->saldo_ditahan, 0, ',', '.') }}</b>
++            </div>
++        </div>
++        <p class="baca">Akan diajukan: <b data-ikut-rp="nominal" data-kosong="belum diisi">belum diisi</b></p>
++    </x-slot:layar>
++
++    <form method="POST" action="{{ route('nasabah.penarikan.store') }}" id="form-tarik" style="display:grid;gap:16px">
++        @csrf
++        @include('partials.rupiah-input', ['id' => 'nominal', 'name' => 'nominal', 'label' => 'Berapa yang mau diambil?', 'step' => 5000, 'max' => (int) $nasabah->saldo_tersedia, 'maxLabel' => 'Semua saldo', 'draf' => 'capit'])
++        @error('nominal')<p class="err">{{ $message }}</p>@enderror
++        <div class="deret">
++            <button class="key r besar" type="submit">Ambil uang</button>
++        </div>
++    </form>
++
++    <x-slot:nampan>
++        <p>Setelah diajukan, status berubah menjadi Menunggu. Jika disetujui, temui pengurus untuk menerima uang tunai.</p>
++    </x-slot:nampan>
++</x-alat>
+ 
+ <h2>Riwayat pengajuan penarikan</h2>
+ <div class="tbl">
+diff --git a/resources/views/nasabah/profile/show.blade.php b/resources/views/nasabah/profile/show.blade.php
+index 3b50134..73f0247 100644
+--- a/resources/views/nasabah/profile/show.blade.php
++++ b/resources/views/nasabah/profile/show.blade.php
+@@ -8,60 +8,80 @@
+     <span class="pill ok" style="margin-left:8px">{{ ucfirst($user->status) }}</span>
+ </p>
+ 
+-<h2>Perbarui informasi kontak</h2>
+-<form class="f" method="POST" action="{{ route('nasabah.profile.update') }}" style="max-width:540px" novalidate>
++<form method="POST" action="{{ route('nasabah.profile.update') }}" novalidate>
+     @csrf
+     @method('PUT')
++    <x-alat tool="struk" plat="Profil Saya">
++        <x-slot:layar>
++            <small>Nama</small>
++            <b class="angka kecil">{{ $user->name }}</b>
++            <div class="kisi" style="margin-top:12px">
++                <div>
++                    <small>Nomor nasabah</small>
++                    <b class="angka kecil kuning">{{ $nasabah->nomor_nasabah }}</b>
++                </div>
++                <div>
++                    <small>Telepon / WhatsApp</small>
++                    <b class="angka kecil kuning" data-ikut="telepon" data-kosong="-">{{ $nasabah->telepon }}</b>
++                </div>
++            </div>
++        </x-slot:layar>
+ 
+-    <label for="name">
+-        Nama
+-        <input id="name" type="text" value="{{ $user->name }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
+-        <small style="color:var(--mu);margin-top:2px;display:block">Perubahan nama silakan hubungi pengurus.</small>
+-    </label>
++        <label for="name">
++            Nama
++            <input id="name" type="text" value="{{ $user->name }}" readonly disabled>
++            <small>Perubahan nama silakan hubungi pengurus.</small>
++        </label>
+ 
+-    <label for="email">
+-        Email
+-        <input id="email" type="email" value="{{ $user->email }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
+-        <small style="color:var(--mu);margin-top:2px;display:block">Email akun terikat dan dilindungi.</small>
+-    </label>
++        <label for="email">
++            Email
++            <input id="email" type="email" value="{{ $user->email }}" readonly disabled>
++            <small>Email akun terikat dan dilindungi.</small>
++        </label>
+ 
+-    <label for="telepon">
+-        Telepon / WhatsApp
+-        <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required autofocus>
+-        @error('telepon')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
++        <label for="telepon">
++            Telepon / WhatsApp
++            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required autofocus>
++            @error('telepon')<span class="err">{{ $message }}</span>@enderror
++        </label>
+ 
+-    <label for="alamat">
+-        Alamat Domisili ({{ $nasabah->kategori === 'umum' ? 'Umum' : 'Warga Taman Gading' }})
+-        <input id="alamat" type="text" value="{{ $nasabah->alamat }}" readonly disabled style="opacity:0.6;cursor:not-allowed">
+-        <small style="color:var(--mu);margin-top:2px;display:block">Alamat dan status domisili diverifikasi pengurus. Untuk pindah alamat, hubungi pengurus.</small>
+-    </label>
++        <label for="alamat">
++            Alamat domisili ({{ $nasabah->kategori === 'umum' ? 'Umum' : 'Warga Taman Gading' }})
++            <input id="alamat" type="text" value="{{ $nasabah->alamat }}" readonly disabled>
++            <small>Alamat dan status domisili diverifikasi pengurus. Untuk pindah alamat, hubungi pengurus.</small>
++        </label>
+ 
+-    <button class="btn" type="submit">Simpan Kontak</button>
++        <div class="deret">
++            <button class="key g besar" type="submit">Simpan kontak</button>
++        </div>
++    </x-alat>
+ </form>
+ 
+-<h2>Ganti kata sandi</h2>
+-<form class="f" method="POST" action="{{ route('password.change.update') }}" style="max-width:540px;margin-top:16px" novalidate>
++<form method="POST" action="{{ route('password.change.update') }}" novalidate>
+     @csrf
++    <x-alat tool="struk" plat="Ganti Kata Sandi">
++        <label for="current_password">
++            Kata sandi saat ini
++            <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
++            @error('current_password')<span class="err">{{ $message }}</span>@enderror
++        </label>
+ 
+-    <label for="current_password">
+-        Kata sandi saat ini
+-        <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
+-        @error('current_password')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
++        <label for="password">
++            Kata sandi baru
++            <input id="password" name="password" type="password" autocomplete="new-password" required>
++            <small>Minimal 8 karakter, kombinasi huruf dan angka.</small>
++            @error('password')<span class="err">{{ $message }}</span>@enderror
++        </label>
+ 
+-    <label for="password">
+-        Kata sandi baru (min. 8 karakter, kombinasi huruf &amp; angka)
+-        <input id="password" name="password" type="password" autocomplete="new-password" required>
+-        @error('password')<span class="err" style="display:block">{{ $message }}</span>@enderror
+-    </label>
++        <label for="password_confirmation">
++            Ulangi kata sandi baru
++            <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
++        </label>
+ 
+-    <label for="password_confirmation">
+-        Ulangi kata sandi baru
+-        <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
+-    </label>
+-
+-    <button class="btn" type="submit">Simpan Kata Sandi</button>
++        <div class="deret">
++            <button class="key g besar" type="submit">Simpan kata sandi</button>
++        </div>
++    </x-alat>
+ </form>
+ 
+ <p class="sub" style="margin-top:24px">
+diff --git a/resources/views/nasabah/setoran/index.blade.php b/resources/views/nasabah/setoran/index.blade.php
+index 7e5ead3..5e7ba5b 100644
+--- a/resources/views/nasabah/setoran/index.blade.php
++++ b/resources/views/nasabah/setoran/index.blade.php
+@@ -5,19 +5,30 @@
+ <h1>Riwayat <em>setoran sampah</em></h1>
+ <p class="lead">Catatan riwayat sampah yang telah Ibu setorkan ke Bank Sampah Sahabat Ibu.</p>
+ 
+-<form class="f frow" method="GET" action="{{ route('nasabah.setoran.index') }}" style="margin-bottom:20px">
+-    <label>
+-        Dari Tanggal
+-        <input name="start_date" type="date" value="{{ request('start_date') }}">
+-    </label>
+-    <label>
+-        Sampai Tanggal
+-        <input name="end_date" type="date" value="{{ request('end_date') }}">
+-    </label>
+-    <button class="btn sm" type="submit">Terapkan</button>
+-    @if(request('start_date') || request('end_date'))
+-        <a href="{{ route('nasabah.setoran.index') }}" class="btn o sm" style="text-decoration:none">Reset</a>
+-    @endif
++<form method="GET" action="{{ route('nasabah.setoran.index') }}">
++    <x-alat tool="riwayat" plat="Buku Tabungan">
++        <x-slot:layar>
++            <small>Catatan yang tampil</small>
++            <b class="angka">{{ $transaksiList->total() }} setoran</b>
++        </x-slot:layar>
++
++        <div class="frow" style="gap:14px">
++            <label style="flex:1 1 200px">
++                Dari tanggal
++                <input name="start_date" type="date" value="{{ request('start_date') }}">
++            </label>
++            <label style="flex:1 1 200px">
++                Sampai tanggal
++                <input name="end_date" type="date" value="{{ request('end_date') }}">
++            </label>
++        </div>
++        <div class="deret">
++            <button class="key g" type="submit">Terapkan</button>
++            @if(request('start_date') || request('end_date'))
++                <a href="{{ route('nasabah.setoran.index') }}" class="key p">Reset</a>
++            @endif
++        </div>
++    </x-alat>
+ </form>
+ 
+ <div class="tbl">
+diff --git a/resources/views/partials/rupiah-input.blade.php b/resources/views/partials/rupiah-input.blade.php
+index 7c4cd1f..1c27340 100644
+--- a/resources/views/partials/rupiah-input.blade.php
++++ b/resources/views/partials/rupiah-input.blade.php
+@@ -1,38 +1,34 @@
+ {{--
+     Isian nominal rupiah dengan pintasan (hanya angka, tidak bisa minus).
++    Tampil sebagai layar angka + papan tombol (gaya panel alat, lihat public/assets/alat.css).
+     Variabel: $id, $name, $label, $step (kelipatan tombol +/−), $max (opsional), $value (opsional),
+-              $placeholder (opsional), $maxLabel (opsional, teks tombol "isi maksimum").
++              $placeholder (opsional), $maxLabel (opsional, teks tombol "isi maksimum"),
++              $draf (opsional: kunci alat 3D yang ikut menampilkan angka ini, mis. 'capit').
++    Setiap perubahan mengirim event 'rupiah' (detail = angka) yang ditangkap public/assets/js/sinkron.js.
+ --}}
+ @php
+     $rpValue = old($name, $value ?? '');
+     $rpStep = (int) ($step ?? 1000);
+ @endphp
+-@once
+-    <style>
+-        .rp-b{min-height:48px;min-width:56px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:#ffffff14;color:var(--ink);font:inherit;font-weight:800;font-size:16px;cursor:pointer}
+-        .rp-b:active{transform:translateY(1px)}
+-        .rp-b.rp-hapus{margin-left:auto}
+-        .rp-bar{display:flex;flex-wrap:wrap;gap:8px}
+-        .rp-tampil{font-weight:800;font-size:15px;color:var(--green,#6fe0a2)}
+-    </style>
+-@endonce
+-<div class="rp-field" style="display:grid;gap:6px;min-width:240px">
+-    <label for="{{ $id }}" style="font-weight:700;font-size:14.5px">{{ $label }}</label>
+-    <div data-rupiah data-step="{{ $rpStep }}" @if(!empty($max)) data-max="{{ (int) $max }}" @endif style="display:grid;gap:8px">
+-        <input id="{{ $id }}" name="{{ $name }}" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="12" required
+-               placeholder="{{ $placeholder ?? 'Contoh: 50000' }}" value="{{ $rpValue }}" style="font-size:20px;font-weight:800">
+-        <div class="rp-bar">
+-            <button type="button" class="rp-b" data-aksi="kurang" aria-label="Kurangi {{ number_format($rpStep, 0, ',', '.') }}">−</button>
+-            <button type="button" class="rp-b" data-aksi="tambah" aria-label="Tambah {{ number_format($rpStep, 0, ',', '.') }}">+</button>
+-            <button type="button" class="rp-b" data-aksi="nol2" aria-label="Tambah dua angka nol">00</button>
+-            <button type="button" class="rp-b" data-aksi="nol3" aria-label="Tambah tiga angka nol">000</button>
++<div class="rp-field">
++    <label for="{{ $id }}">{{ $label }}</label>
++    <div data-rupiah data-nama="{{ $id }}" data-step="{{ $rpStep }}" @if(!empty($max)) data-max="{{ (int) $max }}" @endif @if(!empty($draf)) data-draf="{{ $draf }}" @endif style="display:grid;gap:12px">
++        <div class="rp-lcd">
++            <input id="{{ $id }}" class="rp-input" name="{{ $name }}" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="12" required
++                   placeholder="{{ $placeholder ?? '0' }}" value="{{ $rpValue }}">
++        </div>
++        <div class="rp-papan">
++            <button type="button" class="key p" data-aksi="kurang" aria-label="Kurangi {{ number_format($rpStep, 0, ',', '.') }}">−</button>
++            <button type="button" class="key p" data-aksi="tambah" aria-label="Tambah {{ number_format($rpStep, 0, ',', '.') }}">+</button>
++            <button type="button" class="key y" data-aksi="nol2" aria-label="Tambah dua angka nol">00</button>
++            <button type="button" class="key y" data-aksi="nol3" aria-label="Tambah tiga angka nol">000</button>
+             @if(!empty($max))
+-                <button type="button" class="rp-b" data-aksi="max">{{ $maxLabel ?? 'Maksimum' }}</button>
++                <button type="button" class="key g" data-aksi="max">{{ $maxLabel ?? 'Maksimum' }}</button>
+             @endif
+-            <button type="button" class="rp-b rp-hapus" data-aksi="hapus">Hapus</button>
++            <button type="button" class="key rp-hapus" data-aksi="hapus">Hapus</button>
+         </div>
+-        <span class="rp-tampil" data-tampil aria-live="polite"></span>
+-        <small style="color:var(--mu)">Tombol + dan − bergeser Rp {{ number_format($rpStep, 0, ',', '.') }}. Nilai tidak bisa kurang dari 0.</small>
++        <output class="sr" data-tampil aria-live="polite"></output>
++        <small>Tombol + dan − bergeser Rp {{ number_format($rpStep, 0, ',', '.') }}. Nilai tidak bisa kurang dari 0.</small>
+     </div>
+ </div>
+ @once
+@@ -50,6 +46,7 @@ function tulis(n) {
+                 if (max !== null && n > max) n = max;
+                 inp.value = n > 0 ? String(n) : '';
+                 tampil.textContent = n > 0 ? fmt(n) : '';
++                w.dispatchEvent(new CustomEvent('rupiah', { bubbles: true, detail: n }));
+             }
+             inp.addEventListener('input', function () {
+                 var d = inp.value.replace(/\D+/g, '').replace(/^0+/, '');
+@@ -71,7 +68,7 @@ function tulis(n) {
+                 else if (a === 'hapus') tulis(0);
+                 inp.focus();
+             });
+-            tulis(nilai());
++            tampil.textContent = nilai() > 0 ? fmt(nilai()) : '';
+         });
+     })();
+     </script>

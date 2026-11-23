@@ -5,23 +5,45 @@
 <h1>Pengajuan <em>penarikan uang</em></h1>
 <p class="lead">Kelola persetujuan dan pencairan dana tunai kepada nasabah (BR-07, BR-08, BR-09).</p>
 
-<form class="f frow" method="GET" action="{{ route('admin.penarikan.index') }}" style="margin-bottom:20px">
-    <label>
-        Status
-        <select name="status">
-            <option value="">Semua Status</option>
-            <option value="menunggu" {{ request('status') === 'menunggu' ? 'selected' : '' }}>Menunggu Persetujuan</option>
-            <option value="disetujui" {{ request('status') === 'disetujui' ? 'selected' : '' }}>Disetujui (Siap Dicairkan)</option>
-            <option value="dicairkan" {{ request('status') === 'dicairkan' ? 'selected' : '' }}>Dicairkan (Selesai)</option>
-            <option value="ditolak" {{ request('status') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-            <option value="dibatalkan" {{ request('status') === 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
-        </select>
-    </label>
-    <button class="btn sm" type="submit">Filter</button>
-    @if(request('status'))
-        <a href="{{ route('admin.penarikan.index') }}" class="btn o sm" style="text-decoration:none">Reset</a>
-    @endif
-</form>
+@php
+    $statusTombol = [
+        '' => 'Semua',
+        'menunggu' => 'Menunggu',
+        'disetujui' => 'Disetujui',
+        'dicairkan' => 'Dicairkan',
+        'ditolak' => 'Ditolak',
+        'dibatalkan' => 'Dibatalkan',
+    ];
+@endphp
+<x-alat tool="capit" plat="Penarikan">
+    <x-slot:layar>
+        <div class="baris">
+            <div>
+                <small>Pengajuan yang tampil</small>
+                <b class="angka">{{ $penarikanList->total() }}</b>
+            </div>
+            <div class="kanan">
+                <small>Saring status</small>
+                <b class="angka kecil kuning">{{ $statusTombol[(string) request('status')] ?? 'Semua' }}</b>
+            </div>
+        </div>
+    </x-slot:layar>
+
+    <div>
+        <p style="font-weight:800;font-size:17px;margin:0 0 10px">Tekan status untuk menyaring daftar</p>
+        <div class="deret" role="group" aria-label="Saring menurut status">
+            @foreach($statusTombol as $nilai => $nama)
+                <a href="{{ route('admin.penarikan.index', $nilai === '' ? [] : ['status' => $nilai]) }}"
+                   class="key sm {{ (string) request('status') === (string) $nilai ? 'on' : 'p' }}"
+                   @if((string) request('status') === (string) $nilai) aria-current="true" @endif>{{ $nama }}</a>
+            @endforeach
+        </div>
+    </div>
+
+    <x-slot:nampan>
+        <p>Setujui dulu pengajuan yang masuk. Setelah uang tunai diserahkan langsung ke nasabah, tekan Cairkan Tunai.</p>
+    </x-slot:nampan>
+</x-alat>
 
 <div class="tbl">
     <table>
@@ -87,25 +109,25 @@
     {{ $penarikanList->links() }}
 </div>
 
-<dialog id="modal-tolak-penarikan">
-    <form method="POST" id="form-tolak-penarikan" class="f" style="min-width:320px">
-        @csrf
-        <h3>Tolak Pengajuan Penarikan</h3>
-        <p class="lead" id="ket-tolak-penarikan" style="margin-bottom:12px"></p>
-        <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
-            Penolakan akan mengembalikan saldo yang ditahan ke saldo tersedia nasabah.
-        </p>
-
-        <label for="alasan_penolakan">
-            Alasan penolakan (wajib)
-            <input id="alasan_penolakan" name="alasan_penolakan" type="text" maxlength="255" required placeholder="Contoh: Kas fisik belum tersedia hari ini">
-        </label>
-
-        <div class="row" style="margin-top:14px;gap:8px">
-            <button class="btn" type="submit" style="background:#dc2626;border-color:#b91c1c">Kirim Penolakan</button>
-            <button class="btn o" type="button" onclick="document.getElementById('modal-tolak-penarikan').close()">Batal</button>
-        </div>
-    </form>
+<dialog id="modal-tolak-penarikan" class="dlg-alat">
+    <x-alat tool="capit" plat="Tolak Pengajuan">
+        <x-slot:layar>
+            <small>Pengajuan yang ditolak</small>
+            <b class="angka kecil kuning" id="ket-tolak-penarikan">-</b>
+        </x-slot:layar>
+        <form method="POST" id="form-tolak-penarikan" style="display:grid;gap:16px">
+            @csrf
+            <small>Penolakan mengembalikan saldo yang ditahan ke saldo tersedia nasabah.</small>
+            <label for="alasan_penolakan">
+                Alasan penolakan (wajib)
+                <input id="alasan_penolakan" name="alasan_penolakan" type="text" maxlength="255" required placeholder="Contoh: Kas fisik belum tersedia hari ini">
+            </label>
+            <div class="deret">
+                <button class="key r besar" type="submit">Kirim penolakan</button>
+                <button class="key p" type="button" onclick="document.getElementById('modal-tolak-penarikan').close()">Batal</button>
+            </div>
+        </form>
+    </x-alat>
 </dialog>
 
 <script>

@@ -163,9 +163,12 @@ box(2.2,2.3,.5,cream,0,1.45,-.8,tm);const tmS=screen(1.9,1.55,0,1.5,-.54,tm);
 screen(2.5,.28,0,.2,1.12,tm).paint((g,W,H)=>{bg(g,W,H,'#f1ead8');tx(g,'TIMBANGAN CATAT SETORAN',W/2,H*.72,40,'#26332d','center')});
 tag(tm,'timbang');let wShow=0;
 tmS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Transaksi baru',24,42,24,'#9fd9b8','left','600');tx(g,'NSB-0842 / Ani',W-24,42,24,'#fff','right');if(S.m.tm)tx(g,S.m.tm,24,76,19,'#f3c64f','left','600');tx(g,fmt(wShow)+' kg',24,146,62);
- S.cart.slice(0,3).forEach((r,i)=>{const y=196+i*34;tx(g,r.j+' '+fmt(r.kg)+' kg',24,y,24,'#eef5f0','left','600');tx(g,rp(r.kg*J[r.j].h),W-24,y,24,'#eef5f0','right','600')});
- if(!S.cart.length){tx(g,'Keranjang kosong.',24,206,24,'#9fd9b8','left','700');tx(g,'Pilih sampah di rak katalog.',24,238,22,'#9fd9b8','left','600')};
- if(S.cart.length>3)tx(g,'+'+(S.cart.length-3)+' baris lagi',24,300,20,'#9fd9b8');
+ {const L=S.cart,rh=34,vt=170,vb=H-120,vh=vb-vt,ov=L.length*rh>vh,mx=Math.max(0,L.length*rh-vh);S.tmMax=mx;S.tmOff=Math.max(0,Math.min(mx,S.tmOff||0));const xr=ov?W-100:W-24;
+  if(L.length)tx(g,L.length+' baris',W-24,146,22,'#9fd9b8','right','600');
+  if(!L.length){tx(g,'Keranjang kosong.',24,206,24,'#9fd9b8','left','700');tx(g,'Pilih sampah di rak katalog.',24,238,22,'#9fd9b8','left','600')}
+  else{g.save();g.beginPath();g.rect(0,vt,W,vh);g.clip();L.forEach((r,i)=>{const y=vt+26+i*rh-S.tmOff;if(y<vt-rh||y>vb+rh)return;tx(g,r.j+' '+fmt(r.kg)+' kg',24,y,24,'#eef5f0','left','600');tx(g,rp(r.kg*J[r.j].h),xr,y,24,'#eef5f0','right','600')});g.restore();
+   if(ov){B(W-88,vt,60,56,'▲',S.tmOff>0?()=>{S.tmOff-=rh*2;redraw()}:null,'n');B(W-88,vb-56,60,56,'▼',S.tmOff<mx?()=>{S.tmOff+=rh*2;redraw()}:null,'n');
+    const th=Math.max(24,vh*vh/(L.length*rh));g.fillStyle='#ffffff22';g.fillRect(W-16,vt,8,vh);g.fillStyle='#9fd9b8';g.fillRect(W-16,vt+(vh-th)*(S.tmOff/mx),8,th)}}}
  tx(g,'Total '+rp(S.cart.reduce((a,r)=>a+r.kg*J[r.j].h,0)),24,H-96,34,'#f3c64f');
  B(24,H-70,270,54,'Catat & timbang',S.busy||!S.cart.length?null:doSetor,'g');B(308,H-70,180,54,'Kosongkan',S.cart.length&&!S.busy?()=>{S.cart=[];redraw()}:null,'n')});
 
@@ -232,7 +235,7 @@ kS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Katalog harga · 21 Nov 2026',24,40,22,'#9f
  if(S.m.rak)tx(g,S.m.rak,24,138,20,'#f3c64f','left','600');else if(st<=0)tx(g,'Ambil kantong di Titik Kumpul dulu',24,138,20,'#ff8a7a','left','700');
  tx(g,rp(J[S.sel].h)+'/kg',24,190,50);tx(g,'Stok Ibu: '+fmt(st)+' kg',24,226,26,st>0?'#8ef0be':'#ff8a7a','left','800');tx(g,'Nilai '+rp(S.kg*J[S.sel].h),W-24,226,26,'#f3c64f','right','800');
  B(24,244,76,60,'−',()=>{S.kg=Math.max(.25,S.kg-.25);redraw()});tx(g,fmt(S.kg)+' kg',W/2,288,40,'#fff','center');B(412,244,76,60,'+',()=>{S.kg=Math.min(mx,S.kg+.25);redraw()});
- const ok=st>=S.kg-1e-9&&st>0;B(24,H-84,464,64,ok?'+ Masukkan keranjang':'Stok kosong',ok?()=>{S.stok[S.sel]-=S.kg;S.cart.push({j:S.sel,kg:S.kg});S.m.rak=S.sel+' '+fmt(S.kg)+' kg masuk keranjang';S.m.tm='';S.kg=Math.min(S.kg,Math.max(.25,S.stok[S.sel]));redraw()}:null,'g')});
+ const ok=st>=S.kg-1e-9&&st>0;B(24,H-84,464,64,ok?'+ Masukkan keranjang':'Stok kosong',ok?()=>{S.stok[S.sel]-=S.kg;S.cart.push({j:S.sel,kg:S.kg});S.tmOff=1e9;S.m.rak=S.sel+' '+fmt(S.kg)+' kg masuk keranjang';S.m.tm='';S.kg=Math.min(S.kg,Math.max(.25,S.stok[S.sel]));redraw()}:null,'g')});
 
 // 6 CAPIT
 const cp=new THREE.Group();cp.position.set(8.7,0,0);row.add(cp);
@@ -379,7 +382,7 @@ async function goStart(){if(cur=='luar')return;if(!S.door)await toggleDoor('luar
 function moveTo(k){if(k=='pintu'&&cur=='luar')k='luar';if(cur=='luar'&&k!='luar'&&!S.door){toggleDoor(k);return}cur=k;G=cl(P[k]);nav()}
 let drag=null;const pts=new Map(),clampR=r=>Math.max(1.2,Math.min(22,r));let pinch=0;
 R.domElement.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,m:false};pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size==2){const[a,b]=[...pts.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);drag.m=true}});
-R.domElement.addEventListener('wheel',e=>{if(cur=='luar')return;e.preventDefault();G.r=clampR(G.r*Math.exp(e.deltaY*.0015))},{passive:false});
+R.domElement.addEventListener('wheel',e=>{if(cur=='luar')return;e.preventDefault();if(cur=='timbang'&&S.tmMax>0){ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1),cam);if(ray.intersectObject(tmS).length){S.tmOff=Math.max(0,Math.min(S.tmMax,(S.tmOff||0)+e.deltaY*.5));redraw();return}}G.r=clampR(G.r*Math.exp(e.deltaY*.0015))},{passive:false});
 const kd=new Set(),hold={f:0,b:0,l:0,r:0,zi:0,zo:0},joyV={x:0,y:0};
 {const J=$('joy'),K=$('knob');let pid=null;const upd=e=>{const b=J.getBoundingClientRect(),R0=b.width/2-10;let dx=e.clientX-(b.left+b.width/2),dy=e.clientY-(b.top+b.height/2);const d=Math.hypot(dx,dy);if(d>R0){dx*=R0/d;dy*=R0/d}K.style.transform='translate('+dx+'px,'+dy+'px)';const dz=Math.hypot(dx,dy)/R0;joyV.x=dz<.12?0:dx/R0;joyV.y=dz<.12?0:dy/R0};
  const end=()=>{pid=null;joyV.x=joyV.y=0;K.style.transform='';J.classList.remove('on')};

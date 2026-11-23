@@ -1,0 +1,185 @@
+/* ==========================================================================
+   PANEL ALAT — form menjadi badan alat yang sama dengan alat di ruangan 3D.
+   Warna dan huruf diambil dari alat 3D (public/assets/js/alat.js):
+   badan krem #f1ead8, rangka #26332d, layar gelap + angka hijau muda,
+   papan nama berwarna per alat, tombol tebal yang bisa "ditekan".
+   Dimuat setelah style.css di layouts/app.blade.php.
+   ========================================================================== */
+
+:root{
+  --krem:#f1ead8; --rangka:#26332d; --kertas:#f6f0df; --tinta:#3a2f1e;
+  --mu:#b8cbbd; --em:#8ef0be; /* dulu dipakai view tapi belum pernah didefinisikan */
+}
+
+/* kolom grid boleh menyusut (tanpa ini <select> berisi teks panjang dan tabel melebarkan halaman di HP) */
+.pgm{grid-template-columns:minmax(0,1fr)}
+.alat-badan,.alat label,.alat fieldset{grid-template-columns:minmax(0,1fr)}
+.alat label,.alat fieldset{min-width:0}
+.alat select{max-width:100%;text-overflow:ellipsis}
+
+/* ---------- badan alat ---------- */
+.alat{
+  --papan:#2f7d5b; --teks-papan:#fff;
+  position:relative; margin:20px 0 28px; max-width:720px;
+  border-radius:28px; border:4px solid var(--rangka);
+  background:var(--krem); color:var(--rangka);
+  box-shadow:0 20px 44px #000a, inset 0 3px 0 #fff9, inset 0 -8px 0 #0000001a;
+  overflow:hidden;
+}
+.alat[data-alat="capit"]{--papan:#e5594b}
+.alat[data-alat="rak"],.alat[data-alat="scan"]{--papan:#2f7d5b}
+.alat[data-alat="timbang"]{--papan:#26332d}
+.alat[data-alat="struk"]{--papan:#3b4a43}
+.alat[data-alat="riwayat"]{--papan:#5a3d28}
+
+/* papan nama di atas alat (sama dengan label di ruangan) */
+.alat-plat{
+  display:flex; align-items:center; gap:14px; padding:14px 20px;
+  background:var(--papan); color:var(--teks-papan); border-bottom:4px solid var(--rangka);
+}
+.alat-plat:before{ /* lampu "alat menyala" */
+  content:""; flex:none; width:22px; height:22px; border-radius:50%;
+  background:#f3c64f; box-shadow:0 0 0 4px #ffffff55, 0 0 14px #f3c64f;
+}
+.alat .alat-plat h2{
+  margin:0; color:inherit; text-transform:uppercase; letter-spacing:.03em;
+  font:800 clamp(22px,3.4vw,30px)/1.05 "Trebuchet MS","Segoe UI",sans-serif;
+}
+.alat-plat .sambung{
+  display:none; margin-left:auto; text-align:right; max-width:210px;
+  font:700 13px/1.25 Inter,"Segoe UI",sans-serif; opacity:.92;
+}
+html.g3d .alat-plat .sambung{display:block}
+
+/* ---------- layar LCD ---------- */
+.layar{
+  margin:18px 18px 0; padding:16px 20px 18px; border-radius:16px;
+  background:linear-gradient(#12201a,#0b1511); color:#eef5f0;
+  border:4px solid var(--rangka); box-shadow:inset 0 0 26px #000b, 0 2px 0 #fff9;
+  font-family:"Trebuchet MS","Segoe UI",sans-serif;
+}
+.layar small,.alat .layar small{display:block;color:#9fd9b8;font-weight:700;font-size:16px;line-height:1.3}
+.layar .baris{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 24px}
+.layar .angka{display:block;color:#8ef0be;font-weight:800;font-size:clamp(34px,7vw,54px);line-height:1.1;overflow-wrap:anywhere}
+.layar .angka.kecil{font-size:clamp(24px,4.6vw,32px)}
+.layar .kuning{color:#f3c64f}
+.layar .merah{color:#ff8a7a}
+.layar .baca{margin:10px 0 0;font-size:19px;font-weight:700;line-height:1.4;color:#eef5f0}
+.layar .baca b{font-size:1.15em;color:#f3c64f}
+.layar .baca .ok{color:#8ef0be;font-size:.95em}
+.layar .baca .merah{font-size:.95em}
+.layar .kanan{text-align:right}
+.layar .kisi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}
+.layar .daftar{display:grid;gap:8px;margin-top:10px}
+.layar .daftar div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 14px;border-radius:12px;background:#ffffff12;font-weight:800;font-size:clamp(19px,3.6vw,24px)}
+.layar .daftar span{color:#8ef0be}
+
+/* ---------- isi alat: kolom isian + tombol ---------- */
+.alat-badan{padding:18px 20px 22px;display:grid;gap:16px}
+.alat label,.alat legend{display:grid;gap:6px;font-weight:800;font-size:17px;line-height:1.3;color:var(--rangka)}
+.alat legend{display:block;padding:0;margin-bottom:6px}
+.alat small{color:#5b5645;font-weight:600;font-size:14.5px;line-height:1.45}
+.alat .err{color:#b03a2d;font-size:15px;font-weight:700}
+.alat :is(input,select,textarea):not([type=checkbox]):not([type=radio]){
+  width:100%; min-height:56px; padding:10px 16px; border-radius:14px;
+  border:3px solid var(--rangka); background:#fff; color:#1b241f;
+  font:700 19px/1.3 Inter,"Segoe UI",sans-serif; box-shadow:inset 0 3px 0 #0000001a;
+}
+.alat :is(input,select,textarea)::placeholder{color:#8a8470;font-weight:600}
+.alat :is(input,select,textarea):focus-visible{outline:4px solid #f3c64f;outline-offset:2px}
+.alat :is(input,select)[readonly],.alat :is(input,select)[disabled]{background:#e4dcc6;color:#5d5a50;opacity:1;cursor:not-allowed}
+.alat input[type=radio],.alat input[type=checkbox]{width:26px!important;height:26px!important;flex:none;accent-color:#2f7d5b}
+.alat [aria-invalid=true]{border-color:#b03a2d!important}
+
+/* ---------- tombol tebal (sama dengan tombol di layar alat 3D) ---------- */
+.key{
+  --tebal:#0b1511;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:58px; min-width:58px; padding:0 22px; border:0; border-radius:18px;
+  background:#2c3b34; color:#eef5f0; text-decoration:none; cursor:pointer;
+  font:800 19px/1 "Trebuchet MS","Segoe UI",sans-serif;
+  box-shadow:0 6px 0 var(--tebal), 0 12px 18px #0004;
+  transition:transform .08s, box-shadow .08s, filter .15s;
+}
+.key:hover{filter:brightness(1.12)}
+.key:active,.key.tekan{transform:translateY(5px);box-shadow:0 1px 0 var(--tebal),0 3px 6px #0004}
+.key.g{background:#6fe0a2;color:#0d2a1b;--tebal:#2f7d5b}
+.key.r{background:#e5594b;color:#fff;--tebal:#8e2a20}
+.key.y{background:#f3c64f;color:#2b1f00;--tebal:#a47a12}
+.key.p{background:#e3d7bd;color:#3a2f1e;--tebal:#a89870}
+.key.on{background:#fff;color:#16201b;--tebal:#26332d;outline:3px solid #f3c64f}
+.key.sm{min-height:46px;min-width:46px;padding:0 16px;font-size:16px}
+.key[disabled],.key[aria-disabled=true]{opacity:.45;pointer-events:none}
+.deret{display:flex;flex-wrap:wrap;gap:14px 12px;align-items:center}
+.deret .key.besar{flex:1 1 220px;min-height:68px;font-size:22px}
+.alat .key:focus-visible{outline:4px solid #f3c64f;outline-offset:3px}
+
+/* ---------- nampan keluaran (bagian bawah alat) ---------- */
+.nampan{
+  padding:16px 20px 20px; background:#e0d6bb; border-top:4px solid var(--rangka);
+  box-shadow:inset 0 8px 14px #0000001f; font-size:16px; line-height:1.5; font-weight:600;
+}
+.nampan p{margin:0;color:#3a2f1e}
+
+/* ---------- isian rupiah: kolom angka = layar mesin ---------- */
+.rp-field{display:grid;gap:8px}
+.rp-field>label{font-weight:800;font-size:17px}
+.rp-lcd{position:relative}
+.rp-lcd:before{content:"Rp";position:absolute;left:18px;top:50%;transform:translateY(-50%);font:800 24px "Trebuchet MS",sans-serif;color:#9fd9b8;pointer-events:none}
+.alat .rp-lcd input.rp-input{
+  min-height:80px; padding:8px 18px 8px 66px; text-align:right; border:4px solid var(--rangka);
+  background:linear-gradient(#12201a,#0b1511); color:#8ef0be;
+  font:800 clamp(32px,7vw,46px)/1 "Trebuchet MS","Segoe UI",sans-serif;
+  box-shadow:inset 0 0 26px #000b;
+}
+.alat .rp-lcd input.rp-input::placeholder{color:#4f7d66;font-weight:700}
+.rp-papan{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:12px 10px}
+.rp-papan .key{min-width:0;padding:0 10px}
+.rp-papan .rp-hapus{--tebal:#8e2a20;background:#ff8a7a;color:#3a0f09}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- baki timbangan: satu baris per jenis sampah ---------- */
+.baki{display:grid;gap:12px}
+.baki-baris{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 14px;align-items:center;padding:12px 14px;border-radius:18px;background:#e8dfc6;border:2px dashed #a89870}
+.baki-nama{display:grid;gap:2px}
+.baki-nama label{font-size:20px}
+.langkah{display:flex;align-items:center;gap:8px}
+.langkah input{width:118px!important;text-align:center;font-size:22px!important}
+.langkah .key{min-width:54px;min-height:54px;padding:0;font-size:28px}
+@media(max-width:560px){.baki-baris{grid-template-columns:1fr}.langkah{justify-content:space-between}.langkah input{flex:1;width:auto!important}}
+
+/* ---------- kertas: tabel di semua halaman seperti buku tabungan / struk ---------- */
+#isi .tbl{
+  --mu:#6b5a3d; --em:#1f6b46;
+  background:var(--kertas); color:var(--tinta); border:3px solid #d9cfb5; border-radius:18px;
+  padding:6px 12px; box-shadow:0 10px 24px #0005;
+}
+#isi .tbl th{color:#7a5200}
+#isi .tbl th,#isi .tbl td{border-bottom:1px solid #d9cfb5}
+#isi .tbl tr:last-child td{border-bottom:0}
+#isi .tbl b{color:inherit}
+#isi .tbl a:not(.btn){color:#1f6b46;font-weight:700}
+#isi .tbl [style*="#f87171"]{color:#b03a2d!important}
+#isi .tbl .pill{background:#fbefc9;border-color:#d1a63a;color:#7a5200}
+#isi .tbl .pill.ok{background:#d6efdf;border-color:#2f7d5b;color:#14573a}
+#isi .tbl .pill.no{background:#fbe0dc;border-color:#c0584b;color:#9a2a1c}
+#isi .tbl .btn{background:#6fe0a2;color:#0d2a1b;box-shadow:0 4px 0 #2f7d5b}
+#isi .tbl .btn.o{background:#2c3b34;color:#eef5f0;box-shadow:0 4px 0 #0b1511}
+#isi .tbl .btn:hover{box-shadow:0 4px 0 #2f7d5b;filter:brightness(1.07)}
+
+/* ---------- jendela (dialog) tolak: tetap berupa alat ---------- */
+dialog.dlg-alat{padding:0;border:0;background:transparent;width:min(560px,94vw);overflow:visible;max-height:none}
+dialog.dlg-alat .alat{margin:0;max-width:none}
+
+/* ---------- layar kecil ---------- */
+@media(max-width:560px){
+  .alat{border-radius:22px;margin-left:-4px;margin-right:-4px}
+  .alat-plat{padding:12px 14px}.alat-plat .sambung{display:none!important}
+  .layar{margin:14px 12px 0;padding:14px 14px 16px}
+  .alat-badan{padding:16px 14px 20px}
+  .nampan{padding:14px}
+  .layar .kisi{grid-template-columns:1fr}
+  .layar .kanan{text-align:left}
+}
+@media(prefers-reduced-motion:reduce){.key{transition:none}}
+@media print{.alat{box-shadow:none;border-color:#000}.alat-plat{background:#fff!important;color:#000!important}}
