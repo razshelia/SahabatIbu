@@ -3,13 +3,13 @@
 @section('content')
 <small class="kick">Katalog harga</small>
 <h1>Harga sampah <em>harian</em></h1>
-<p class="lead">Atur pembaruan harga per kg yang berlaku harian (BR-03, BR-04).</p>
+<p class="lead">Tetapkan harga per satuan dan tanggal mulai berlakunya.</p>
 
 <form method="POST" action="{{ route('admin.katalog.harga.store') }}" id="form-harga">
     @csrf
     <x-alat tool="rak" plat="Katalog Harga">
         <x-slot:layar>
-            <small id="lcd-jenis">Harga sekarang</small>
+            <small id="lcd-jenis">Harga saat ini</small>
             <b class="angka" id="lcd-lama">-</b>
             <p class="baca">Harga baru: <b id="lcd-baru">belum diisi</b> <span id="lcd-selisih"></span></p>
         </x-slot:layar>
@@ -21,13 +21,15 @@
                     <option value="{{ $j->id }}" data-nama="{{ $j->nama }}" data-satuan="{{ $j->satuan }}" data-sekarang="{{ (int) ($j->harga_berlaku->harga_per_kg ?? 0) }}">{{ $j->nama }} ({{ $j->satuan }})</option>
                 @endforeach
             </select>
+            @error('jenis_sampah_id')<span class="err" data-validation-error-for="jenis_sampah_id">{{ $message }}</span>@enderror
         </label>
 
-        @include('partials.rupiah-input', ['id' => 'harga_per_kg', 'name' => 'harga_per_kg', 'label' => 'Harga baru per kg', 'step' => 500, 'placeholder' => '0'])
+        @include('partials.rupiah-input', ['id' => 'harga_per_kg', 'name' => 'harga_per_kg', 'label' => '        Harga baru per satuan', 'step' => 500, 'placeholder' => '0'])
 
         <label for="berlaku_mulai">
-            Berlaku mulai
+            Mulai berlaku
             <input id="berlaku_mulai" name="berlaku_mulai" type="date" required value="{{ date('Y-m-d') }}">
+            @error('berlaku_mulai')<span class="err" data-validation-error-for="berlaku_mulai">{{ $message }}</span>@enderror
         </label>
 
         <div class="deret">
@@ -35,7 +37,7 @@
         </div>
 
         <x-slot:nampan>
-            <p>Harga baru berlaku untuk setoran yang ditimbang mulai tanggal di atas. Setoran lama tidak berubah.</p>
+            <p>Harga ini digunakan untuk setoran yang ditimbang mulai tanggal tersebut. Setoran sebelumnya tidak berubah.</p>
         </x-slot:nampan>
     </x-alat>
 </form>
@@ -76,14 +78,14 @@
 </script>
 @endpush
 
-<h2>Harga yang berlaku saat ini</h2>
+<h2>Harga saat ini</h2>
 <div class="tbl">
     <table>
         <thead>
             <tr>
-                <th>Jenis Sampah</th>
+                <th>Jenis sampah</th>
                 <th>Satuan</th>
-                <th>Harga Berlaku</th>
+                <th>Harga berlaku</th>
                 <th>Status</th>
                 <th>Aksi</th>
             </tr>
@@ -96,7 +98,7 @@
                     <td>
                         @if($j->harga_berlaku)
                             Rp {{ number_format($j->harga_berlaku->harga_per_kg, 0, ',', '.') }}/{{ $j->satuan }}
-                            <small style="color:var(--mu);display:block">sejak {{ $j->harga_berlaku->berlaku_mulai->format('d/m/Y') }}</small>
+                            <small style="color:var(--mu);display:block">Mulai {{ $j->harga_berlaku->berlaku_mulai->format('d/m/Y') }}</small>
                         @else
                             <span style="color:#f87171">Belum diatur</span>
                         @endif
@@ -128,15 +130,15 @@
     </table>
 </div>
 
-<h2>Riwayat perubahan harga</h2>
+<h2>Perubahan harga</h2>
 <div class="tbl">
     <table>
         <thead>
             <tr>
-                <th>Jenis Sampah</th>
-                <th>Harga per Satuan</th>
-                <th>Berlaku Mulai</th>
-                <th>Dibuat Oleh</th>
+                <th>Jenis sampah</th>
+                <th>Harga per satuan</th>
+                <th>Mulai berlaku</th>
+                <th>Diubah oleh</th>
             </tr>
         </thead>
         <tbody>
@@ -145,10 +147,10 @@
                     <td><b>{{ $rh->jenisSampah->nama ?? '-' }}</b></td>
                     <td>Rp {{ number_format($rh->harga_per_kg, 0, ',', '.') }} / {{ $rh->jenisSampah->satuan ?? 'kg' }}</td>
                     <td>{{ $rh->berlaku_mulai->format('d/m/Y') }}</td>
-                    <td>{{ $rh->pembuat->name ?? 'Admin' }}</td>
+                    <td>{{ $rh->pembuat->name ?? 'Pengurus' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="4">Belum ada riwayat perubahan harga.</td></tr>
+                <tr><td colspan="4">Belum ada perubahan harga.</td></tr>
             @endforelse
         </tbody>
     </table>

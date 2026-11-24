@@ -94,7 +94,7 @@ class AdminSetoranController extends Controller
             );
 
             return redirect()->route('admin.setoran.show', $transaksi->id)
-                ->with('success', "Setoran dengan kode {$transaksi->kode} berhasil disimpan! Saldo nasabah telah bertambah.");
+                ->with('success', "Setoran {$transaksi->kode} sudah dicatat. Saldo nasabah bertambah.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
@@ -128,7 +128,7 @@ class AdminSetoranController extends Controller
                 Auth::user()
             );
 
-            return back()->with('success', "Transaksi setoran {$setoran->kode} telah berhasil dibatalkan dan saldo nasabah telah disesuaikan.");
+            return back()->with('success', "Setoran {$setoran->kode} dibatalkan. Saldo nasabah sudah disesuaikan.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }

@@ -2,10 +2,13 @@
 <html lang="id"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Garasi Bank Sampah 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
 <style>
 :root{--ink:#eef5f0;--glass:#141c18a8;--line:#ffffff1f;--green:#6fe0a2;--yel:#f3c64f;box-sizing:border-box}
 *{box-sizing:border-box;margin:0}
-html,body{height:100%;overflow:hidden;background:#1b211e;color:var(--ink);font-family:"Inter","Segoe UI","Trebuchet MS",sans-serif}
+html,body{height:100%;overflow:hidden;background:#1b211e;color:var(--ink);font-family:"Rubik","Segoe UI","Trebuchet MS",sans-serif}
 body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 canvas{display:block;width:100%;height:100%;touch-action:none}
 body:after{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,#0000 55%,#000a 100%)}
@@ -74,7 +77,7 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;background:radi
 <header id="top"><div class="brand g"><img class="logo" src="{{ asset('assets/logo-mark.svg') }}" alt="" width="34" height="34"><div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div></div><div class="right"><div class="bal g" id="balbox"><small>Saldo</small><b id="balv"></b></div><div class="bal g" id="dombox"><small>Dompet tunai</small><b id="domv"></b></div>@auth
 <a class="sw g" href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}" style="text-decoration:none">&larr; Kembali</a>
 @else
-<a class="sw g" href="{{ url('/') }}" style="text-decoration:none">&larr; Beranda</a><a class="sw g" href="{{ route('login') }}" style="text-decoration:none">Masuk / Daftar</a>
+<a class="sw g" href="{{ url('/') }}" style="text-decoration:none">&larr; Beranda</a><a class="sw g" href="{{ route('login') }}" style="text-decoration:none">Masuk atau daftar</a>
 @endauth</div></header>
 <div id="remote" role="toolbar" aria-label="Remote garasi">
 <button class="home" onclick="goStart()" aria-label="Kembali ke awal, di luar garasi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0d2a1b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/></svg></button>
@@ -84,7 +87,7 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;background:radi
 <button id="doorBtn" class="slide" onclick="toggleDoor()" aria-label="Buka atau tutup pintu garasi"><span class="k"></span>Pintu <em id="ds">tutup</em></button>
 <button class="fold" onclick="this.parentNode.classList.toggle('min')" aria-label="Ciutkan atau perluas tombol alat">▾</button></div>
 <div id="pad" class="g" role="group" aria-label="Kendali jalan dan zoom"><div id="joy" role="application" aria-label="Joystick: geser ke segala arah untuk berjalan"><i class="a u">&#9650;</i><i class="a d">&#9660;</i><i class="a l">&#9664;</i><i class="a r">&#9654;</i><div id="knob"></div></div><div class="zm"><button data-h="zi" aria-label="Zoom masuk"><b>+</b></button><button data-h="zo" aria-label="Zoom keluar"><b>&minus;</b></button></div></div>
-<div id="hint">Garasi masih tertutup. Ketuk pintu atau panel di sampingnya untuk membuka.</div><div id="note" role="status" aria-live="polite"></div>
+<div id="hint">Garasi masih tertutup. Buka pintunya atau pilih panel di samping.</div><div id="note" role="status" aria-live="polite"></div>
 @php
     $curUser = auth()->user();
     $nasabah = $curUser?->nasabah;
@@ -210,10 +213,10 @@ let wr=null;
 const nNew=()=>S.riw.length-S.sync;
 const flt=()=>S.riw.slice(S.riw.length-(wr?S.riw.length:S.sync)).filter(r=>S.f=='all'||(S.f=='set'&&r.v>0)||(S.f=='tar'&&r.v<0));
 bL.paint((g,W,H,B)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,H);tx(g,'BUKU TABUNGAN',W/2,60,36,'#3a2f1e','center');tx(g,USER_NAME+' · '+USER_NO,W/2,96,24,'#6b5a3d','center','600');
- tx(g,'Saldo tercatat',40,150,24,'#6b5a3d','left','600');tx(g,rp(S.bs-S.bt),40,206,50,'#1f6b46');tx(g,'Ditahan '+rp(S.bt),40,246,24,'#a0701a','left','600');tx(g,flt().length+' catatan ditampilkan',40,284,22,'#6b5a3d','left','600');
- [['all','Semua'],['set','Setoran'],['tar','Tarikan']].forEach((f,i)=>B(40,312+i*62,432,52,f[1],()=>{if(!S.wrt){S.f=f[0];redraw()}},S.f==f[0]?'pon':'p'));
+ tx(g,'Saldo tercatat',40,150,24,'#6b5a3d','left','600');tx(g,rp(S.bs-S.bt),40,206,50,'#1f6b46');tx(g,'Saldo ditahan '+rp(S.bt),40,246,24,'#a0701a','left','600');tx(g,flt().length+' catatan',40,284,22,'#6b5a3d','left','600');
+ [['all','Semua'],['set','Setoran'],['tar','Penarikan']].forEach((f,i)=>B(40,312+i*62,432,52,f[1],()=>{if(!S.wrt){S.f=f[0];redraw()}},S.f==f[0]?'pon':'p'));
  B(40,530,432,96,nNew()>0?'Perbarui ('+nNew()+' baru)':'Perbarui buku',S.wrt?null:writeBook,'g');
- tx(g,nNew()>0?'Ada catatan yang belum ditulis di buku':(S.m.bk||'Buku sudah terbaru'),W/2,662,21,nNew()>0?'#a0701a':'#6b5a3d','center','700')});
+ tx(g,nNew()>0?'Ada catatan baru untuk ditulis':(S.m.bk||'Buku sudah terbaru'),W/2,662,21,nNew()>0?'#a0701a':'#6b5a3d','center','700')});
 bR.paint((g,W,H)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,H);tx(g,'Catatan',40,64,32,'#3a2f1e');const L=flt().slice(0,6);if(!L.length)tx(g,'Belum ada catatan.',40,130,24,'#6b5a3d','left','600');
  L.forEach((r,i)=>{const y=120+i*96;if(wr&&i<wr.n&&i>wr.i)return;g.save();if(wr&&i==wr.i&&i<wr.n){g.beginPath();g.rect(0,y-34,40+(W-60)*wr.p,110);g.clip()}
   g.fillStyle='#d9cfb5';g.fillRect(40,y-30,W-80,2);tx(g,r.k+' · '+r.t,40,y+4,24,'#3a2f1e');tx(g,(r.v<0?'−':'+')+Math.abs(Math.round(r.v)).toLocaleString('id-ID'),W-40,y+4,26,r.v<0?'#b03a2d':'#1f6b46','right');tx(g,r.d,40,y+36,21,'#6b5a3d','left','600');g.restore()});tx(g,'Halaman 1',W/2,H-24,20,'#9a8a68','center','600')});
@@ -246,10 +249,10 @@ mk('Plastik',-1.1,.4);mk('Kertas',1.1,.4);mk('Logam',0,2.2);
 screen(3.4,.6,0,5.2,.2,rk).paint((g,W,H)=>{bg(g,W,H,'#2f7d5b');tx(g,'RAK KATALOG HARGA',W/2,H*.65,44,'#fff','center')});
 const kg=new THREE.Group();kg.position.set(3.9,0,.9);rk.add(kg);box(.12,1.2,.12,M(0x26332d),0,.6,-.1,kg);box(2.1,1.75,.12,M(0x26332d),0,1.85,-.08,kg);
 const kS=screen(2.0,1.65,0,1.85,0,kg);tag(kg,'rak');
-kS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Katalog harga · 21 Nov 2026',24,40,22,'#9fd9b8','left','600');Object.keys(J).forEach((k,i)=>B(24+i*160,54,148,56,k,()=>{S.sel=k;redraw()},k==S.sel?'on':'n'));
+kS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Harga sampah · 21 Nov 2026',24,40,22,'#9fd9b8','left','600');Object.keys(J).forEach((k,i)=>B(24+i*160,54,148,56,k,()=>{S.sel=k;redraw()},k==S.sel?'on':'n'));
  const st=S.stok[S.sel],mx=Math.max(.25,Math.min(20,st));if(S.kg>mx)S.kg=mx;
- if(S.m.rak)tx(g,S.m.rak,24,138,20,'#f3c64f','left','600');else if(st<=0)tx(g,'Ambil kantong di Titik Kumpul dulu',24,138,20,'#ff8a7a','left','700');
- tx(g,rp(J[S.sel].h)+'/kg',24,190,50);tx(g,'Stok Ibu: '+fmt(st)+' kg',24,226,26,st>0?'#8ef0be':'#ff8a7a','left','800');tx(g,'Nilai '+rp(S.kg*J[S.sel].h),W-24,226,26,'#f3c64f','right','800');
+ if(S.m.rak)tx(g,S.m.rak,24,138,20,'#f3c64f','left','600');else if(st<=0)tx(g,'Ambil sampah di titik kumpul dulu',24,138,20,'#ff8a7a','left','700');
+ tx(g,rp(J[S.sel].h)+'/kg',24,190,50);tx(g,'Stok: '+fmt(st)+' kg',24,226,26,st>0?'#8ef0be':'#ff8a7a','left','800');tx(g,'Nilai '+rp(S.kg*J[S.sel].h),W-24,226,26,'#f3c64f','right','800');
  B(24,244,76,60,'−',()=>{S.kg=Math.max(.25,S.kg-.25);redraw()});tx(g,fmt(S.kg)+' kg',W/2,288,40,'#fff','center');B(412,244,76,60,'+',()=>{S.kg=Math.min(mx,S.kg+.25);redraw()});
  const ok=st>=S.kg-1e-9&&st>0;B(24,H-84,464,64,ok?'+ Masukkan keranjang':'Stok kosong',ok?()=>{S.stok[S.sel]-=S.kg;S.cart.push({j:S.sel,kg:S.kg});S.tmOff=1e9;S.m.rak=S.sel+' '+fmt(S.kg)+' kg masuk keranjang';S.m.tm='';S.kg=Math.min(S.kg,Math.max(.25,S.stok[S.sel]));redraw()}:null,'g')});
 
@@ -259,7 +262,7 @@ box(3.2,1.4,2.4,cream,0,.7,0,cp);
 const gl=new THREE.Mesh(new THREE.BoxGeometry(3,2.6,2.2),new THREE.MeshPhysicalMaterial({color:0xcfeee0,transparent:true,opacity:.2,roughness:.05}));gl.position.y=2.7;cp.add(gl);
 [[-1.5,-1.1],[1.5,-1.1],[-1.5,1.1],[1.5,1.1]].forEach(p=>box(.1,2.6,.1,M(0x26332d),p[0],2.7,p[1],cp));box(3.2,.12,2.4,cream,0,4.05,0,cp);
 const cpS=screen(2.4,1.2,-.4,.7,1.21,cp,0,800);
-const cpL=screen(2.8,.5,0,4.45,1.1,cp);cpL.paint((g,W,H)=>{bg(g,W,H,'#e5594b');tx(g,'MESIN CAPIT PENARIKAN',W/2,H*.66,44,'#fff','center')});
+const cpL=screen(2.8,.5,0,4.45,1.1,cp);cpL.paint((g,W,H)=>{bg(g,W,H,'#e5594b');tx(g,'MESIN PENARIKAN',W/2,H*.66,44,'#fff','center')});
 // isi mesin: koin emas dan ikat uang di lantai kaca
 const goldM=M(0xf3c64f,.3,.25),bandM=M(0xf3c64f,.5),billM=[M(0x2f7d5b,.6),M(0xf6bdb0,.6),M(0x6fe0a2,.6)];
 const tagK=o=>{o.traverse(q=>{q.userData.k='capit'});return o};
@@ -287,7 +290,7 @@ let cpRun=false;function lampTick(){const t=performance.now()/180;lamps.forEach(
 let prize=null;
 const trayState=()=>{if(!prize)return 0;const t=S.tarik.find(x=>x.id==prize.userData.id);return t&&t.st=='Disetujui'?2:1};
 const traySign=screen(.7,.22,1.2,.8,1.222,cp,0,420);
-traySign.paint((g,W,H)=>{const q=trayState();bg(g,W,H,q==2?'#2f7d5b':'#26332d');tx(g,q==2?'AMBIL UANG':q==1?'MENUNGGU ADMIN':'NAMPAN UANG',W/2,H*.68,q==1?40:52,q==2?'#fff':'#f3c64f','center','900')});
+traySign.paint((g,W,H)=>{const q=trayState();bg(g,W,H,q==2?'#2f7d5b':'#26332d');tx(g,q==2?'AMBIL UANG':q==1?'MENUNGGU':'NAMPAN UANG',W/2,H*.68,q==1?40:52,q==2?'#fff':'#f3c64f','center','900')});
 const trayLamp=new THREE.Mesh(new THREE.SphereGeometry(.05,12,8),new THREE.MeshBasicMaterial({color:0x555555}));trayLamp.position.set(1.52,.55,1.23);cp.add(trayLamp);
 const trayHit=new THREE.Mesh(new THREE.BoxGeometry(.95,.75,.9),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));trayHit.position.set(1.2,.5,1.45);trayHit.userData.tray=1;cp.add(trayHit);
 const bd=new THREE.Group();bd.position.set(3.1,0,.9);cp.add(bd);box(.12,1,.12,M(0x26332d),0,.5,-.1,bd);box(1.5,2.5,.1,M(0x26332d),0,2.1,-.08,bd);
@@ -295,7 +298,7 @@ const bS=screen(1.4,2.4,0,2.1,0,bd,0,512);
 tag(cp,'capit');
 cpS.paint((g,W,H,B)=>{bg(g,W,H,'#1b2a22');const ph=Math.floor(performance.now()/350)%2;
  for(let i=0;i<20;i++){const x=20+i*(W-40)/19;g.fillStyle=(i+ph)%2?'#f3c64f':'#ff8a7a';g.beginPath();g.arc(x,12,6,0,7);g.fill();g.beginPath();g.arc(x,H-12,6,0,7);g.fill()}
- tx(g,'AMBIL UANG',24,66,46,'#f3c64f','left','900');tx(g,'Saldo '+rp(avail()),W-24,66,34,'#8ef0be','right','800');
+ tx(g,'PENARIKAN',24,66,46,'#f3c64f','left','900');tx(g,'Saldo tersedia '+rp(avail()),W-24,66,34,'#8ef0be','right','800');
  B(24,86,130,104,'−',()=>{
   if(S.nom>10000){
    S.nom-=10000;
@@ -308,25 +311,25 @@ cpS.paint((g,W,H,B)=>{bg(g,W,H,'#1b2a22');const ph=Math.floor(performance.now()/
  B(W-154,86,130,104,'+',()=>{
   const maxNom=Math.floor(avail()/10000)*10000;
   if(avail()<10000){
-   S.m.cp='Saldo belum cukup (minimal Rp 10.000). Setor sampah dulu, Bu.';
-   note('Saldo belum cukup untuk penarikan (minimal Rp 10.000). Setor sampah di Timbangan dulu!');
+   S.m.cp='Saldo tersedia belum cukup untuk penarikan minimal Rp 10.000.';
+   note('Saldo tersedia belum cukup. Setor sampah terlebih dahulu.');
    redraw();
    return;
   }
   if(S.nom+10000>maxNom){
-   note('Nominal sudah mencapai batas saldo tersedia ('+rp(maxNom)+').');
+   note('Jumlah sudah mencapai saldo tersedia ('+rp(maxNom)+').');
    return;
   }
   S.nom+=10000;
   redraw();
  });
- B(24,206,W-48,112,'TARIK UANG',S.busy?null:doCapit,'r');
- tx(g,S.m.cp||(avail()<10000?'Saldo belum cukup. Setor sampah dulu, Bu.':'Admin setuju = capit berhasil. Ditolak = capit gagal.'),W/2,364,26,avail()<10000&&!S.m.cp?'#ff8a7a':'#cfe9da','center','800')});
-bS.paint((g,W,H,B)=>{bg(g,W,H,'#12201a');g.fillStyle='#f3c64f';g.fillRect(0,0,W,84);tx(g,'PENGAJUAN TARIK',W/2,58,40,'#2b1f00','center','900');
- if(!S.tarik.length){tx(g,'Belum ada pengajuan',W/2,210,34,'#9fd9b8','center','800');tx(g,'Tekan TARIK UANG di mesin capit',W/2,256,24,'#cfe9da','center','600')}
+ B(24,206,W-48,112,'AJUKAN PENARIKAN',S.busy?null:doCapit,'r');
+ tx(g,S.m.cp||(avail()<10000?'Saldo tersedia belum cukup. Setor sampah terlebih dahulu.':'Pengajuan akan diperiksa sebelum diproses.'),W/2,364,26,avail()<10000&&!S.m.cp?'#ff8a7a':'#cfe9da','center','800')});
+bS.paint((g,W,H,B)=>{bg(g,W,H,'#12201a');g.fillStyle='#f3c64f';g.fillRect(0,0,W,84);tx(g,'PENGAJUAN PENARIKAN',W/2,58,40,'#2b1f00','center','900');
+ if(!S.tarik.length){tx(g,'Belum ada pengajuan',W/2,210,34,'#9fd9b8','center','800');tx(g,'Pilih Penarikan di mesin capit',W/2,256,24,'#cfe9da','center','600')}
  S.tarik.slice(0,3).forEach((t,i)=>{const y=104+i*252;g.fillStyle='#ffffff14';rr(g,14,y,W-28,236,22);g.fill();tx(g,t.id,34,y+52,36,'#fff');tx(g,rp(t.v),W-34,y+52,36,'#8ef0be','right');
   g.fillStyle=t.st=='Dicairkan'?'#6fe0a2':t.st=='Disetujui'?'#b9d7f2':t.st=='Ditolak'?'#ff8a7a':'#f3c64f';rr(g,34,y+72,190,42,21);g.fill();tx(g,t.st,129,y+102,25,'#1b211e','center','900');
-  const MS={Menunggu:['Capit menjepit uang,','menunggu keputusan Admin'],Disetujui:['Disetujui! Ambil uang di','nampan mesin capit'],Dicairkan:['Selesai, uang sudah','masuk dompet Ibu'],Ditolak:['Capit gagal. Dana','kembali ke saldo']}[t.st]||['',''];
+  const MS={Menunggu:['Pengajuan diterima,','menunggu pemeriksaan pengurus'],Disetujui:['Pengajuan disetujui.','Silakan ambil uang dari nampan mesin.'],Dicairkan:['Penarikan selesai.','Dana masuk ke dompet tunai'],Ditolak:['Pengajuan ditolak.','Dana kembali ke saldo']}[t.st]||['',''];
   const mc=t.st=='Ditolak'?'#ff8a7a':t.st=='Dicairkan'?'#6fe0a2':'#eef5f0';tx(g,MS[0],34,y+158,28,mc,'left','800');tx(g,MS[1],34,y+196,28,mc,'left','800')});
  tx(g,S.m.bd||'',24,H-24,24,'#f3c64f','left','700')});
 
@@ -344,7 +347,7 @@ tag(dr,'pintu');dr.traverse(o=>o.userData.dr=1);
 let doorP=0;
 async function toggleDoor(to){if(S.doorBusy)return;S.doorBusy=1;S.door=S.door?0:1;const a=doorP,b=S.door;$('doorBtn').classList.toggle('on',!!S.door);$('ds').textContent=S.door?'buka':'tutup';nav();redraw();
  await tw(p=>{doorP=a+(b-a)*p;dr.scale.y=1-.92*doorP;dl.intensity=doorP*1.3},2200);S.doorBusy=0;
- if(S.door){$('hint').textContent='Seret layar = putar  •  W/S atau joystick = jalan  •  roda mouse atau cubit = zoom  •  ketuk alat = mendekat';hintFade(1);moveTo(to||(cur=='luar'?'home':cur))}else if(cur=='luar'){$('hint').textContent='Garasi masih tertutup. Ketuk pintu atau panel di sampingnya untuk membuka.';hintFade(0)}else{$('hint').textContent='Pintu garasi ditutup. Ketuk tombol Pintu atau panel untuk membuka kembali.';hintFade(1)}}
+ if(S.door){$('hint').textContent='Seret layar untuk melihat sekeliling. Gunakan W/S atau joystick untuk berjalan, roda mouse atau cubit untuk zoom, dan pilih alat untuk mendekat.';hintFade(1);moveTo(to||(cur=='luar'?'home':cur))}else if(cur=='luar'){$('hint').textContent='Garasi masih tertutup. Pilih pintu atau panel di sampingnya untuk membuka.';hintFade(0)}else{$('hint').textContent='Pintu garasi tertutup. Pilih tombol Pintu atau panel untuk membukanya kembali.';hintFade(1)}}
 
 dekor();
 // animasi
@@ -364,13 +367,13 @@ async function tearRcpt(){if(!paperOut||S.busy||S.tearing)return;S.tearing=1;pap
  pr.remove(grp);S.tearing=0;note('Struk disobek, disimpan Ibu di dompet kertas.');redraw()}
 async function doSetor(){if(S.busy||!S.cart.length)return;S.busy=true;S.m.tm='';wShow=0;redraw();moveTo('timbang');await wait(700);
  const rows=[];let tot=0;for(const r of S.cart){await dropItem(r.j,r.kg);const v=r.kg*J[r.j].h;tot+=v;rows.push([r.j+' '+fmt(r.kg)+'kg',Math.round(v).toLocaleString('id-ID')])}
- S.saldo+=tot;if(S.nom<10000&&avail()>=10000)S.nom=10000;const k='SET-'+String(S.n++).padStart(4,'0'),t='21 Nov';S.riw.unshift({k,t,v:tot,d:S.cart.map(r=>r.j+' '+fmt(r.kg)+' kg').join(', ')});S.cart=[];wShow=0;S.m.tm=k+' tercatat, saldo +'+rp(tot);S.busy=false;redraw();
+ S.saldo+=tot;if(S.nom<10000&&avail()>=10000)S.nom=10000;const k='SET-'+String(S.n++).padStart(4,'0'),t='21 Nov';S.riw.unshift({k,t,v:tot,d:S.cart.map(r=>r.j+' '+fmt(r.kg)+' kg').join(', ')});S.cart=[];wShow=0;S.m.tm=k+' sudah dicatat';S.busy=false;redraw();
  moveTo('struk');await wait(600);await printRcpt({k,t,rows,v:tot,s:S.saldo})}
 const APPROVE=.6;
 async function doCapit(){if(S.busy)return;
  if(avail()<10000){S.m.cp='Saldo belum cukup. Setor sampah dulu, Bu.';note('Saldo belum cukup untuk menarik uang.');redraw();return}
  if(S.nom<=0||S.nom>avail()){S.m.cp='Pilih nominal dulu dengan tombol + atau −';redraw();return}
- if(prize||S.tarik.some(t=>t.st=='Menunggu'||t.st=='Disetujui')){S.m.cp='Ambil uang di nampan dulu';note('Ketuk uang di nampan untuk mengambilnya.');redraw();return}
+ if(prize||S.tarik.some(t=>t.st=='Menunggu'||t.st=='Disetujui')){S.m.cp='Silakan ambil uang dari nampan dulu.';note('Pilih uang di nampan untuk mengambilnya.');redraw();return}
  S.busy=true;S.tahan+=S.nom;const id='TRK-'+String(S.tn++).padStart(4,'0'),v=S.nom,tr={id,v,st:'Menunggu'};S.tarik.unshift(tr);S.m.cp='Capit mengambil uang '+id+'...';S.m.bd='Capit sedang bekerja...';S.nom=Math.min(S.nom,Math.floor(avail()/10000)*10000);redraw();cpRun=true;
  const t=loot.splice(Math.floor(Math.random()*loot.length),1)[0],ex=t.position.x,ez=t.position.z,ty=t.position.y,x0=trol.position.x,z0=bridge.position.z,h0=H,hd=3.82-(t.position.y+.4);
  await tw(p=>setF(FA+(.6-FA)*p),350);
@@ -380,19 +383,19 @@ async function doCapit(){if(S.busy)return;
  cp.remove(t);head.add(t);t.position.set(0,-.36,0);t.rotation.set(0,0,0);
  await tw(p=>setH(hd+(.7-hd)*p),900);
  // capit sudah menjepit uang: tunggu keputusan Admin (acak), hasilnya menentukan capit berhasil atau gagal
- S.m.cp='Capit sudah menjepit uang. Menunggu keputusan Admin...';S.m.bd='Menunggu keputusan Admin...';redraw();
+ S.m.cp='Pengajuan sudah masuk. Menunggu pemeriksaan pengurus...';S.m.bd='Menunggu pemeriksaan pengurus...';redraw();
  await tw(p=>{t.rotation.z=Math.sin(p*Math.PI*8)*.07},2800);t.rotation.z=0;
  const ok=Math.random()<APPROVE;
  if(!ok){
-  tr.st='Ditolak';S.m.bd='Admin menolak '+id;S.m.cp='Admin menolak. Capit gagal!';redraw();
+  tr.st='Ditolak';S.m.bd='Pengurus menolak '+id;S.m.cp='Pengajuan ditolak. Dana kembali ke saldo.';redraw();
   const x1=ex+(1.05-ex)*.4,z1=ez+(.55-ez)*.4;
   await tw(p=>{trol.position.x=ex+(x1-ex)*p;bridge.position.z=ez+(z1-ez)*p;t.rotation.z=Math.sin(p*Math.PI*3)*.09},800);
   await tw(p=>setF(-.04+.64*p),300);
   head.remove(t);cp.add(t);t.rotation.set(0,0,0);t.position.set(x1,2.76,z1);
   await tw(p=>{t.position.y=2.76+(ty-2.76)*p*p;t.rotation.z=p*.5},700);t.rotation.z=0;t.position.y=ty;loot.push(t);
   await tw(p=>{trol.position.x=x1*(1-p);bridge.position.z=z1*(1-p);setH(.7+(.5-.7)*p);setF(.6+(.25-.6)*p)},1100);
-  S.tahan-=v;S.nom=Math.min(Math.max(S.nom,10000),Math.floor(avail()/10000)*10000);cpRun=false;S.busy=false;S.m.cp='Capit gagal, pengajuan ditolak Admin. Saldo tidak berkurang.';S.m.bd=id+' ditolak. Dana kembali ke saldo.';note('Admin menolak pengajuan, capit gagal. Saldo tidak berkurang.');redraw();return}
- tr.st='Disetujui';S.m.bd='Admin menyetujui '+id;note('Admin menyetujui '+id+'. Capit membawa uang!');redraw();
+  S.tahan-=v;S.nom=Math.min(Math.max(S.nom,10000),Math.floor(avail()/10000)*10000);cpRun=false;S.busy=false;S.m.cp='Pengajuan ditolak. Dana kembali ke saldo tersedia.';S.m.bd=id+' ditolak. Dana kembali ke saldo.';note('Pengajuan ditolak. Dana kembali ke saldo tersedia.');redraw();return}
+ tr.st='Disetujui';S.m.bd='Pengurus menyetujui '+id;note('Pengajuan '+id+' disetujui. Uang tersedia di nampan.');redraw();
  await tw(p=>{trol.position.x=ex+(1.05-ex)*p;bridge.position.z=ez+(.55-ez)*p;t.rotation.z=Math.sin(p*Math.PI*3)*.09*(1-p)},1300);
  await tw(p=>setF(-.04+.64*p),350);
  head.remove(t);cp.add(t);t.rotation.set(0,0,0);t.position.set(1.05,3.82-.7-.36,.55);
@@ -401,17 +404,17 @@ async function doCapit(){if(S.busy)return;
  await tw(p=>{prize.position.z=1.05+.42*p;prize.position.y=.5-.15*p},700);
  await Promise.all([tw(p=>{trol.position.x=1.05*(1-p);bridge.position.z=.55*(1-p);setH(.7+(.5-.7)*p);setF(.6+(.25-.6)*p)},1100),
   (async()=>{const n=cash(t.userData.i);n.position.set(t.userData.sx,1.4+.07,t.userData.sz);n.scale.setScalar(.01);n.userData.sx=t.userData.sx;n.userData.sz=t.userData.sz;n.userData.i=t.userData.i;cp.add(n);loot.push(n);await tw(p=>n.scale.setScalar(.01+.99*p),900)})()]);
- cpRun=false;S.busy=false;S.m.cp='Capit berhasil! Ketuk uang di nampan untuk mengambil';S.m.bd=id+' disetujui. Ambil uang di nampan.';redraw()}
+ cpRun=false;S.busy=false;S.m.cp='Pengajuan disetujui. Silakan ambil uang dari nampan.';S.m.bd=id+' disetujui. Silakan ambil uang dari nampan.';redraw()}
 async function takeCash(){if(!prize||S.taking)return;const pz=prize;S.taking=1;
- if(trayState()!=2){S.m.cp='Uang belum bisa diambil';note('Tunggu capit selesai dulu ya, Bu.');redraw();const x0=pz.position.x;await tw(p=>{pz.position.x=x0+Math.sin(p*34)*.05*(1-p)},500);pz.position.x=x0;S.taking=0;return}
+ if(trayState()!=2){S.m.cp='Uang belum tersedia';note('Tunggu sampai pengajuan disetujui.');redraw();const x0=pz.position.x;await tw(p=>{pz.position.x=x0+Math.sin(p*34)*.05*(1-p)},500);pz.position.x=x0;S.taking=0;return}
  const t=S.tarik.find(x=>x.id==pz.userData.id),v=t.v,p0=pz.position.clone(),cs=[];
  for(let i=0;i<16;i++){const c=new THREE.Group();cyl(.11,.03,goldM,0,0,0,c,24);c.position.copy(p0);c.position.y+=.1;cp.add(c);cs.push({c,vx:(Math.random()-.5)*1.8,vy:1.8+Math.random()*1.6,vz:.5+Math.random()*1.6,r:Math.random()*10})}
  await tw(p=>{pz.position.set(p0.x,p0.y+p*1.7,p0.z+p*.8);pz.rotation.y=p*12.5;pz.rotation.x=p*3.2;pz.scale.setScalar(1+.7*Math.sin(p*Math.PI)*(1-p*.4)-p*.6);const tt=p*1.1;cs.forEach(o=>{o.c.position.set(p0.x+o.vx*tt,Math.max(.12,p0.y+.1+o.vy*tt-4.2*tt*tt),p0.z+o.vz*tt);o.c.rotation.set(o.r*p,0,o.r*p*.7);o.c.scale.setScalar(p>.75?1-(p-.75)*4:1)})},1100);
- cp.remove(pz);cs.forEach(o=>cp.remove(o.c));prize=null;S.saldo-=v;S.tahan-=v;t.st='Dicairkan';S.riw.unshift({k:t.id,t:'21 Nov',v:-v,d:'Penarikan tunai'});S.nom=Math.min(S.nom,Math.floor(avail()/10000)*10000);S.m.bd=t.id+' selesai, uang masuk dompet.';S.dompet+=v;S.m.cp='Uang '+rp(v)+' masuk dompet Ibu';note('Uang '+rp(v)+' masuk dompet tunai!');S.taking=0;redraw()}
+ cp.remove(pz);cs.forEach(o=>cp.remove(o.c));prize=null;S.saldo-=v;S.tahan-=v;t.st='Dicairkan';S.riw.unshift({k:t.id,t:'21 Nov',v:-v,d:'Penarikan tunai'});S.nom=Math.min(S.nom,Math.floor(avail()/10000)*10000);S.m.bd=t.id+' selesai. Dana masuk dompet tunai.';S.dompet+=v;S.m.cp='Rp '+rp(v)+' masuk ke dompet tunai.';note('Dana Rp '+rp(v)+' masuk ke dompet tunai.');S.taking=0;redraw()}
 
 // kamera
 const P={luar:{t:[0,3.2,14.3],r:20,th:0,ph:1.42},home:{t:[0,1.4,-2.5],r:13,th:0,ph:1.3},pintu:{t:[0,2.4,13.4],r:9,th:Math.PI,ph:1.4},scan:{t:[-7.96,1.5,-2.4],r:4.6,th:0,ph:1.2},rak:{t:[-3.0,1.4,-2.2],r:5,th:.12,ph:1.3},timbang:{t:[-.4,1.05,-2.6],r:2.9,th:0,ph:1.38},struk:{t:[1.5,.75,-2.4],r:3,th:-.1,ph:1.3},riwayat:{t:[3.6,1.0,-2.4],r:3.2,th:0,ph:.95},capit:{t:[6.9,1.5,-2.5],r:6.5,th:-.1,ph:1.32},papan:{t:[8.5,1.35,-1.85],r:3.2,th:0,ph:1.45}};
-const KEYS=[['home','Semua','#d9d2bf','#a79d84'],['scan','Kumpul','#b9d7f2','#7ea6c8'],['rak','Katalog','#e8c99a','#b8955f'],['timbang','Setoran','#c9ced3','#98a0a8'],['struk','Struk','#f3dc9a','#c4aa5e'],['riwayat','Buku','#bfe6cf','#86b89c'],['capit','Tarik','#f6bdb0','#cc8b7d']];
+const KEYS=[['home','Luar','#d9d2bf','#a79d84'],['scan','Titik kumpul','#b9d7f2','#7ea6c8'],['rak','Harga','#e8c99a','#b8955f'],['timbang','Setoran','#c9ced3','#98a0a8'],['struk','Struk','#f3dc9a','#c4aa5e'],['riwayat','Riwayat','#bfe6cf','#86b89c'],['capit','Penarikan','#f6bdb0','#cc8b7d']];
 const ORD=['home','scan','rak','timbang','struk','riwayat','capit'];
 const NM={luar:'Luar garasi',home:'Seluruh garasi',pintu:'Pintu garasi',scan:'Titik kumpul warga',rak:'Rak katalog',timbang:'Timbangan',riwayat:'Buku tabungan',capit:'Mesin capit',papan:'Layar pengajuan',struk:'Pencetak struk'};
 const cl=o=>JSON.parse(JSON.stringify(o));let G=cl(P.luar),C=cl(P.luar),cur='luar';

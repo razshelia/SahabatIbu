@@ -80,7 +80,7 @@ class AdminNasabahController extends Controller
 
         try {
             $this->pendaftaranService->verifikasiPendaftar($user, $setujui, $alasan, Auth::user());
-            $pesan = $setujui ? "Pendaftar {$user->name} berhasil disetujui dan kini aktif." : "Pendaftar {$user->name} berhasil ditolak.";
+            $pesan = $setujui ? "Pendaftaran {$user->name} disetujui. Akunnya sekarang aktif." : "Pendaftaran {$user->name} belum disetujui.";
             return back()->with('success', $pesan);
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
@@ -114,7 +114,7 @@ class AdminNasabahController extends Controller
 
         try {
             $user = $this->pendaftaranService->tambahNasabahLangsung($validated, Auth::user());
-            return redirect()->route('admin.nasabah.index')->with('success', "Nasabah {$user->name} berhasil ditambahkan dan berstatus aktif.");
+            return redirect()->route('admin.nasabah.index')->with('success', "Akun nasabah {$user->name} sudah dibuat dan aktif.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
@@ -159,7 +159,7 @@ class AdminNasabahController extends Controller
             user: Auth::user()
         );
 
-        return redirect()->route('admin.nasabah.index')->with('success', "Data nasabah {$nasabah->user->name} berhasil diperbarui.");
+        return redirect()->route('admin.nasabah.index')->with('success', "Data nasabah {$nasabah->user->name} sudah diperbarui.");
     }
 
     /**
@@ -170,7 +170,7 @@ class AdminNasabahController extends Controller
         try {
             $this->pendaftaranService->toggleStatusAktif($user, Auth::user());
             $statusText = $user->fresh()->status === 'aktif' ? 'diaktifkan' : 'dinonaktifkan';
-            return back()->with('success', "Status akun {$user->name} berhasil {$statusText}.");
+            return back()->with('success', "Akun {$user->name} sudah {$statusText}.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -189,7 +189,7 @@ class AdminNasabahController extends Controller
 
         try {
             $this->pendaftaranService->anonimisasi($nasabah, Auth::user());
-            return redirect()->route('admin.nasabah.index')->with('success', "Data nasabah nomor {$nasabah->nomor_nasabah} telah berhasil dianonimkan secara permanen.");
+            return redirect()->route('admin.nasabah.index')->with('success', "Data nasabah nomor {$nasabah->nomor_nasabah} sudah dianonimkan. Tindakan ini tidak dapat dibatalkan.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }

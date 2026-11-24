@@ -21,9 +21,9 @@ function view(k){const a=innerWidth/innerHeight,ft=.384,W=innerWidth,H=innerHeig
  const nx=(rg.x0+rg.x1)/W-1,ny=1-(rg.y0+rg.y1)/H;
  const tx_=q.c[0]-nx*ft*a*d,ty=q.c[1]-ny*ft*d,el=Math.min(d*.2,5.8-ty);
  return{p:[tx_,ty+el,q.c[2]+d],t:[tx_,ty,q.c[2]]}}
-const KEYS=[['hero','home','Beranda'],['scan','card','Cek Saldo'],['rak','tag','Daftar Harga'],['timbang','scale','Setor Sampah'],['struk','receipt','Struk'],['riwayat','book','Buku Tabungan'],['capit','cash','Ambil Uang'],['aman','shield','Keamanan'],['cta','key','Masuk / Daftar']];
+const KEYS=[['hero','home','Beranda'],['scan','card','Cek saldo'],['rak','tag','Daftar harga'],['timbang','scale','Setoran'],['struk','receipt','Struk'],['riwayat','book','Buku tabungan'],['capit','cash','Penarikan'],['aman','shield','Keamanan'],['cta','key','Masuk atau daftar']];
 const ORD=['hero','scan','rak','timbang','struk','riwayat','capit','aman','cta'];
-const NM={hero:'Luar garasi',scan:'Cek saldo',rak:'Daftar harga',timbang:'Timbang sampah',struk:'Cetak struk',riwayat:'Buku tabungan',capit:'Ambil uang',aman:'Aman & privat',cta:'Masuk / daftar'};
+const NM={hero:'Luar garasi',scan:'Cek saldo',rak:'Daftar harga',timbang:'Setoran',struk:'Cetak struk',riwayat:'Buku tabungan',capit:'Penarikan',aman:'Keamanan dan privasi',cta:'Masuk atau daftar'};
 const GL={scan:'Alat bank sampah',aman:'Informasi'};
 $('keys').innerHTML=KEYS.map(n=>(GL[n[0]]?`<small class="gl">${GL[n[0]]}</small>`:'')+`<button data-k="${n[0]}" title="${n[2]}" onclick="goSec('${n[0]}');toggleSide(false)"><svg class="i"><use href="#i-${n[1]}"/></svg><span class="t">${n[2]}</span></button>`).join('')+'<small class="gl">Coba tanpa akun</small><a href="/garasi"><svg class="i"><use href="#i-touch"/></svg><span class="t">Main di garasi 3D</span></a>';
 addEventListener('keydown',e=>{if(e.key=='Escape')toggleSide(false)});

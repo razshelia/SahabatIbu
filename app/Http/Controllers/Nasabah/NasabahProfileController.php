@@ -44,6 +44,6 @@ class NasabahProfileController extends Controller
             user: Auth::user()
         );
 
-        return back()->with('success', 'Data profil kontak Anda berhasil diperbarui.');
+        return back()->with('success', 'Nomor telepon berhasil diperbarui.');
     }
 }

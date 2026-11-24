@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="robots" content="noindex">
     <title>{{ $title ?? 'Portal Bank Sampah Sahabat Ibu' }}</title>
-    <link rel="stylesheet" href="{{ asset('assets/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/style.css') }}?v=8">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link rel="stylesheet" href="{{ asset('assets/alat.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/alat.css') }}?v=3">
 </head>
 <body data-view="{{ $dataView ?? 'home' }}" data-role="{{ auth()->user()->role }}">
     @include('partials.icons')
@@ -19,7 +22,7 @@
             </button>
             <div>
                 <b>{{ $pageTitle ?? 'Dashboard' }}</b>
-                <small>{{ auth()->user()->role === 'admin' ? 'Admin' : 'Nasabah' }} · Sahabat Ibu</small>
+                <small>{{ auth()->user()->role === 'admin' ? 'Pengurus' : 'Nasabah' }} · Sahabat Ibu</small>
             </div>
         </div>
         <div class="right">
@@ -28,7 +31,7 @@
                     <small>Pengajuan menunggu</small>
                     <b>{{ \App\Models\PenarikanDana::where('status', 'menunggu')->count() }}</b>
                 @else
-                    <small>Uang bisa diambil</small>
+                    <small>Saldo tersedia</small>
                     <b>Rp {{ number_format(auth()->user()->nasabah?->saldo_tersedia ?? 0, 0, ',', '.') }}</b>
                 @endif
             </div>
@@ -46,35 +49,35 @@
                     <svg class="i"><use href="#i-home"/></svg><span class="t">Dashboard</span>
                 </a>
                 <a href="{{ route('admin.nasabah.index') }}" class="{{ request()->routeIs('admin.nasabah.index') || request()->routeIs('admin.nasabah.edit') || request()->routeIs('admin.nasabah.create') ? 'on' : '' }}">
-                    <svg class="i"><use href="#i-users"/></svg><span class="t">Pendaftar &amp; Nasabah</span>
+                    <svg class="i"><use href="#i-users"/></svg><span class="t">Pendaftar &amp; nasabah</span>
                 </a>
                 <a href="{{ route('admin.katalog.index') }}" class="{{ request()->routeIs('admin.katalog.*') ? 'on' : '' }}">
-                    <svg class="i"><use href="#i-tag"/></svg><span class="t">Katalog Harga</span>
+                    <svg class="i"><use href="#i-tag"/></svg><span class="t">Katalog harga</span>
                 </a>
                 <a href="{{ route('admin.setoran.index') }}" class="{{ request()->routeIs('admin.setoran.*') ? 'on' : '' }}">
                     <svg class="i"><use href="#i-scale"/></svg><span class="t">Setoran</span>
                 </a>
                 <a href="{{ route('admin.penarikan.index') }}" class="{{ request()->routeIs('admin.penarikan.*') ? 'on' : '' }}">
-                    <svg class="i"><use href="#i-cash"/></svg><span class="t">Penarikan</span>
+                    <svg class="i"><use href="#i-cash"/></svg><span class="t">Penarikan dana</span>
                 </a>
                 <a href="{{ route('admin.laporan.index') }}" class="{{ request()->routeIs('admin.laporan.*') ? 'on' : '' }}">
                     <svg class="i"><use href="#i-receipt"/></svg><span class="t">Laporan</span>
                 </a>
                 <a href="{{ route('admin.profile.show') }}" class="{{ request()->routeIs('admin.profile.*') ? 'on' : '' }}">
-                    <svg class="i"><use href="#i-user"/></svg><span class="t">Profil &amp; Log</span>
+                    <svg class="i"><use href="#i-user"/></svg><span class="t">Profil &amp; aktivitas</span>
                 </a>
             @else
                 <a href="{{ route('nasabah.dashboard') }}" class="{{ request()->routeIs('nasabah.dashboard') ? 'on' : '' }}">
                     <svg class="i"><use href="#i-home"/></svg><span class="t">Dashboard</span>
                 </a>
                 <a href="{{ route('nasabah.setoran.index') }}" class="{{ request()->routeIs('nasabah.setoran.*') ? 'on' : '' }}">
-                    <svg class="i"><use href="#i-scale"/></svg><span class="t">Riwayat Setoran</span>
+                    <svg class="i"><use href="#i-scale"/></svg><span class="t">Riwayat setoran</span>
                 </a>
                 <a href="{{ route('nasabah.penarikan.index') }}" class="{{ request()->routeIs('nasabah.penarikan.*') ? 'on' : '' }}">
-                    <svg class="i"><use href="#i-cash"/></svg><span class="t">Penarikan Dana</span>
+                    <svg class="i"><use href="#i-cash"/></svg><span class="t">Penarikan dana</span>
                 </a>
                 <a href="{{ route('nasabah.katalog.index') }}" class="{{ request()->routeIs('nasabah.katalog.*') ? 'on' : '' }}">
-                    <svg class="i"><use href="#i-tag"/></svg><span class="t">Katalog Harga</span>
+                    <svg class="i"><use href="#i-tag"/></svg><span class="t">Katalog harga</span>
                 </a>
                 <a href="{{ route('nasabah.profile.show') }}" class="{{ request()->routeIs('nasabah.profile.*') ? 'on' : '' }}">
                     <svg class="i"><use href="#i-user"/></svg><span class="t">Profil</span>
@@ -83,7 +86,7 @@
 
             <small class="gl">Lainnya</small>
             <a href="{{ route('garasi') }}" class="{{ request()->routeIs('garasi') ? 'on' : '' }}">
-                <svg class="i"><use href="#i-door"/></svg><span class="t">Garasi 3D</span>
+                <svg class="i"><use href="#i-door"/></svg><span class="t">Coba garasi 3D</span>
             </a>
             <form method="POST" action="{{ route('logout') }}" id="form-logout" style="margin:0">
                 @csrf
@@ -129,10 +132,10 @@
     <script defer src="{{ asset('assets/js/inti.js') }}"></script>
     <script defer src="{{ asset('assets/js/dekor.js') }}"></script>
     <script defer src="{{ asset('assets/js/ruangan.js') }}"></script>
-    <script defer src="{{ asset('assets/js/alat.js') }}"></script>
+    <script defer src="{{ asset('assets/js/alat.js') }}?v=2"></script>
     <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
-    <script defer src="{{ asset('assets/js/aksi.js') }}"></script>
-    <script defer src="{{ asset('assets/js/latar.js') }}"></script>
+    <script defer src="{{ asset('assets/js/aksi.js') }}?v=2"></script>
+    <script defer src="{{ asset('assets/js/latar.js') }}?v=2"></script>
     <script defer src="{{ asset('assets/js/sinkron.js') }}"></script>
     <button type="button" id="lihat" onclick="toggleLihat()" aria-pressed="false">Lihat ruangan penuh</button>
     <button type="button" id="pusat" aria-label="Kembalikan sudut pandang ruangan">Pusatkan ruangan</button>
@@ -142,7 +145,9 @@
     <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.js"></script>
     <script defer src="{{ asset('assets/js/gerak.js') }}"></script>
+    <script defer src="{{ asset('assets/js/kilau-kartu.js') }}?v=2"></script>
     <script defer src="{{ asset('assets/js/menu.js') }}"></script>
+    <script defer src="{{ asset('assets/js/validasi-form.js') }}?v=5"></script>
     <script>
         function toggleLihat() {
             const on = document.documentElement.classList.toggle('lihat');

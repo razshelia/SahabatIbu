@@ -67,6 +67,6 @@ class RegisterController extends Controller
         Auth::login($user);
 
         return redirect()->route('account.status')
-            ->with('success', 'Pendaftaran Anda berhasil dikirim! Akun Anda sedang menunggu verifikasi oleh pengurus bank sampah.');
+            ->with('success', 'Pendaftaran Ibu sudah dikirim. Pengurus akan memeriksa data sebelum akun diaktifkan.');
     }
 }

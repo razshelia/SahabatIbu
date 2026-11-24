@@ -35,7 +35,7 @@ html,
 body {
     background: #1b211e;
     color: var(--ink);
-    font-family: "Inter", "Segoe UI", "Trebuchet MS", sans-serif
+    font-family: "Rubik", "Segoe UI", "Trebuchet MS", sans-serif
 }
 
 body {
@@ -942,8 +942,7 @@ dialog .ic {
 #keys button.on,
 #keys a.on {
     background: #6fe0a226;
-    color: var(--green);
-    box-shadow: inset 3px 0 0 var(--green)
+    color: var(--green)
 }
 
 html.mini #side .t,
@@ -1228,6 +1227,52 @@ a.brand {
     font: inherit
 }
 
+.validation-control {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0
+}
+
+.validation-control > :is(input, select, textarea) {
+    box-sizing: border-box;
+    width: 100%
+}
+
+.validation-indicator {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    z-index: 1;
+    color: #43d483;
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1;
+    pointer-events: none;
+    transform: translateY(-50%);
+    display: none
+}
+
+.validation-control[data-valid=true] .validation-indicator {
+    display: block
+}
+
+.validation-control[data-has-toggle=true] .validation-indicator {
+    right: 46px
+}
+
+.f .validation-control[data-valid=true] > :is(input, select, textarea) {
+    padding-right: 44px
+}
+
+.validation-control[data-has-toggle=true][data-valid=true] > input {
+    padding-right: 72px !important
+}
+
+.alamat-grup label .validation-control {
+    flex: 1 1 auto
+}
+
 .f input[aria-invalid=true] {
     border-color: #ff8a7a
 }
@@ -1469,7 +1514,7 @@ td {
     border-radius: 999px;
     background: #6fe0a2;
     color: #141c18;
-    font: 800 16px/1 'Trebuchet MS', sans-serif;
+    font: 800 16px/1 "Rubik", "Segoe UI", sans-serif;
     box-shadow: 0 10px 26px #0008;
     cursor: pointer
 }
@@ -1527,7 +1572,7 @@ html.lihat main.pgm {
     background: #25d366;
     border-color: #ffffff40;
     color: #06260f;
-    font: 800 16px/1 'Trebuchet MS', sans-serif;
+    font: 800 16px/1 "Rubik", "Segoe UI", sans-serif;
     text-decoration: none;
     box-shadow: 0 10px 26px #0008;
     transition: transform .15s, filter .2s
@@ -1582,7 +1627,7 @@ html.g3d canvas.drag {
     border-radius: 999px;
     background: #ffffffd9;
     color: #141c18;
-    font: 800 14px/1 'Trebuchet MS', sans-serif;
+    font: 800 14px/1 "Rubik", "Segoe UI", sans-serif;
     box-shadow: 0 8px 22px #0007;
     cursor: pointer
 }
@@ -1730,6 +1775,21 @@ html.mo .card.g.glow {
     padding: 30px 36px 28px
 }
 
+@media(max-width:900px) {
+    #hero .card,
+    #cta .card {
+        width: 100%
+    }
+
+    #hero .row .btn,
+    #cta .row .btn {
+        flex: 1 1 220px;
+        min-width: 0;
+        white-space: normal;
+        line-height: 1.3
+    }
+}
+
 .card.g,
 html.mo .card.g {
     position: relative;
@@ -1829,11 +1889,13 @@ html.mo .card.g.glow {
 
 @media(min-width:901px) {
     .card .row .btn {
-        flex: 1 1 0;
-        padding: 0 12px;
+        flex: 1 1 220px;
+        min-width: 0;
+        padding: 8px 12px;
         font-size: 15px;
-        white-space: nowrap;
-        gap: 7px
+        white-space: normal;
+        line-height: 1.3;
+        gap: 7px;
     }
 }
 
@@ -1855,5 +1917,171 @@ html.mo .card.g.glow {
 
     .card {
         padding: 16px 18px
+    }
+}
+
+html.mo .card,
+html.mo .wide,
+html.mo .sec.in .card,
+html.mo .sec.in .wide,
+html.mo .cta .card {
+    opacity: 1;
+    transform: none
+}
+
+html.mo .sec.in .card:hover,
+html.mo .sec.in .card:active {
+    transform: none
+}
+
+html.mo .card:not([data-mo="1"]),
+html.mo .mo-w:not([data-mo="1"]) {
+    pointer-events: none
+}
+
+html.mo .card>:not(.skel):not(.grid):not(.chips):not(.how):not(.row),
+html.mo .card>:is(.grid, .chips, .how, .row)>*,
+html.mo .mo-w>:not(.grid),
+html.mo .mo-w>.grid>* {
+    opacity: 0
+}
+
+html.mo .card.g::after,
+html.mo .mo-w::after {
+    opacity: var(--sc, 0)
+}
+
+/* Bagian Keamanan: lapisan gelap berpinggir lembut seperti kartu lain, judul dan kartu kecil terbaca */
+#aman .wide {
+    position: relative;
+    isolation: isolate;
+    text-shadow: 0 1px 16px #0a120dd9, 0 0 3px #0a120d99
+}
+
+#aman .wide::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -48px -72px;
+    pointer-events: none;
+    background: #0b140fe0;
+    -webkit-backdrop-filter: blur(7px) saturate(1.3);
+    backdrop-filter: blur(7px) saturate(1.3);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent), linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent), linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+    mask-composite: intersect
+}
+
+#aman .wide h2 {
+    color: #fff
+}
+
+#aman .wide .grid>.g {
+    background: #ffffff14;
+    border: 1px solid #ffffff1f;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    text-shadow: none
+}
+
+#aman .wide .grid span {
+    color: #eaf2ec
+}
+
+/* Transisi CSS untuk opacity/transform dimatikan pada elemen yang digerakkan Motion agar tidak berebut */
+html.mo .sec.in .card,
+html.mo .sec.in .wide {
+    transition: box-shadow .3s, border-color .3s
+}
+
+html.mo .card :is(.how, .chips, .row, .grid)>*,
+html.mo .mo-w .grid>* {
+    transition-property: box-shadow, border-color, background-color, color
+}
+
+/* Kilau kaca mengikuti pointer, tanpa mengubah lapisan teks kartu. */
+.box.g.pointer-glow,
+.kpi > .g.pointer-glow {
+    background-image: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), #ffffff20, transparent 72%)
+}
+
+.grid > .g.pointer-glow,
+.how > div.pointer-glow {
+    background-image:
+        radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), #ffffff20, transparent 72%),
+        linear-gradient(160deg, #ffffff1c, #0b140f73)
+}
+
+#aman .wide .grid > .g.pointer-glow {
+    background-image:
+        radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), #ffffff20, transparent 72%)
+}
+
+.card.g {
+    isolation: isolate
+}
+
+.card.g::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .2s;
+    background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), #ffffff26, transparent 72%)
+}
+
+.card.g.pointer-glow::before {
+    opacity: 1
+}
+
+.card.g > * {
+    position: relative;
+    z-index: 1
+}
+
+html.mo .card.g::before {
+    z-index: 0
+}
+
+/* Pilihan menu tampak seperti kaca tipis, bukan garis aksen di pinggir. */
+#keys a,
+#keys button,
+.fold {
+    border: 1px solid transparent;
+    background-clip: padding-box
+}
+
+#keys a:hover,
+#keys button:hover,
+.fold:hover {
+    border-color: #ffffff24;
+    background:
+        radial-gradient(150px circle at var(--mx, 50%) var(--my, 50%), #ffffff24, transparent 72%),
+        linear-gradient(120deg, #ffffff18, #ffffff08 58%, #6fe0a216);
+    box-shadow: inset 0 1px 0 #ffffff24, 0 5px 16px #0003;
+    backdrop-filter: blur(12px) saturate(1.5);
+    -webkit-backdrop-filter: blur(12px) saturate(1.5)
+}
+
+#keys button.on,
+#keys a.on {
+    border-color: #ffffff2b;
+    background:
+        radial-gradient(150px circle at var(--mx, 50%) var(--my, 50%), #ffffff2b, transparent 72%),
+        linear-gradient(120deg, #ffffff20, #6fe0a21f 62%, #ffffff0c);
+    color: #a9edc3;
+    box-shadow: inset 0 1px 0 #ffffff35, 0 5px 16px #0003, 0 0 18px #6fe0a20d;
+    backdrop-filter: blur(14px) saturate(1.6);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6)
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card.g::before {
+        transition: none
     }
 }

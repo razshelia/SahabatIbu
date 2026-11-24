@@ -3,7 +3,7 @@
 @section('content')
 <small class="kick">Riwayat</small>
 <h1>Riwayat <em>setoran sampah</em></h1>
-<p class="lead">Catatan riwayat sampah yang telah Ibu setorkan ke Bank Sampah Sahabat Ibu.</p>
+<p class="lead">Lihat semua setoran yang sudah tercatat.</p>
 
 <form method="GET" action="{{ route('nasabah.setoran.index') }}">
     <x-alat tool="riwayat" plat="Buku Tabungan">
@@ -37,10 +37,10 @@
             <tr>
                 <th>Kode</th>
                 <th>Tanggal</th>
-                <th>Total Berat</th>
+                <th>Total berat</th>
                 <th>Nilai (Rp)</th>
                 <th>Status</th>
-                <th>Aksi</th>
+                <th>Detail</th>
             </tr>
         </thead>
         <tbody>
@@ -63,7 +63,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6">Belum ada riwayat setoran pada periode ini.</td></tr>
+                <tr><td colspan="6">Tidak ada setoran pada periode ini.</td></tr>
             @endforelse
         </tbody>
     </table>

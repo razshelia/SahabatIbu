@@ -45,8 +45,8 @@ class PasswordController extends Controller
         }
 
         $request->validate($rules, [
-            'password.regex' => 'Kata sandi baru harus minimal 8 karakter dan memuat kombinasi huruf dan angka.',
-            'current_password.current_password' => 'Kata sandi lama yang Anda masukkan tidak sesuai.',
+            'password.regex' => 'Kata sandi baru harus terdiri dari minimal 8 karakter, dengan huruf dan angka.',
+            'current_password.current_password' => 'Kata sandi saat ini tidak sesuai.',
         ]);
 
         $user->forceFill([
@@ -63,7 +63,7 @@ class PasswordController extends Controller
 
         $targetRoute = $user->role === 'admin' ? 'admin.dashboard' : 'nasabah.dashboard';
 
-        return redirect()->route($targetRoute)->with('success', 'Kata sandi Anda berhasil diperbarui!');
+        return redirect()->route($targetRoute)->with('success', 'Kata sandi berhasil diperbarui.');
     }
 
     /**
@@ -86,7 +86,7 @@ class PasswordController extends Controller
         if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             return back()->withErrors([
-                'email' => "Terlalu banyak permintaan reset kata sandi. Coba lagi dalam {$seconds} detik.",
+                'email' => "Terlalu banyak permintaan tautan reset. Coba lagi dalam {$seconds} detik.",
             ]);
         }
 
@@ -113,7 +113,7 @@ class PasswordController extends Controller
             session()->flash('demo_reset_link', $resetUrl);
         }
 
-        return back()->with('status', 'Jika alamat email terdaftar di sistem, tautan pemulihan kata sandi telah dikirim.');
+        return back()->with('status', 'Jika email terdaftar, tautan untuk mengatur ulang kata sandi akan dikirim.');
     }
 
     /**
@@ -146,17 +146,17 @@ class PasswordController extends Controller
 
         // Validasi token dan masa berlaku (60 menit)
         if (! $record || ! Hash::check($request->token, $record->token)) {
-            return back()->withErrors(['email' => 'Tautan reset kata sandi tidak valid atau sudah pernah digunakan.']);
+            return back()->withErrors(['email' => 'Tautan reset tidak valid atau sudah digunakan.']);
         }
 
         if (Carbon::parse($record->created_at)->addMinutes(60)->isPast()) {
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-            return back()->withErrors(['email' => 'Tautan reset kata sandi telah kedaluwarsa.']);
+            return back()->withErrors(['email' => 'Tautan reset sudah kedaluwarsa. Minta tautan baru.']);
         }
 
         $user = User::where('email', $request->email)->first();
         if (! $user) {
-            return back()->withErrors(['email' => 'Pengguna dengan email tersebut tidak ditemukan.']);
+            return back()->withErrors(['email' => 'Akun dengan email tersebut tidak ditemukan.']);
         }
 
         $user->forceFill([
@@ -173,6 +173,6 @@ class PasswordController extends Controller
             user: $user
         );
 
-        return redirect()->route('login')->with('success', 'Kata sandi Anda telah berhasil direset. Silakan masuk menggunakan kata sandi baru.');
+        return redirect()->route('login')->with('success', 'Kata sandi berhasil diatur ulang. Silakan masuk dengan kata sandi baru.');
     }
 }

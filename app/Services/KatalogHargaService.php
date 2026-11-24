@@ -76,7 +76,7 @@ class KatalogHargaService
     public function tambahHarga(int $jenisSampahId, float $hargaPerKg, string $berlakuMulai, User $admin): HargaSampah
     {
         if ($hargaPerKg <= 0) {
-            throw new RuntimeException('Harga per satuan harus lebih besar dari 0.');
+            throw new RuntimeException('Harga per satuan harus lebih dari 0.');
         }
 
         $jenis = JenisSampah::findOrFail($jenisSampahId);

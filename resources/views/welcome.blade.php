@@ -2,8 +2,8 @@
 <html lang="id" class="ld"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bank Sampah Sahabat Ibu · Garasi 3D</title>
-<meta name="description" content="Setor sampah, saldo langsung naik. Bank Sampah Sahabat Ibu, Perumahan Taman Gading, Jember.">
-<link rel="stylesheet" href="{{ asset('assets/style.css') }}"><link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}"></head><body>
+<meta name="description" content="Setorkan sampah terpilah, simpan hasilnya sebagai tabungan. Cek harga, saldo, dan riwayat setoran di Bank Sampah Sahabat Ibu, Jember.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="{{ asset('assets/style.css') }}?v=8"><link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}"></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/></symbol>
 <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
@@ -37,39 +37,38 @@
 <div class="right">
     @auth
         <a class="g tl" href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}">
-            <svg class="i"><use href="#i-user"/></svg> Dashboard {{ auth()->user()->role === 'admin' ? 'Admin' : 'Nasabah' }}
+            <svg class="i"><use href="#i-user"/></svg> Buka dashboard
         </a>
     @else
         <a class="g tl" href="{{ route('login') }}"><svg class="i"><use href="#i-key"/></svg> Masuk / Daftar</a>
     @endauth
-    <div class="bal g"><small>Tabungan</small><b id="balv">Sahabat Ibu</b></div>
 </div></header>
 <div id="toast" role="status" aria-live="polite"></div>
-<div id="cue" class="g"><i><svg class="i"><use href="#i-down"/></svg></i>Gulir ke bawah untuk masuk garasi</div>
+<div id="cue" class="g"><i><svg class="i"><use href="#i-down"/></svg></i>Gulir untuk menjelajahi garasi</div>
 <aside id="side" class="g" aria-label="Menu utama"><div class="brand"><img class="logo" src="{{ asset('assets/logo-mark.svg') }}" alt="" width="34" height="34"><div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div></div><nav id="keys" aria-label="Menu"></nav><button class="fold" id="fold" onclick="toggleSide()" aria-label="Ciutkan atau perluas menu"><svg class="i"><use href="#i-chev"/></svg><span class="t">Ciutkan menu</span></button></aside><div id="scrim" onclick="toggleSide(false)"></div>
 <i id="pg"></i>
 <main>
-<section class="sec" id="hero" data-k="luar"><div class="card g"><h1>Setor sampah, <em>saldo langsung naik</em>.</h1><p>Cek saldo, lihat harga sampah, dan ajukan pengambilan uang dari satu halaman. Masuk ke garasi, lalu coba tiap alat.</p>
+<section class="sec" id="hero" data-k="luar"><div class="card g"><h1>Sampah terpilah bisa jadi <em>tabungan</em>.</h1><p>Cek saldo, lihat harga, atau ajukan penarikan di sini. Buka garasi untuk mencoba fiturnya.</p>
 <div class="how"><div><b><svg class="i"><use href="#i-down"/></svg></b>Gulir ke bawah</div><div><b><svg class="i"><use href="#i-eye"/></svg></b>Pilih alat</div><div><b><svg class="i"><use href="#i-check"/></svg></b>Tekan tombol hijau</div></div>
 <div class="row">
-    <a class="btn" href="#scan" onclick="goSec('scan');return false"><svg class="i"><use href="#i-door"/></svg>Masuk garasi</a>
-    <a class="btn o" href="{{ route('garasi') }}"><svg class="i"><use href="#i-touch"/></svg>Main garasi 3D</a>
+    <a class="btn" href="#scan" onclick="goSec('scan');return false"><svg class="i"><use href="#i-door"/></svg>Jelajahi garasi</a>
+    <a class="btn o" href="{{ route('garasi') }}"><svg class="i"><use href="#i-touch"/></svg>Coba garasi 3D</a>
     @auth
-        <a class="btn o" href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}"><svg class="i"><use href="#i-user"/></svg>Buka Portal</a>
+        <a class="btn o" href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}"><svg class="i"><use href="#i-user"/></svg>Buka dashboard</a>
     @else
-        <a class="btn o" href="{{ route('login') }}"><svg class="i"><use href="#i-key"/></svg>Masuk / Daftar</a>
+        <a class="btn o" href="{{ route('login') }}"><svg class="i"><use href="#i-key"/></svg>Masuk atau daftar</a>
     @endauth
 </div>
-<ul class="chips"><li><svg class="i"><use href="#i-pin"/></svg> Perum. Taman Gading, Jember</li><li><svg class="i"><use href="#i-users"/></svg> Admin &amp; Nasabah</li><li><svg class="i"><use href="#i-lock"/></svg> Login email / Google</li></ul></div></section>
+<ul class="chips"><li><svg class="i"><use href="#i-pin"/></svg> Perum. Taman Gading, Jember</li><li><svg class="i"><use href="#i-users"/></svg> Untuk pengurus dan nasabah</li><li><svg class="i"><use href="#i-lock"/></svg> Masuk lewat email atau Google</li></ul></div></section>
 <div id="tools" style="display:contents"></div>
-<section class="sec" id="aman" data-k="home"><div class="wide"><small class="kick">Keamanan &amp; privasi</small><h2>Data Ibu <em>aman dan privat</em></h2><div class="grid"><div class="g"><b><i><svg class="i"><use href="#i-lock"/></svg></i>Data milik sendiri</b><span>Ibu hanya melihat tabungan Ibu sendiri. Server memeriksa hak akses di setiap permintaan.</span></div><div class="g"><b><i><svg class="i"><use href="#i-doc"/></svg></i>Persetujuan privasi</b><span>Saat mendaftar, Ibu menyetujui pemakaian data pribadi sesuai UU No. 27 Tahun 2022. Siapa pun boleh membaca Kebijakan Privasi.</span></div><div class="g"><b><i><svg class="i"><use href="#i-shield"/></svg></i>Login terlindungi</b><span>Masuk dengan email dan kata sandi, atau dengan Google. Sistem membatasi percobaan login, dan pengurus memeriksa log aktivitas.</span></div></div></div></section>
-<section class="sec cta" id="cta" data-k="home"><div class="wide"><div class="card g"><small class="kick">Mulai sekarang</small><h2>Mulai <em>menabung sampah</em> hari ini</h2><p><b><svg class="i"><use href="#i-user"/></svg> Nasabah</b> melihat saldo, riwayat, daftar harga, dan mengajukan pengambilan uang.<br><b><svg class="i"><use href="#i-briefcase"/></svg> Admin</b> mengelola nasabah, harga, setoran, penarikan, dan laporan. Akun baru berstatus <em>Menunggu Verifikasi</em> sampai pengurus menyetujui.</p>
+<section class="sec" id="aman" data-k="home"><div class="wide"><small class="kick">Keamanan dan privasi</small><h2>Data Ibu <em>kami jaga</em></h2><div class="grid"><div class="g"><b><i><svg class="i"><use href="#i-lock"/></svg></i>Data akun Ibu</b><span>Ibu hanya dapat melihat data milik akun sendiri. Setiap permintaan diperiksa sebelum diproses.</span></div><div class="g"><b><i><svg class="i"><use href="#i-doc"/></svg></i>Penggunaan data</b><span>Data pribadi dikelola sesuai persetujuan Ibu dan UU No. 27 Tahun 2022. Kebijakan Privasi dapat dibaca kapan saja.</span></div><div class="g"><b><i><svg class="i"><use href="#i-shield"/></svg></i>Akun terlindungi</b><span>Masuk dengan email dan kata sandi atau akun Google. Percobaan masuk dibatasi, dan aktivitas akun dicatat untuk ditinjau pengurus.</span></div></div></div></section>
+<section class="sec cta" id="cta" data-k="home"><div class="wide"><div class="card g"><small class="kick">Mulai di sini</small><h2>Setorkan sampah, tambah <em>tabungan</em></h2><p><b><svg class="i"><use href="#i-user"/></svg> Nasabah</b> bisa melihat saldo dan riwayat setoran, mengecek harga, serta mengajukan penarikan.<br><b><svg class="i"><use href="#i-briefcase"/></svg> Pengurus</b> mencatat setoran, mengelola nasabah dan harga, serta memproses penarikan. Pendaftar baru perlu mendapat persetujuan sebelum akunnya aktif.</p>
 <div class="row">
     @auth
-        <a class="btn" href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}"><svg class="i"><use href="#i-user"/></svg> Ke Dashboard</a>
+        <a class="btn" href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}"><svg class="i"><use href="#i-user"/></svg> Buka dashboard</a>
     @else
         <a class="btn" href="{{ route('login') }}"><svg class="i"><use href="#i-key"/></svg> Masuk</a>
-        <a class="btn o" href="{{ route('register') }}"><svg class="i"><use href="#i-doc"/></svg> Daftar sebagai nasabah</a>
+        <a class="btn o" href="{{ route('register') }}"><svg class="i"><use href="#i-doc"/></svg> Daftar jadi nasabah</a>
     @endauth
     <a class="btn o" href="{{ route('garasi') }}"><svg class="i"><use href="#i-touch"/></svg> Coba garasi 3D tanpa akun</a>
 </div>
@@ -80,11 +79,11 @@
 <script defer src="{{ asset('assets/js/inti.js') }}"></script>
 <script defer src="{{ asset('assets/js/dekor.js') }}"></script>
 <script defer src="{{ asset('assets/js/ruangan.js') }}"></script>
-<script defer src="{{ asset('assets/js/alat.js') }}"></script>
+<script defer src="{{ asset('assets/js/alat.js') }}?v=2"></script>
 <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
-<script defer src="{{ asset('assets/js/aksi.js') }}"></script>
-<script defer src="{{ asset('assets/js/kamera-nav.js') }}"></script>
-<script defer src="{{ asset('assets/js/konten.js') }}"></script>
+<script defer src="{{ asset('assets/js/aksi.js') }}?v=2"></script>
+<script defer src="{{ asset('assets/js/kamera-nav.js') }}?v=2"></script>
+<script defer src="{{ asset('assets/js/konten.js') }}?v=2"></script>
 <script defer src="{{ asset('assets/js/scroll.js') }}"></script>
 @include('partials.wa-admin')
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -92,4 +91,5 @@
 <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.js"></script>
 <script defer src="{{ asset('assets/js/gerak.js') }}"></script>
+<script defer src="{{ asset('assets/js/kilau-kartu.js') }}?v=2"></script>
 <script defer src="{{ asset('assets/js/menu.js') }}"></script></body></html>

@@ -3,7 +3,7 @@
 @section('content')
 <section class="box g">
     <small class="kick">Masuk</small>
-    <h1>Selamat datang, <em>Ibu</em></h1>
+    <h1>Senang bertemu lagi, <em>Ibu</em></h1>
     <p class="lead">Masuk dengan email atau akun Google.</p>
 
     <a href="{{ route('auth.google') }}" class="btn o" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none">
@@ -19,7 +19,7 @@
             Email
             <input id="email" name="email" type="email" autocomplete="username" value="{{ old('email') }}" maxlength="255" required autofocus>
             @error('email')
-                <span class="err" style="display:block">{{ $message }}</span>
+                <span class="err" data-validation-error-for="email" style="display:block">{{ $message }}</span>
             @enderror
         </label>
 
@@ -32,7 +32,7 @@
                 </button>
             </span>
             @error('password')
-                <span class="err" style="display:block">{{ $message }}</span>
+                <span class="err" data-validation-error-for="password" style="display:block">{{ $message }}</span>
             @enderror
         </label>
 
@@ -56,7 +56,7 @@
 
     <p class="sub">
         <a class="lk" href="{{ route('password.forgot.form') }}">Lupa kata sandi?</a><br>
-        Belum punya akun? <a class="lk" href="{{ route('register') }}">Daftar sebagai nasabah</a>
+        Belum punya akun? <a class="lk" href="{{ route('register') }}">Daftar jadi nasabah</a>
     </p>
 </section>
 @endsection

@@ -2,17 +2,17 @@
 
 @section('content')
 <small class="kick">Setoran</small>
-<h1>Riwayat &amp; data <em>setoran</em></h1>
+<h1>Daftar <em>setoran</em></h1>
 
 <div class="row" style="margin-bottom:16px">
-    <a href="{{ route('admin.setoran.create') }}" class="btn sm" style="text-decoration:none">+ Catat Setoran Baru</a>
+    <a href="{{ route('admin.setoran.create') }}" class="btn sm" style="text-decoration:none">+ Catat setoran</a>
 </div>
 
 <form class="f frow" method="GET" action="{{ route('admin.setoran.index') }}" style="margin-bottom:20px">
     <label>
         Nasabah
         <select name="nasabah_id">
-            <option value="">Semua Nasabah</option>
+            <option value="">Semua nasabah</option>
             @foreach($nasabahList as $n)
                 <option value="{{ $n->id }}" {{ request('nasabah_id') == $n->id ? 'selected' : '' }}>
                     {{ $n->nomor_nasabah }} · {{ $n->user->name }}
@@ -22,19 +22,19 @@
     </label>
 
     <label>
-        Dari Tanggal
+        Dari tanggal
         <input name="start_date" type="date" value="{{ request('start_date') }}">
     </label>
 
     <label>
-        Sampai Tanggal
+        Sampai tanggal
         <input name="end_date" type="date" value="{{ request('end_date') }}">
     </label>
 
     <label>
         Status
         <select name="status">
-            <option value="">Semua Status</option>
+            <option value="">Semua status</option>
             <option value="berhasil" {{ request('status') === 'berhasil' ? 'selected' : '' }}>Berhasil</option>
             <option value="dibatalkan" {{ request('status') === 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
         </select>
@@ -53,7 +53,7 @@
                 <th>Kode</th>
                 <th>Tanggal</th>
                 <th>Nasabah</th>
-                <th>Total Berat</th>
+                <th>Total berat</th>
                 <th>Nilai (Rp)</th>
                 <th>Status</th>
                 <th>Aksi</th>
@@ -101,19 +101,22 @@
 <dialog id="modal-batal">
     <form method="POST" id="form-batal" class="f" style="min-width:320px">
         @csrf
+        <input type="hidden" name="setoran_id" id="setoran-batal-id" value="{{ old('setoran_id') }}">
+        <input type="hidden" name="setoran_batal_label" id="setoran-batal-label" value="{{ old('setoran_batal_label') }}">
         <h3>Batalkan Setoran</h3>
         <p class="lead" id="ket-setoran-batal" style="margin-bottom:12px"></p>
         <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
-            Pembatalan akan mengurangi saldo nasabah sebesar nilai transaksi ini (BR-10, BR-17).
+            Pembatalan akan mengurangi saldo nasabah sebesar nilai setoran ini.
         </p>
 
         <label for="alasan_pembatalan">
             Alasan pembatalan (wajib)
-            <input id="alasan_pembatalan" name="alasan_pembatalan" type="text" maxlength="255" required placeholder="Contoh: Kesalahan timbang atau permintaan nasabah">
+            <input id="alasan_pembatalan" name="alasan_pembatalan" type="text" maxlength="255" required value="{{ old('alasan_pembatalan') }}" placeholder="Contoh: Kesalahan timbang atau permintaan nasabah">
+            @error('alasan_pembatalan')<span class="err" data-validation-error-for="alasan_pembatalan">{{ $message }}</span>@enderror
         </label>
 
         <div class="row" style="margin-top:14px;gap:8px">
-            <button class="btn" type="submit" style="background:#dc2626;border-color:#b91c1c">Konfirmasi Batal</button>
+            <button class="btn" type="submit" style="background:#dc2626;border-color:#b91c1c">Batalkan setoran</button>
             <button class="btn o" type="button" onclick="document.getElementById('modal-batal').close()">Tutup</button>
         </div>
     </form>
@@ -124,8 +127,21 @@
         const modal = document.getElementById('modal-batal');
         const form = document.getElementById('form-batal');
         document.getElementById('ket-setoran-batal').textContent = kode + ' · ' + nama;
+        document.getElementById('setoran-batal-id').value = id;
+        document.getElementById('setoran-batal-label').value = kode + ' · ' + nama;
         form.action = "{{ url('admin/setoran') }}/" + id + "/batalkan";
         modal.showModal();
     }
 </script>
+@if($errors->has('alasan_pembatalan') && old('setoran_id'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const id = Number(document.getElementById('setoran-batal-id').value);
+            if (!Number.isInteger(id) || id < 1) return;
+            document.getElementById('ket-setoran-batal').textContent = document.getElementById('setoran-batal-label').value;
+            document.getElementById('form-batal').action = "{{ url('admin/setoran') }}/" + id + "/batalkan";
+            document.getElementById('modal-batal').showModal();
+        });
+    </script>
+@endif
 @endsection

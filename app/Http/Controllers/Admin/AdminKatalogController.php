@@ -51,7 +51,7 @@ class AdminKatalogController extends Controller
 
         try {
             $this->katalogService->simpanJenisSampah($validated, null, Auth::user());
-            return back()->with('success', "Jenis sampah {$validated['nama']} berhasil ditambahkan.");
+            return back()->with('success', "Jenis sampah {$validated['nama']} sudah ditambahkan.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
@@ -71,7 +71,7 @@ class AdminKatalogController extends Controller
         try {
             $validated['aktif'] = $request->has('aktif');
             $this->katalogService->simpanJenisSampah($validated, $jenis, Auth::user());
-            return back()->with('success', "Jenis sampah {$jenis->nama} berhasil diperbarui.");
+            return back()->with('success', "Jenis sampah {$jenis->nama} sudah diperbarui.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -98,7 +98,7 @@ class AdminKatalogController extends Controller
                 Auth::user()
             );
 
-            return back()->with('success', 'Harga sampah baru berhasil disimpan dan berlaku mulai ' . $validated['berlaku_mulai'] . '.');
+            return back()->with('success', 'Harga baru sudah disimpan dan berlaku mulai ' . $validated['berlaku_mulai'] . '.');
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }

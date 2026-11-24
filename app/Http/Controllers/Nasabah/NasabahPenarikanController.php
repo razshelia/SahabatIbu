@@ -41,7 +41,7 @@ class NasabahPenarikanController extends Controller
 
         $throttleKey = 'tarik_dana|' . Auth::id();
         if (RateLimiter::tooManyAttempts($throttleKey, 30)) {
-            return back()->with('error', 'Terlalu banyak permintaan penarikan. Silakan tunggu sebentar.');
+            return back()->with('error', 'Terlalu banyak pengajuan penarikan. Coba lagi sebentar.');
         }
 
         RateLimiter::hit($throttleKey, 60);
@@ -53,11 +53,11 @@ class NasabahPenarikanController extends Controller
             'nomor_rekening' => ['required_if:metode,transfer', 'nullable', 'string', 'max:50'],
             'nama_pemilik' => ['required_if:metode,transfer', 'nullable', 'string', 'max:100'],
         ], [
-            'nominal.gt' => 'Nominal penarikan harus lebih besar dari 0.',
-            'metode.in' => 'Metode penarikan harus tunai atau transfer.',
-            'nama_bank.required_if' => 'Nama bank atau e-wallet wajib diisi untuk penarikan transfer.',
-            'nomor_rekening.required_if' => 'Nomor rekening atau nomor e-wallet wajib diisi untuk penarikan transfer.',
-            'nama_pemilik.required_if' => 'Nama pemilik rekening wajib diisi untuk penarikan transfer.',
+            'nominal.gt' => 'Jumlah penarikan harus lebih dari 0.',
+            'metode.in' => 'Pilih cara menerima dana: tunai atau transfer.',
+            'nama_bank.required_if' => 'Isi nama bank atau e-wallet tujuan transfer.',
+            'nomor_rekening.required_if' => 'Isi nomor rekening atau nomor e-wallet tujuan transfer.',
+            'nama_pemilik.required_if' => 'Isi nama pemilik rekening atau akun e-wallet.',
         ]);
 
         try {
@@ -74,7 +74,7 @@ class NasabahPenarikanController extends Controller
                 ? "melalui transfer ke {$penarikan->nama_bank} ({$penarikan->nomor_rekening_masked})"
                 : "secara tunai";
 
-            return back()->with('success', "Pengajuan penarikan sebesar Rp " . number_format((float) $penarikan->nominal, 0, ',', '.') . " {$pesanMetode} berhasil diajukan dengan kode {$penarikan->kode}. Saldo Anda telah ditahan sementara.");
+            return back()->with('success', "Pengajuan Rp " . number_format((float) $penarikan->nominal, 0, ',', '.') . " {$pesanMetode} sudah dikirim dengan kode {$penarikan->kode}. Saldo ditahan sementara sampai pengajuan diproses.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
@@ -89,7 +89,7 @@ class NasabahPenarikanController extends Controller
 
         try {
             $this->penarikanService->batalkanOlehNasabah($penarikan, $nasabah);
-            return back()->with('success', "Pengajuan penarikan {$penarikan->kode} telah berhasil dibatalkan. Saldo ditahan telah dikembalikan.");
+            return back()->with('success', "Pengajuan {$penarikan->kode} dibatalkan. Dana yang ditahan sudah kembali ke saldo tersedia.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }

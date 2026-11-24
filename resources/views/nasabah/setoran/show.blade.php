@@ -14,14 +14,14 @@
         <b>{{ number_format($setoran->total_berat, 2, ',', '.') }} kg</b>
     </div>
     <div class="g">
-        <small>Total nilai tabungan</small>
+        <small>Nilai setoran</small>
         <b>Rp {{ number_format($setoran->total_nilai, 0, ',', '.') }}</b>
     </div>
 </div>
 
 @if($setoran->status === 'dibatalkan')
     <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:14px;border-radius:12px;margin-bottom:24px;font-size:13px;color:#fca5a5;">
-        <b>Informasi Pembatalan:</b><br>
+        <b>Setoran dibatalkan</b><br>
         Setoran ini telah dibatalkan oleh pengurus pada {{ $setoran->dibatalkan_pada?->format('d/m/Y H:i') }}<br>
         Alasan: <em>{{ $setoran->alasan_pembatalan }}</em>
     </div>
@@ -33,9 +33,9 @@
         <thead>
             <tr>
                 <th>Jenis Sampah</th>
-                <th>Harga Satuan Terkunci</th>
+                <th>Harga per satuan saat setoran</th>
                 <th>Berat</th>
-                <th>Subtotal Nilai</th>
+                <th>Subtotal</th>
             </tr>
         </thead>
         <tbody>
@@ -50,7 +50,7 @@
         </tbody>
         <tfoot>
             <tr style="border-top:1px solid var(--bd);font-weight:bold">
-                <td colspan="2">TOTAL</td>
+                <td colspan="2">Total</td>
                 <td>{{ number_format($setoran->total_berat, 2, ',', '.') }} kg</td>
                 <td>Rp {{ number_format($setoran->total_nilai, 0, ',', '.') }}</td>
             </tr>
@@ -59,6 +59,6 @@
 </div>
 
 <div class="row" style="margin-top:24px">
-    <a href="{{ route('nasabah.setoran.index') }}" class="btn o sm" style="text-decoration:none">&larr; Kembali ke Riwayat</a>
+    <a href="{{ route('nasabah.setoran.index') }}" class="btn o sm" style="text-decoration:none">&larr; Kembali ke riwayat setoran</a>
 </div>
 @endsection

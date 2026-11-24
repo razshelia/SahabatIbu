@@ -30,7 +30,7 @@ class GoogleAuthController extends Controller
         $throttleKey = 'google_oauth|' . Request::ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
-            return redirect()->route('login')->with('error', 'Terlalu banyak permintaan otentikasi Google. Silakan tunggu sebentar.');
+            return redirect()->route('login')->with('error', 'Terlalu banyak permintaan masuk dengan Google. Coba lagi sebentar.');
         }
 
         RateLimiter::hit($throttleKey, 60);
@@ -84,7 +84,7 @@ class GoogleAuthController extends Controller
         } catch (Throwable $e) {
             Log::error('Google login error: ' . $e->getMessage());
 
-            return redirect()->route('login')->with('error', 'Gagal login menggunakan akun Google. Silakan coba kembali.');
+            return redirect()->route('login')->with('error', 'Tidak dapat masuk dengan akun Google. Coba lagi.');
         }
     }
 }

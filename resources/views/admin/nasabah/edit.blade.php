@@ -3,7 +3,7 @@
 @section('content')
 <small class="kick">Pendaftar &amp; nasabah</small>
 <h1>Ubah data <em>{{ $nasabah->user->name }}</em></h1>
-<p class="lead">Saldo dan riwayat transaksi tidak ikut berubah.</p>
+<p class="lead">Mengubah data ini tidak mengubah saldo atau riwayat transaksi.</p>
 
 <form method="POST" action="{{ route('admin.nasabah.update', $nasabah) }}" novalidate>
     @csrf
@@ -29,19 +29,19 @@
         <label for="name">
             Nama lengkap
             <input id="name" name="name" type="text" autocomplete="name" value="{{ old('name', $nasabah->user->name) }}" maxlength="100" required>
-            @error('name')<span class="err">{{ $message }}</span>@enderror
+            @error('name')<span class="err" data-validation-error-for="name">{{ $message }}</span>@enderror
         </label>
 
         <label for="email">
             Email
             <input id="email" type="email" value="{{ $nasabah->user->email }}" readonly disabled>
-            <small>Email akun tidak dapat diubah sembarangan.</small>
+            <small>Email akun tidak dapat diubah dari halaman ini.</small>
         </label>
 
         <label for="telepon">
             Telepon
-            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required>
-            @error('telepon')<span class="err">{{ $message }}</span>@enderror
+            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" pattern="[0-9+]+" data-validation-pattern-message="Gunakan angka dan tanda + saja. Hapus spasi atau tanda hubung." required>
+            @error('telepon')<span class="err" data-validation-error-for="telepon">{{ $message }}</span>@enderror
         </label>
 
         @include('partials.alamat-fields', ['nasabah' => $nasabah])

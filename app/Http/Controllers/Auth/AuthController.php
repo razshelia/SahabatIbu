@@ -47,7 +47,7 @@ class AuthController extends Controller
             );
 
             return back()->withErrors([
-                'email' => "Terlalu banyak percobaan masuk yang gagal. Silakan coba lagi dalam {$seconds} detik.",
+                'email' => "Terlalu banyak percobaan masuk yang gagal. Coba lagi dalam {$seconds} detik.",
             ])->onlyInput('email');
         }
 
@@ -99,7 +99,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Anda telah berhasil keluar.');
+        return redirect()->route('login')->with('success', 'Ibu sudah keluar dari akun.');
     }
 
     /**

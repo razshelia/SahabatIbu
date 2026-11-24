@@ -44,7 +44,10 @@ class AdminPenarikanController extends Controller
     {
         try {
             $this->penarikanService->setujuiPenarikan($penarikan, Auth::user());
-            return back()->with('success', "Pengajuan penarikan {$penarikan->kode} telah disetujui. Siapkan uang tunai untuk diserahkan ke nasabah.");
+            $pesan = $penarikan->metode === 'transfer'
+                ? "Pengajuan {$penarikan->kode} disetujui. Lanjutkan transfer ke rekening tujuan."
+                : "Pengajuan {$penarikan->kode} disetujui. Siapkan uang tunai untuk diserahkan kepada nasabah.";
+            return back()->with('success', $pesan);
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -68,7 +71,7 @@ class AdminPenarikanController extends Controller
                 Auth::user()
             );
 
-            return back()->with('success', "Pengajuan penarikan {$penarikan->kode} berhasil ditolak dan saldo ditahan telah dikembalikan ke nasabah.");
+            return back()->with('success', "Pengajuan {$penarikan->kode} ditolak. Dana yang ditahan sudah kembali ke saldo nasabah.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -91,8 +94,8 @@ class AdminPenarikanController extends Controller
             );
 
             $pesan = $penarikan->metode === 'transfer'
-                ? "Pencairan dana transfer {$penarikan->kode} ke {$penarikan->nama_bank} ({$penarikan->nomor_rekening}) berhasil dikonfirmasi! Saldo nasabah telah dipotong permanen."
-                : "Pencairan dana tunai {$penarikan->kode} berhasil dikonfirmasi! Saldo nasabah telah dipotong secara permanen.";
+                ? "Transfer untuk pengajuan {$penarikan->kode} sudah dikonfirmasi. Saldo nasabah sudah diperbarui."
+                : "Penarikan tunai {$penarikan->kode} sudah dikonfirmasi. Saldo nasabah sudah diperbarui.";
 
             return back()->with('success', $pesan);
         } catch (Throwable $e) {

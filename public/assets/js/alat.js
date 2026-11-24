@@ -4,20 +4,20 @@ box(2.1,1.1,1.3,cream,0,.55,0,pm);box(2.0,1.2,.14,M(0x26332d,.5),0,1.8,-.25,pm).
 const pmS=screen(1.84,1.04,0,1.8,-.15,pm);pmS.rotation.x=-.3;
 const beam=box(1.7,.03,.5,new THREE.MeshBasicMaterial({color:0x6fe0a2}),0,1.12,.3,pm);
 screen(1.9,.32,0,.4,.66,pm).paint((g,W,H)=>{bg(g,W,H,'#f1ead8');tx(g,'CEK SALDO',W/2,H*.72,44,'#26332d','center')});
-pmS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Uang bisa diambil',24,48,28,'#9fd9b8','left','700');tx(g,rp(avail()),24,124,66);tx(g,'Sedang diajukan '+rp(S.tahan),24,164,26,'#f3c64f','left','700');
- B(24,H-92,280,70,'Cek saldo saya',()=>{boost=70;S.m.scan='Kartu terbaca';toast('Saldo Ibu: '+rp(avail())+' (bisa diambil)');redraw()},'g');tx(g,S.m.scan||'Ani · NSB-0842',W-20,H-42,22,'#9fd9b8','right','700')});
-handOn(pmS,164,232,'scan',1);lab(pm,0,2.95,0,'1','Cek Saldo',2.5,'scan');ring(pm,1.6,'scan');
+pmS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Saldo tersedia',24,48,28,'#9fd9b8','left','700');tx(g,rp(avail()),24,124,66);tx(g,'Saldo ditahan '+rp(S.tahan),24,164,26,'#f3c64f','left','700');
+ B(24,H-92,280,70,'Cek saldo saya',()=>{boost=70;S.m.scan='Saldo sudah diperiksa';toast('Saldo tersedia: '+rp(avail()));redraw()},'g');tx(g,S.m.scan||'Ani · NSB-0842',W-20,H-42,22,'#9fd9b8','right','700')});
+handOn(pmS,164,232,'scan',1);lab(pm,0,2.95,0,'1','Cek saldo',2.5,'scan');ring(pm,1.6,'scan');
 
 // 2 TIMBANGAN
 const tm=new THREE.Group();tm.position.set(5.5,0,4.8);sc.add(tm);
 box(2.7,.35,2.2,cream,0,.18,0,tm);cyl(.9,.12,M(0xb4bcc4,.3,.8),0,.46,.1,tm,40);
 box(2.2,2.3,.5,cream,0,1.45,-.8,tm);const tmS=screen(1.9,1.55,0,1.5,-.54,tm);
-screen(2.5,.28,0,.2,1.12,tm).paint((g,W,H)=>{bg(g,W,H,'#f1ead8');tx(g,'TIMBANG SAMPAH',W/2,H*.72,44,'#26332d','center')});
-tmS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Setor sampah',24,46,30,'#9fd9b8','left','700');tx(g,'Ani',W-24,46,28,'#fff','right');
+screen(2.5,.28,0,.2,1.12,tm).paint((g,W,H)=>{bg(g,W,H,'#f1ead8');tx(g,'CATAT SETORAN',W/2,H*.72,44,'#26332d','center')});
+tmS.paint((g,W,H,B)=>{bg(g,W,H);tx(g,'Setoran',24,46,30,'#9fd9b8','left','700');tx(g,'Ani',W-24,46,28,'#fff','right');
  tx(g,fmt(wShow)+' kg',24,142,82);if(S.m.tm)tx(g,S.m.tm,24,182,22,'#f3c64f','left','700');
  const tot=S.cart.reduce((a,r)=>a+r.kg*J[r.j].h,0);
  S.cart.slice(0,2).forEach((r,i)=>{const y=216+i*34;tx(g,r.j+' '+fmt(r.kg)+' kg',24,y,26,'#eef5f0','left','700');tx(g,rp(r.kg*J[r.j].h),W-24,y,26,'#eef5f0','right','700')});
- if(!S.cart.length){tx(g,'Keranjang masih kosong',24,226,28,'#eef5f0','left','700');tx(g,'Isi dulu di Daftar Harga',24,262,24,'#9fd9b8','left','700')}
+ if(!S.cart.length){tx(g,'Keranjang masih kosong',24,226,28,'#eef5f0','left','700');tx(g,'Pilih sampah di Daftar Harga',24,262,24,'#9fd9b8','left','700')}
  if(S.cart.length>2)tx(g,'+'+(S.cart.length-2)+' baris lagi',24,284,22,'#9fd9b8','left','700');
  tx(g,'Total '+rp(tot),24,H-96,38,'#f3c64f');
  if(S.cart.length){B(24,H-76,290,62,'Timbang sekarang',S.busy?null:()=>doSetor(),'g');B(330,H-76,158,62,'Hapus',S.busy?null:()=>{S.cart=[];S.m.tm='';redraw()},'n')}else B(24,H-76,464,62,'Pilih sampah dulu →',()=>goSec('rak'),'y')});
@@ -29,10 +29,10 @@ box(1.7,.9,1.3,cream,0,.45,0,pr);box(1.7,.5,.9,cream,0,1.12,-.2,pr);box(1.3,.08,
 const prS=screen(1.5,.55,0,.42,.66,pr);
 const paper=screen(1.3,1.5,0,1.06,.4,pr);paper.scale.y=.01;paper.rotation.x=-.12;
 prS.paint((g,W,H,B)=>{bg(g,W,H);
- if(lastR){tx(g,lastR.k,20,44,34,'#fff');tx(g,rp(lastR.v),W-20,44,34,'#8ef0be','right');B(20,H-80,230,62,'Cetak lagi',S.busy?null:()=>printRcpt(lastR),'y');tx(g,'Saldo '+rp(lastR.s),W-20,H-38,22,'#9fd9b8','right','700')}
- else{tx(g,'Belum ada struk',20,50,34,'#fff');B(20,H-80,330,62,'Setor dulu →',()=>goSec('timbang'),'y')}});
+ if(lastR){tx(g,lastR.k,20,44,34,'#fff');tx(g,rp(lastR.v),W-20,44,34,'#8ef0be','right');B(20,H-80,230,62,'Cetak ulang',S.busy?null:()=>printRcpt(lastR),'y');tx(g,'Saldo '+rp(lastR.s),W-20,H-38,22,'#9fd9b8','right','700')}
+ else{tx(g,'Belum ada struk',20,50,34,'#fff');B(20,H-80,330,62,'Catat setoran dulu →',()=>goSec('timbang'),'y')}});
 function rcptDraw(r){paper.paint((g,W,H)=>{g.fillStyle='#fff';g.fillRect(0,0,W,H);
- const L=r?[['BANK SAMPAH','c',40],['SAHABAT IBU','c',34],[r.k+' · '+r.t,'c',30],['-'],...r.rows.slice(0,3),['-'],['TOTAL',rp(r.v),40],['Saldo '+rp(r.s),'c',32],['Terima kasih, Ani ','c',30]]:[['Belum ada struk','c',34]];
+ const L=r?[['BANK SAMPAH','c',40],['SAHABAT IBU','c',34],[r.k+' · '+r.t,'c',30],['-'],...r.rows.slice(0,3),['-'],['TOTAL',rp(r.v),40],['Saldo '+rp(r.s),'c',32],['Terima kasih, '+USER_NAME,'c',30]]:[['Belum ada struk','c',34]];
  let y=62;L.forEach(l=>{if(l[0]=='-'){g.fillStyle='#999';g.fillRect(24,y-18,W-48,3);y+=18;return}
   if(l[1]=='c')tx(g,l[0],W/2,y,l[2],'#222','center');else{tx(g,l[0],28,y,l[2],'#222','left','700');tx(g,l[1],W-28,y,l[2],'#222','right','700')}y+=48})})}
 handOn(prS,135,145,'struk',1,()=>!!lastR);lab(pr,0,2.75,0,'4','Struk',2.2,'struk');ring(pr,1.3,'struk');
@@ -47,8 +47,8 @@ function pg(x,ry){const g=new THREE.Group();g.position.set(x,0,0);g.rotation.y=r
 const bL=pg(-1.0,.04),bR=pg(1.0,-.04);box(.05,.1,1.8,M(0xc63a2d),0,-.02,.05,bb).rotation.x=Math.PI/2;
 const flt=()=>S.riw.filter(r=>S.f=='all'||(S.f=='set'&&r.v>0)||(S.f=='tar'&&r.v<0));
 bL.paint((g,W,H,B)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,H);tx(g,'Buku Tabungan',W/2,62,40,'#3a2f1e','center');tx(g,'Ani · NSB-0842',W/2,102,28,'#6b5a3d','center','700');
- tx(g,'Uang bisa diambil',40,166,28,'#6b5a3d','left','700');tx(g,rp(avail()),40,228,62,'#1f6b46');tx(g,'Sedang diajukan '+rp(S.tahan),40,268,25,'#a0701a','left','700');
- [['all','Semua'],['set','Setoran'],['tar','Tarikan']].forEach((f,i)=>B(40,292+i*76,432,66,f[1],()=>{S.f=f[0];redraw()},S.f==f[0]?'pon':'p'))});
+ tx(g,'Saldo tersedia',40,166,28,'#6b5a3d','left','700');tx(g,rp(avail()),40,228,62,'#1f6b46');tx(g,'Saldo ditahan '+rp(S.tahan),40,268,25,'#a0701a','left','700');
+ [['all','Semua'],['set','Setoran'],['tar','Penarikan']].forEach((f,i)=>B(40,292+i*76,432,66,f[1],()=>{S.f=f[0];redraw()},S.f==f[0]?'pon':'p'))});
 bR.paint((g,W,H)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,H);tx(g,'Catatan',40,62,40,'#3a2f1e');tx(g,flt().length+' catatan',W-40,62,26,'#6b5a3d','right','700');const L=flt().slice(0,4);if(!L.length)tx(g,'Belum ada catatan.',40,150,28,'#6b5a3d','left','700');
  L.forEach((r,i)=>{const y=126+i*98;g.fillStyle='#d9cfb5';g.fillRect(40,y-26,W-80,3);tx(g,r.k+' · '+r.t,40,y+10,28,'#3a2f1e');tx(g,(r.v<0?'−':'+')+Math.abs(Math.round(r.v)).toLocaleString('id-ID'),W-40,y+10,34,r.v<0?'#b03a2d':'#1f6b46','right');tx(g,r.d,40,y+46,25,'#6b5a3d','left','700')});tx(g,'Halaman 1',W/2,H-18,22,'#9a8a68','center','700')});
 handOn(bL,420,397,'riwayat',1.15);lab(bk,0,3.0,0,'5','Buku Tabungan',3.0,'riwayat');ring(bk,2.6,'riwayat');
@@ -79,19 +79,24 @@ box(3.6,2.2,2.4,cream,0,1.1,0,cp);
 const gl=new THREE.Mesh(new THREE.BoxGeometry(3.4,1.7,2.2),new THREE.MeshPhysicalMaterial({color:0xcfeee0,transparent:true,opacity:.18,roughness:.05}));gl.position.y=3.05;cp.add(gl);
 [[-1.7,-1.1],[1.7,-1.1],[-1.7,1.1],[1.7,1.1]].forEach(p=>box(.1,1.7,.1,M(0x26332d),p[0],3.05,p[1],cp));box(3.6,.12,2.4,cream,0,3.96,0,cp);
 box(3.2,.5,.1,M(0xe5594b),0,4.3,1.03,cp);
-const cpL=screen(3.1,.46,0,4.3,1.09,cp);cpL.paint((g,W,H)=>{bg(g,W,H,'#e5594b');tx(g,'AMBIL UANG',W/2,H*.7,56,'#fff','center')});
+const cpL=screen(3.1,.46,0,4.3,1.09,cp);cpL.paint((g,W,H)=>{bg(g,W,H,'#e5594b');tx(g,'PENARIKAN',W/2,H*.7,56,'#fff','center')});
 const CY=3.7,DY=.5;
-const envs=[];for(let i=0;i<5;i++){const e=box(.7,.12,.45,M([0xffffff,0xe4f5ea,0xfff6d8,0xffffff,0xe4f5ea][i]),-1.3+i*.4,2.32+(i%2)*.12,-.4+(i%3)*.4,cp);e.rotation.y=i*.7;envs.push(e)}
+const goldM=M(0xf3c64f,.3,.25),bandM=M(0xf3c64f,.5),billM=[M(0x2f7d5b,.6),M(0xf6bdb0,.6),M(0x6fe0a2,.6)];
+function cash(i){const g=new THREE.Group();box(.46,.14,.24,billM[i%billM.length],0,0,0,g);box(.1,.16,.26,bandM,0,0,0,g);return g}
+const envs=[],billSpots=[[-.9,-.4],[-.3,.4],[.35,-.45],[-.75,.55],[.1,-.05]];
+billSpots.forEach(([x,z],i)=>{const e=cash(i);e.position.set(x,2.27,z);e.rotation.y=i*.7;cp.add(e);envs.push(e)});
+let moneySeed=7;const moneyRandom=()=> (moneySeed=(moneySeed*16807)%2147483647)/2147483647;
+for(let i=0;i<16;i++){const x=-1.3+moneyRandom()*2.6,z=-.95+moneyRandom()*1.7;if(x>.55&&z>.05)continue;const n=1+Math.floor(moneyRandom()*3);for(let j=0;j<n;j++){const coin=cyl(.13,.035,goldM,x+moneyRandom()*.05,2.2+.0175+j*.036,z+moneyRandom()*.05,cp,28);coin.rotation.y=moneyRandom()*3}}
 box(.9,.1,.9,M(0x111),1.2,2.25,.2,cp);
 const claw=new THREE.Group();claw.position.set(0,CY,0);cp.add(claw);box(.3,.14,.3,M(0x26332d),0,0,0,claw);cyl(.04,.65,M(0x26332d),0,-.33,0,claw);
 const fg=[];for(let i=0;i<3;i++)fg.push(box(.06,.45,.06,M(0x555,.3,.8),Math.cos(i*2.09)*.22,-.75,Math.sin(i*2.09)*.22,claw));
 const cpS=screen(3.3,2.0,0,1.1,1.21,cp);
-cpS.paint((g,W,H,B)=>{bg(g,W,H);B(12,10,244,52,'Ambil uang',()=>{S.tab='ambil';redraw()},S.tab=='ambil'?'on':'n');B(260,10,240,52,'Status ('+S.tarik.length+')',()=>{S.tab='status';redraw()},S.tab=='status'?'on':'n');
- if(S.tab=='ambil'){tx(g,'Tersedia '+rp(avail()),W/2,102,28,'#f3c64f','center','700');
+cpS.paint((g,W,H,B)=>{bg(g,W,H);B(12,10,244,52,'Penarikan',()=>{S.tab='ambil';redraw()},S.tab=='ambil'?'on':'n');B(260,10,240,52,'Status ('+S.tarik.length+')',()=>{S.tab='status';redraw()},S.tab=='status'?'on':'n');
+if(S.tab=='ambil'){tx(g,'Saldo tersedia '+rp(avail()),W/2,102,28,'#f3c64f','center','700');
   B(12,116,92,76,'−',()=>{S.nom=Math.max(10000,S.nom-10000);redraw()});tx(g,rp(S.nom),W/2,170,54,'#fff','center');B(408,116,92,76,'+',()=>{S.nom=Math.min(Math.floor(avail()/10000)*10000,S.nom+10000);redraw()});
-  B(12,204,488,70,'Ambil uang',S.busy?null:()=>doCapit(),'r');tx(g,S.m.cp||'Uang disiapkan, ambil tunai di pengurus.',W/2,298,21,'#9fd9b8','center','700')}
- else{if(!S.tarik.length){tx(g,'Belum ada pengajuan.',W/2,130,30,'#9fd9b8','center','700');tx(g,'Tekan tab “Ambil uang” dulu',W/2,172,24,'#9fd9b8','center','700')}
+  B(12,204,488,70,'Ajukan penarikan',S.busy?null:()=>doCapit(),'r');tx(g,S.m.cp||'Pilih jumlah yang ingin ditarik.',W/2,298,21,'#9fd9b8','center','700')}
+ else{if(!S.tarik.length){tx(g,'Belum ada pengajuan.',W/2,130,30,'#9fd9b8','center','700');tx(g,'Pilih Penarikan untuk membuat pengajuan.',W/2,172,24,'#9fd9b8','center','700')}
   S.tarik.slice(0,2).forEach((t,i)=>{const y=70+i*116;g.fillStyle='#ffffff10';rr(g,10,y,492,108,16);g.fill();tx(g,t.id,26,y+34,28,'#fff');tx(g,rp(t.v),W-26,y+34,28,'#8ef0be','right');tx(g,t.st=='Dicairkan'?'Dicairkan':''+t.st,26,y+64,22,t.st=='Dicairkan'?'#6fe0a2':'#f3c64f','left','700');
-   if(t.st=='Menunggu'){B(26,y+54,110,46,'Batal',()=>aksi(t,'batal'),'r');B(148,y+54,340,46,'Pengurus: setujui',()=>aksi(t,'next'),'y')}
-   if(t.st=='Disetujui')B(190,y+54,298,46,'Pengurus: beri tunai',()=>aksi(t,'next'),'g')})}});
-handOn(cpS,440,196,'capit',1.2,()=>S.tab=='ambil');lab(cp,0,4.85,0,'6','Ambil Uang',3.2,'capit');ring(cp,2.7,'capit');
+   if(t.st=='Menunggu'){B(26,y+54,110,46,'Batal',()=>aksi(t,'batal'),'r');B(148,y+54,340,46,'Setujui pengajuan',()=>aksi(t,'next'),'y')}
+   if(t.st=='Disetujui')B(190,y+54,298,46,'Tandai sudah dibayar',()=>aksi(t,'next'),'g')})}});
+handOn(cpS,440,196,'capit',1.2,()=>S.tab=='ambil');lab(cp,0,4.85,0,'6','Penarikan',3.2,'capit');ring(cp,2.7,'capit');

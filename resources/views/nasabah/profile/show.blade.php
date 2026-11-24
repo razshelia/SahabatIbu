@@ -2,7 +2,7 @@
 
 @section('content')
 <small class="kick">Profil</small>
-<h1>Data <em>Ibu</em></h1>
+<h1>Profil <em>Ibu</em></h1>
 <p class="lead">
     <b>{{ $user->name }}</b> · {{ $nasabah->nomor_nasabah }} · {{ $user->email }}
     <span class="pill ok" style="margin-left:8px">{{ ucfirst($user->status) }}</span>
@@ -36,19 +36,19 @@
         <label for="email">
             Email
             <input id="email" type="email" value="{{ $user->email }}" readonly disabled>
-            <small>Email akun terikat dan dilindungi.</small>
+            <small>Email tidak dapat diubah dari halaman ini.</small>
         </label>
 
         <label for="telepon">
             Telepon / WhatsApp
-            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" required autofocus>
-            @error('telepon')<span class="err">{{ $message }}</span>@enderror
+            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon', $nasabah->telepon) }}" maxlength="20" pattern="[0-9+]+" data-validation-pattern-message="Gunakan angka dan tanda + saja. Hapus spasi atau tanda hubung." required autofocus>
+            @error('telepon')<span class="err" data-validation-error-for="telepon">{{ $message }}</span>@enderror
         </label>
 
         <label for="alamat">
             Alamat domisili ({{ $nasabah->kategori === 'umum' ? 'Umum' : 'Warga Taman Gading' }})
             <input id="alamat" type="text" value="{{ $nasabah->alamat }}" readonly disabled>
-            <small>Alamat dan status domisili diverifikasi pengurus. Untuk pindah alamat, hubungi pengurus.</small>
+            <small>Pengurus memeriksa alamat dan status domisili. Hubungi pengurus jika alamat Ibu berubah.</small>
         </label>
 
         <div class="deret">
@@ -63,19 +63,19 @@
         <label for="current_password">
             Kata sandi saat ini
             <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
-            @error('current_password')<span class="err">{{ $message }}</span>@enderror
+            @error('current_password')<span class="err" data-validation-error-for="current_password">{{ $message }}</span>@enderror
         </label>
 
         <label for="password">
             Kata sandi baru
-            <input id="password" name="password" type="password" autocomplete="new-password" required>
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).+" data-validation-pattern-message="Tambahkan minimal satu huruf dan satu angka." required>
             <small>Minimal 8 karakter, kombinasi huruf dan angka.</small>
-            @error('password')<span class="err">{{ $message }}</span>@enderror
+            @error('password')<span class="err" data-validation-error-for="password">{{ $message }}</span>@enderror
         </label>
 
         <label for="password_confirmation">
-            Ulangi kata sandi baru
-            <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
+            Ketik ulang kata sandi baru
+            <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" data-match="password" required>
         </label>
 
         <div class="deret">
@@ -85,6 +85,6 @@
 </form>
 
 <p class="sub" style="margin-top:24px">
-    Pelindungan data Ibu dijamin UU No. 27 Tahun 2022. Baca <a class="lk" href="{{ route('privacy.policy') }}">Kebijakan Privasi</a>.
+    Data pribadi Ibu dilindungi sesuai UU No. 27 Tahun 2022. Baca <a class="lk" href="{{ route('privacy.policy') }}">Kebijakan Privasi</a>.
 </p>
 @endsection

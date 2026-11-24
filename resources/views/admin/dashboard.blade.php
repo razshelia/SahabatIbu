@@ -1,7 +1,7 @@
-@extends('layouts.app', ['title' => 'Admin · Dashboard · Bank Sampah Sahabat Ibu', 'dataView' => 'home', 'pageTitle' => 'Dashboard Admin'])
+@extends('layouts.app', ['title' => 'Ringkasan Pengurus · Bank Sampah Sahabat Ibu', 'dataView' => 'home', 'pageTitle' => 'Ringkasan pengurus'])
 
 @section('content')
-<small class="kick">Dashboard</small>
+<small class="kick">Beranda pengurus</small>
 <h1>Ringkasan <em>bank sampah</em></h1>
 
 <div class="kpi">
@@ -14,7 +14,7 @@
         <b>Rp {{ number_format($totalSetoranSukses, 0, ',', '.') }}</b>
     </div>
     <div class="g">
-        <small>Penarikan menunggu</small>
+        <small>Pengajuan penarikan menunggu</small>
         <b>{{ $totalPenarikanMenunggu }}</b>
     </div>
     <div class="g">
@@ -24,18 +24,18 @@
 </div>
 
 <div class="row" style="margin-bottom:20px">
-    <a href="{{ route('admin.setoran.create') }}" class="btn sm" style="text-decoration:none">+ Input Setoran</a>
-    <a href="{{ route('admin.nasabah.create') }}" class="btn o sm" style="text-decoration:none">+ Tambah Nasabah</a>
+    <a href="{{ route('admin.setoran.create') }}" class="btn sm" style="text-decoration:none">+ Catat setoran</a>
+    <a href="{{ route('admin.nasabah.create') }}" class="btn o sm" style="text-decoration:none">+ Tambah nasabah</a>
 </div>
 
-<h2>Total sampah per jenis</h2>
+<h2>Sampah terkumpul per jenis</h2>
 <div class="tbl">
     <table>
         <thead>
             <tr>
                 <th>Jenis</th>
-                <th>Berat Terkumpul</th>
-                <th>Total Nilai</th>
+                <th>Berat terkumpul</th>
+                <th>Nilai setoran</th>
             </tr>
         </thead>
         <tbody>
@@ -52,8 +52,8 @@
     </table>
 </div>
 
-<h2>Audit saldo</h2>
-<p class="lead">Saldo = &Sigma; setoran berhasil &minus; &Sigma; penarikan dicairkan, ditahan = &Sigma; pengajuan berjalan: sesuai (NF-09).</p>
+<h2>Perhitungan saldo</h2>
+<p class="lead">Saldo tersedia berasal dari setoran yang berhasil, dikurangi penarikan yang sudah dicairkan. Dana untuk pengajuan yang masih diproses ditahan sementara.</p>
 
 <h2>Setoran terbaru</h2>
 <div class="tbl">
@@ -63,7 +63,7 @@
                 <th>Kode</th>
                 <th>Tanggal</th>
                 <th>Nasabah</th>
-                <th>Total Berat</th>
+                <th>Total berat</th>
                 <th>Nilai</th>
                 <th>Status</th>
                 <th>Aksi</th>
@@ -99,7 +99,7 @@
         <thead>
             <tr>
                 <th>Kode</th>
-                <th>Waktu Diajukan</th>
+                <th>Diajukan</th>
                 <th>Nasabah</th>
                 <th>Nominal</th>
                 <th>Status</th>

@@ -42,7 +42,7 @@ class TransaksiSetoranService
     public function simpanSetoran(int $nasabahId, array $items, User $admin): TransaksiSetoran
     {
         if (empty($items)) {
-            throw new RuntimeException('Transaksi setoran harus memuat minimal 1 jenis sampah.');
+            throw new RuntimeException('Pilih setidaknya satu jenis sampah untuk dicatat.');
         }
 
         return DB::transaction(function () use ($nasabahId, $items, $admin) {
@@ -50,7 +50,7 @@ class TransaksiSetoranService
             $nasabah = Nasabah::where('id', $nasabahId)->lockForUpdate()->firstOrFail();
 
             if ($nasabah->user->status !== 'aktif') {
-                throw new RuntimeException('Transaksi hanya dapat dilakukan untuk nasabah yang berstatus Aktif.');
+                throw new RuntimeException('Setoran hanya dapat dicatat untuk nasabah aktif.');
             }
 
             $totalBerat = '0';
@@ -62,7 +62,7 @@ class TransaksiSetoranService
                 $berat = (float) $item['berat_kg'];
 
                 if ($berat <= 0) {
-                    throw new RuntimeException('Berat sampah harus lebih besar dari 0.');
+                    throw new RuntimeException('Berat sampah harus lebih dari 0.');
                 }
 
                 // Bulatkan ke 2 desimal
@@ -70,13 +70,13 @@ class TransaksiSetoranService
 
                 $jenisSampah = JenisSampah::findOrFail($jenisId);
                 if (! $jenisSampah->aktif) {
-                    throw new RuntimeException("Jenis sampah {$jenisSampah->nama} sedang tidak aktif.");
+                    throw new RuntimeException("Jenis sampah {$jenisSampah->nama} tidak aktif.");
                 }
 
                 // Ambil harga yang berlaku saat ini (BR-03)
                 $hargaBerlaku = $jenisSampah->hargaBerlaku();
                 if (! $hargaBerlaku) {
-                    throw new RuntimeException("Belum ada harga berlaku untuk jenis sampah {$jenisSampah->nama}.");
+                    throw new RuntimeException("Harga untuk {$jenisSampah->nama} belum tersedia. Tetapkan harga sebelum mencatat setoran.");
                 }
 
                 $hargaPerKg = (string) $hargaBerlaku->harga_per_kg;
@@ -136,11 +136,11 @@ class TransaksiSetoranService
     public function batalkanSetoran(TransaksiSetoran $transaksi, string $alasan, User $admin): void
     {
         if ($transaksi->status !== 'berhasil') {
-            throw new RuntimeException('Hanya transaksi setoran dengan status berhasil yang dapat dibatalkan.');
+            throw new RuntimeException('Hanya setoran yang berstatus Berhasil yang dapat dibatalkan.');
         }
 
         if (empty(trim($alasan))) {
-            throw new RuntimeException('Alasan pembatalan transaksi wajib diisi.');
+            throw new RuntimeException('Isi alasan pembatalan setoran.');
         }
 
         DB::transaction(function () use ($transaksi, $alasan, $admin) {
@@ -149,7 +149,7 @@ class TransaksiSetoranService
             // Aturan BR-17: Pembatalan setoran ditolak jika saldo tersedia < total nilai transaksi
             $saldoTersedia = bcsub((string) $nasabah->saldo, (string) $nasabah->saldo_ditahan, 2);
             if (bccomp($saldoTersedia, (string) $transaksi->total_nilai, 2) < 0) {
-                throw new RuntimeException('Pembatalan transaksi setoran ditolak karena saldo tersedia nasabah (Rp ' . number_format((float) $saldoTersedia, 2, ',', '.') . ') tidak mencukupi untuk pemotongan (Rp ' . number_format((float) $transaksi->total_nilai, 2, ',', '.') . ').');
+                throw new RuntimeException('Setoran tidak dapat dibatalkan karena saldo tersedia (Rp ' . number_format((float) $saldoTersedia, 2, ',', '.') . ') kurang dari nilai setoran (Rp ' . number_format((float) $transaksi->total_nilai, 2, ',', '.') . ').');
             }
 
             // Kurangi saldo nasabah

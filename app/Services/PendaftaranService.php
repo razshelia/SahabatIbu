@@ -167,7 +167,7 @@ class PendaftaranService
     public function verifikasiPendaftar(User $user, bool $setujui, ?string $alasan, User $admin): void
     {
         if ($user->status !== 'menunggu') {
-            throw new RuntimeException('Hanya pendaftar berstatus menunggu yang dapat diverifikasi.');
+            throw new RuntimeException('Pendaftaran ini tidak lagi berstatus Menunggu.');
         }
 
         DB::transaction(function () use ($user, $setujui, $alasan, $admin) {
@@ -188,7 +188,7 @@ class PendaftaranService
                 );
             } else {
                 if (empty(trim($alasan ?? ''))) {
-                    throw new RuntimeException('Alasan penolakan wajib diisi.');
+                    throw new RuntimeException('Isi catatan sebelum menolak pendaftaran.');
                 }
 
                 $user->forceFill([
@@ -218,7 +218,7 @@ class PendaftaranService
     public function toggleStatusAktif(User $user, User $admin): void
     {
         if (! in_array($user->status, ['aktif', 'nonaktif'])) {
-            throw new RuntimeException('Hanya akun aktif atau nonaktif yang dapat diubah statusnya.');
+            throw new RuntimeException('Status hanya dapat diubah untuk akun Aktif atau Nonaktif.');
         }
 
         DB::transaction(function () use ($user, $admin) {
@@ -243,11 +243,11 @@ class PendaftaranService
         $user = $nasabah->user;
 
         if ($user->status !== 'nonaktif') {
-            throw new RuntimeException('Anonimisasi hanya dapat dilakukan pada akun dengan status Nonaktif.');
+            throw new RuntimeException('Akun harus berstatus Nonaktif sebelum datanya dapat dianonimkan.');
         }
 
         if (bccomp((string) $nasabah->saldo, '0', 2) !== 0 || bccomp((string) $nasabah->saldo_ditahan, '0', 2) !== 0) {
-            throw new RuntimeException('Anonimisasi ditolak karena saldo nasabah belum nol.');
+            throw new RuntimeException('Data belum dapat dianonimkan karena saldo nasabah belum nol.');
         }
 
         $adaPenarikanAktif = $nasabah->penarikanDana()
@@ -255,7 +255,7 @@ class PendaftaranService
             ->exists();
 
         if ($adaPenarikanAktif) {
-            throw new RuntimeException('Anonimisasi ditolak karena masih terdapat penarikan berstatus Menunggu atau Disetujui.');
+            throw new RuntimeException('Data belum dapat dianonimkan karena masih ada pengajuan penarikan yang diproses.');
         }
 
         DB::transaction(function () use ($user, $nasabah, $admin) {

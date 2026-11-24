@@ -3,9 +3,9 @@
 @section('content')
 <small class="kick">Setoran</small>
 <h1>Catat <em>setoran sampah</em></h1>
-<p class="lead">Pilih nasabah, lalu isi berat tiap jenis sampah yang ditimbang (BR-01, BR-05). Layar timbangan di bawah menghitung nilainya.</p>
+<p class="lead">Pilih nasabah dan masukkan berat setiap jenis sampah. Perkiraan nilai setoran akan dihitung otomatis.</p>
 
-<form method="POST" action="{{ route('admin.setoran.store') }}" novalidate id="form-setoran">
+<form method="POST" action="{{ route('admin.setoran.store') }}" novalidate id="form-setoran" data-require-one-positive="items">
     @csrf
 
     <x-alat tool="timbang" plat="Timbang Sampah">
@@ -20,7 +20,7 @@
                     <b class="angka kecil kuning" id="lcd-nasabah">Belum dipilih</b>
                 </div>
             </div>
-            <p class="baca">Estimasi nilai: <b id="lcd-rp">Rp 0</b></p>
+            <p class="baca">Perkiraan nilai setoran: <b id="lcd-rp">Rp 0</b></p>
         </x-slot:layar>
 
         <label for="nasabah_id">
@@ -33,15 +33,15 @@
                     </option>
                 @endforeach
             </select>
-            @error('nasabah_id')<span class="err">{{ $message }}</span>@enderror
+            @error('nasabah_id')<span class="err" data-validation-error-for="nasabah_id">{{ $message }}</span>@enderror
         </label>
 
         <div>
-            <p style="font-weight:800;font-size:17px;margin:0 0 4px">Letakkan sampah di timbangan</p>
-            <small>Kosongkan jenis yang tidak disetor. Tombol + dan − bergeser 0,25. Boleh juga ketik angka, pakai koma atau titik (maks. 2 angka di belakang koma).</small>
+            <p style="font-weight:800;font-size:17px;margin:0 0 4px">Masukkan berat sampah</p>
+            <small>Biarkan kosong untuk jenis yang tidak disetor. Gunakan tombol + atau − untuk mengubah berat sebesar 0,25 kg, atau ketik angka dengan koma atau titik (maksimal 2 angka di belakang koma).</small>
         </div>
 
-        <div class="baki">
+        <div class="baki" data-validation-group="items">
             @foreach($jenisList as $index => $jenis)
                 <div class="baki-baris">
                     <div class="baki-nama">
@@ -55,17 +55,21 @@
                                id="berat-{{ $index }}"
                                name="items[{{ $index }}][berat_kg]"
                                class="input-berat"
+                               data-optional-positive
                                data-harga="{{ $jenis->harga_saat_ini }}"
                                inputmode="decimal"
+                               pattern="[0-9]+([.,][0-9]{1,2})?"
+                               data-validation-pattern-message="Masukkan angka dengan maksimal dua angka di belakang koma."
                                autocomplete="off"
                                placeholder="0,00"
                                value="{{ old("items.{$index}.berat_kg") }}">
+                        @error("items.{$index}.berat_kg")<span class="err" data-validation-error-for="items.{{ $index }}.berat_kg">{{ $message }}</span>@enderror
                         <button type="button" class="key g sm" data-langkah="0.25" aria-label="Tambah 0,25 {{ $jenis->satuan }} {{ $jenis->nama }}">+</button>
                     </div>
                 </div>
             @endforeach
         </div>
-        @error('items')<span class="err">{{ $message }}</span>@enderror
+        @error('items')<span class="err" data-validation-error-for="items">{{ $message }}</span>@enderror
 
         <div class="deret">
             <button class="key g besar" type="submit">Simpan setoran</button>
@@ -73,7 +77,7 @@
         </div>
 
         <x-slot:nampan>
-            <p>Setelah disimpan, struk setoran tercetak dan saldo nasabah bertambah.</p>
+            <p>Setelah setoran disimpan, nilainya ditambahkan ke saldo nasabah. Rincian transaksi tersedia di struk.</p>
         </x-slot:nampan>
     </x-alat>
 </form>

@@ -14,7 +14,7 @@
     <label for="{{ $id }}">{{ $label }}</label>
     <div data-rupiah data-nama="{{ $id }}" data-step="{{ $rpStep }}" @if(!empty($max)) data-max="{{ (int) $max }}" @endif @if(!empty($draf)) data-draf="{{ $draf }}" @endif style="display:grid;gap:12px">
         <div class="rp-lcd">
-            <input id="{{ $id }}" class="rp-input" name="{{ $name }}" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="12" required
+            <input id="{{ $id }}" class="rp-input" name="{{ $name }}" type="text" inputmode="numeric" pattern="[0-9]*" data-min-value="1" autocomplete="off" maxlength="12" required
                    placeholder="{{ $placeholder ?? '0' }}" value="{{ $rpValue }}">
         </div>
         <div class="rp-papan">
@@ -28,9 +28,12 @@
             <button type="button" class="key rp-hapus" data-aksi="hapus">Hapus</button>
         </div>
         <output class="sr" data-tampil aria-live="polite"></output>
-        <small>Tombol + dan − bergeser Rp {{ number_format($rpStep, 0, ',', '.') }}. Nilai tidak bisa kurang dari 0.</small>
+        <small>Gunakan tombol + atau − untuk mengubah jumlah sebesar Rp {{ number_format($rpStep, 0, ',', '.') }}. Jumlah tidak bisa kurang dari 0.</small>
     </div>
 </div>
+@error($name)
+    <span class="err" data-validation-error-for="{{ $name }}" style="display:block">{{ $message }}</span>
+@enderror
 @once
     @push('scripts')
     <script>

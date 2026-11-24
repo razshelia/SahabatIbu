@@ -13,7 +13,7 @@ async function doSetor(){if(S.busy||!S.cart.length)return;S.busy=true;S.m.tm='';
  toast(''+k+' tersimpan! Saldo bertambah '+rp(tot)+'. Struk sedang dicetak.');goSec('struk');await wait(1100);await printRcpt({k,t,rows,v:tot,s:S.saldo})}
 async function doCapit(){if(S.busy)return;if(S.nom<=0||S.nom>avail()){S.m.cp='Jumlah harus lebih dari 0 dan sesuai saldo.';toast('Jumlah uang harus lebih dari 0 dan tidak melebihi saldo yang bisa diambil.');redraw();return}
  S.busy=true;S.tahan+=S.nom;const id='TRK-0'+(S.tn++),nm=S.nom;S.tarik.unshift({id,v:S.nom,st:'Menunggu'});S.tab='status';S.nom=Math.min(S.nom,Math.floor(avail()/10000)*10000);redraw();
- toast('Pengajuan '+id+' ('+rp(nm)+') masuk. Uangnya ditahan dulu, status: Menunggu.');
+ toast('Pengajuan '+id+' sebesar '+rp(nm)+' sudah dikirim. Dana ditahan sementara.');
  const e=envs[Math.floor(Math.random()*envs.length)];const ex=e.position.x,ey=e.position.y,ez=e.position.z,x0=claw.position.x,z0=claw.position.z;
  await tw(p=>{claw.position.x=x0+(ex-x0)*p;claw.position.z=z0+(ez-z0)*p},900);await tw(p=>{claw.position.y=CY-p*DY},700);
  await tw(p=>fg.forEach((f,i)=>{f.position.x=Math.cos(i*2.09)*(.22-.14*p);f.position.z=Math.sin(i*2.09)*(.22-.14*p)}),400);
@@ -23,5 +23,5 @@ async function doCapit(){if(S.busy)return;if(S.nom<=0||S.nom>avail()){S.m.cp='Ju
  await tw(p=>fg.forEach((f,i)=>{f.position.x=Math.cos(i*2.09)*(.08+.14*p);f.position.z=Math.sin(i*2.09)*(.08+.14*p)}),300);
  await tw(p=>{claw.position.x=1.2*(1-p);claw.position.z=.2*(1-p)},600);e.position.set(ex,ey,ez);
  S.busy=false;S.m.cp='Pengajuan '+id+' masuk. Dana ditahan.';redraw()}
-function aksi(t,a){if(a=='batal'){S.tahan-=t.v;t.st='Dibatalkan';toast('↩ Pengajuan dibatalkan, uang kembali ke saldo yang bisa diambil.')}else if(t.st=='Menunggu'){t.st='Disetujui';toast('Pengurus menyetujui '+t.id+'. Tinggal ambil uang tunai.')}else{S.saldo-=t.v;S.tahan-=t.v;t.st='Dicairkan';S.riw.unshift({k:t.id,t:'22 Nov',v:-t.v,d:'Penarikan tunai'});toast(''+t.id+' dicairkan '+rp(t.v)+'. Tercatat di Buku Tabungan.')}S.nom=Math.min(S.nom,Math.floor(avail()/10000)*10000);redraw()}
+function aksi(t,a){if(a=='batal'){S.tahan-=t.v;t.st='Dibatalkan';toast('Pengajuan dibatalkan. Dana kembali ke saldo tersedia.')}else if(t.st=='Menunggu'){t.st='Disetujui';toast('Pengajuan '+t.id+' disetujui. Silakan ambil uang tunai.')}else{S.saldo-=t.v;S.tahan-=t.v;t.st='Dicairkan';S.riw.unshift({k:t.id,t:'22 Nov',v:-t.v,d:'Penarikan tunai'});toast('Penarikan '+t.id+' sebesar '+rp(t.v)+' sudah dicairkan dan dicatat di buku tabungan.')}S.nom=Math.min(S.nom,Math.floor(avail()/10000)*10000);redraw()}
 

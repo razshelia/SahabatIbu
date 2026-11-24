@@ -1,13 +1,13 @@
-@extends('layouts.app', ['title' => 'Nasabah · Dashboard · Bank Sampah Sahabat Ibu', 'dataView' => 'home', 'pageTitle' => 'Dashboard Nasabah'])
+@extends('layouts.app', ['title' => 'Ringkasan Nasabah · Bank Sampah Sahabat Ibu', 'dataView' => 'home', 'pageTitle' => 'Ringkasan nasabah'])
 
 @section('content')
 <small class="kick">Dashboard</small>
 <h1>Halo, <em>{{ $user->name }}</em></h1>
-<p class="lead">Nomor Nasabah: <b>{{ $nasabah->nomor_nasabah }}</b></p>
+<p class="lead">Nomor nasabah: <b>{{ $nasabah->nomor_nasabah }}</b></p>
 
-<x-alat tool="scan" plat="Cek Saldo">
+<x-alat tool="scan" plat="Cek saldo">
     <x-slot:layar>
-        <small>Uang bisa diambil</small>
+        <small>Saldo tersedia</small>
         <b class="angka">Rp {{ number_format($nasabah->saldo_tersedia, 0, ',', '.') }}</b>
         <div class="kisi" style="margin-top:14px">
             <div>
@@ -15,7 +15,7 @@
                 <b class="angka kecil kuning">Rp {{ number_format($nasabah->saldo_ditahan, 0, ',', '.') }}</b>
             </div>
             <div>
-                <small>Total sampah</small>
+                <small>Total berat setoran</small>
                 <b class="angka kecil">{{ number_format($totalBeratSetoran, 2, ',', '.') }} kg</b>
             </div>
             <div>
@@ -26,7 +26,7 @@
     </x-slot:layar>
 
     <div class="deret">
-        <a href="{{ route('nasabah.penarikan.index') }}" class="key r besar">Ambil uang</a>
+        <a href="{{ route('nasabah.penarikan.index') }}" class="key r besar">Ajukan penarikan</a>
         <a href="{{ route('nasabah.setoran.index') }}" class="key p">Riwayat setoran</a>
         <a href="{{ route('nasabah.katalog.index') }}" class="key p">Harga hari ini</a>
     </div>
@@ -39,7 +39,7 @@
             <tr>
                 <th>Kode</th>
                 <th>Tanggal</th>
-                <th>Total Berat</th>
+                <th>Total berat</th>
                 <th>Nilai (Rp)</th>
                 <th>Status</th>
                 <th>Aksi</th>
@@ -62,20 +62,20 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6">Ibu belum memiliki riwayat setoran sampah.</td></tr>
+                <tr><td colspan="6">Belum ada setoran yang tercatat.</td></tr>
             @endforelse
         </tbody>
     </table>
 </div>
 
-<h2>Status penarikan berjalan</h2>
+<h2>Pengajuan penarikan aktif</h2>
 @if($penarikanAktif->isNotEmpty())
     <div class="tbl">
         <table>
             <thead>
                 <tr>
                     <th>Kode</th>
-                    <th>Waktu Pengajuan</th>
+                    <th>Diajukan</th>
                     <th>Nominal</th>
                     <th>Status</th>
                     <th>Aksi</th>
@@ -100,8 +100,10 @@
                                         Batalkan
                                     </button>
                                 </form>
+                            @elseif($tarik->metode === 'transfer')
+                                <small style="color:var(--em)">Sedang diproses untuk transfer</small>
                             @else
-                                <small style="color:var(--em)">Siap diambil tunai</small>
+                                <small style="color:var(--em)">Silakan temui pengurus untuk menerima uang</small>
                             @endif
                         </td>
                     </tr>
@@ -110,6 +112,6 @@
         </table>
     </div>
 @else
-    <p class="lead">Tidak ada pengajuan penarikan dana yang sedang berjalan saat ini.</p>
+    <p class="lead">Belum ada pengajuan penarikan yang aktif.</p>
 @endif
 @endsection

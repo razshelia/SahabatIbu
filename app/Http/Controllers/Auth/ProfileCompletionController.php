@@ -52,6 +52,6 @@ class ProfileCompletionController extends Controller
         $this->pendaftaranService->lengkapiProfilGoogle(Auth::user(), $validated);
 
         return redirect()->route('account.status')
-            ->with('success', 'Profil Anda telah dilengkapi! Data Anda sedang dalam tahap verifikasi pengurus bank sampah.');
+            ->with('success', 'Data profil Ibu sudah lengkap. Pengurus akan memeriksa pendaftaran sebelum akun diaktifkan.');
     }
 }

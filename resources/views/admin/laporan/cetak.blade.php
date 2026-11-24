@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Laporan Operasional Bank Sampah Sahabat Ibu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; font-size: 11px; color: #111; margin: 20px; }
+        body { font-family: "Rubik", sans-serif; font-size: 11px; color: #111; margin: 20px; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .header h1 { font-size: 16px; margin: 0 0 5px 0; }
         .header p { margin: 0; font-size: 11px; color: #555; }
@@ -25,47 +28,47 @@
 <body>
     <div class="no-print" style="margin-bottom: 15px; text-align: right;">
         <button onclick="window.print()" style="padding: 6px 12px; background: #047857; color: white; border: none; cursor: pointer; border-radius: 4px;">
-            Cetak Dokumen Ini
+            Cetak laporan
         </button>
     </div>
 
     <div class="header">
         <h1>BANK SAMPAH SAHABAT IBU</h1>
         <p>Perumahan Taman Gading, Kelurahan Tegal Besar, Kecamatan Kaliwates, Kabupaten Jember</p>
-        <p><strong>Laporan Rekapitulasi Operasional & Keuangan</strong></p>
+        <p><strong>Laporan kegiatan dan keuangan</strong></p>
     </div>
 
     <div class="meta">
         <strong>Periode:</strong> {{ \Carbon\Carbon::parse($startDate)->format('d F Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d F Y') }}<br>
-        <strong>Dicetak pada:</strong> {{ now()->format('d/m/Y H:i') }}
+        <strong>Waktu cetak:</strong> {{ now()->format('d/m/Y H:i') }}
     </div>
 
     <div class="summary-box">
         <div class="summary-card">
-            <h4>Total Tabungan Masuk</h4>
+            <h4>Total setoran</h4>
             <p>Rp {{ number_format($rekap['total_setoran'], 0, ',', '.') }}</p>
         </div>
         <div class="summary-card">
-            <h4>Total Sampah Terkumpul</h4>
+            <h4>Total sampah terkumpul</h4>
             <p>{{ number_format($rekap['total_berat'], 2, ',', '.') }} kg</p>
         </div>
         <div class="summary-card">
-            <h4>Total Penarikan Dicairkan</h4>
+            <h4>Total penarikan dicairkan</h4>
             <p>Rp {{ number_format($rekap['total_penarikan'], 0, ',', '.') }}</p>
         </div>
         <div class="summary-card">
-            <h4>Selisih Kas Bersih</h4>
+            <h4>Saldo bersih</h4>
             <p>Rp {{ number_format($rekap['saldo_bersih'], 0, ',', '.') }}</p>
         </div>
     </div>
 
-    <h3>1. Rekapitulasi Sampah Berdasarkan Jenis</h3>
+    <h3>1. Sampah terkumpul per jenis</h3>
     <table>
         <thead>
             <tr>
-                <th>Jenis Sampah</th>
-                <th class="text-right">Total Berat</th>
-                <th class="text-right">Total Nilai Tabungan</th>
+                <th>Jenis sampah</th>
+                <th class="text-right">Total berat</th>
+                <th class="text-right">Nilai setoran</th>
             </tr>
         </thead>
         <tbody>
@@ -79,16 +82,16 @@
         </tbody>
     </table>
 
-    <h3>2. Riwayat Transaksi Setoran Sampah (Berhasil)</h3>
+    <h3>2. Setoran yang berhasil</h3>
     <table>
         <thead>
             <tr>
-                <th>No. Nasabah</th>
-                <th>Nama Nasabah</th>
+                <th>Nomor nasabah</th>
+                <th>Nama nasabah</th>
                 <th>Kode</th>
                 <th>Tanggal</th>
-                <th class="text-right">Total Berat</th>
-                <th class="text-right">Nilai Tabungan</th>
+                <th class="text-right">Total berat</th>
+                <th class="text-right">Nilai setoran</th>
             </tr>
         </thead>
         <tbody>
@@ -107,17 +110,17 @@
         </tbody>
     </table>
 
-    <h3>3. Riwayat Penarikan Dana (Dicairkan)</h3>
+    <h3>3. Penarikan yang sudah dicairkan</h3>
     <table>
         <thead>
             <tr>
-                <th>No. Nasabah</th>
-                <th>Nama Nasabah</th>
+                <th>Nomor nasabah</th>
+                <th>Nama nasabah</th>
                 <th>Kode</th>
-                <th>Tanggal Dicairkan</th>
+                <th>Tanggal pencairan</th>
                 <th>Metode</th>
-                <th class="text-right">Nominal (Rp)</th>
-                <th>Ref / Catatan</th>
+                <th class="text-right">Jumlah (Rp)</th>
+                <th>Referensi atau catatan</th>
             </tr>
         </thead>
         <tbody>

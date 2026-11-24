@@ -5,34 +5,34 @@
     <small class="kick">Status pendaftaran</small>
 
     @if($user->status === 'menunggu')
-        <h1>Menunggu Verifikasi</h1>
+        <h1>Pendaftaran sedang diperiksa</h1>
         <p class="lead">Halo, <b>{{ $user->name }}</b> ({{ $user->email }}).</p>
-        <span class="pill">Menunggu Verifikasi</span>
+        <span class="pill">Menunggu</span>
 
-        <h2>Sementara menunggu, Ibu bisa:</h2>
+        <h2>Sambil menunggu, Ibu bisa:</h2>
         <ul>
-            <li>Menghubungi pengurus bila ada kendala</li>
+            <li>Menghubungi pengurus jika perlu bantuan</li>
             <li>Melengkapi data atau mengganti kata sandi</li>
-            <li>Melihat status pendaftaran ini, lalu keluar</li>
+            <li>Keluar dari akun dan kembali lagi nanti untuk melihat status</li>
         </ul>
 
         <p class="lead" style="margin-top:14px">
-            Setoran dan penarikan baru bisa dilakukan setelah pengurus menyetujui dan akun berstatus <em>Aktif</em>.
+            Ibu bisa mulai menyetor dan mengajukan penarikan setelah akun disetujui.
         </p>
     @elseif($user->status === 'ditolak')
-        <h1>Pendaftaran Ditolak</h1>
+        <h1>Pendaftaran belum disetujui</h1>
         <p class="lead">Halo, <b>{{ $user->name }}</b> ({{ $user->email }}).</p>
         <span class="pill no">Ditolak</span>
 
         @if($user->alasan_penolakan)
             <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:12px;border-radius:12px;margin:14px 0;font-size:13px;color:#fca5a5;">
-                <b>Alasan penolakan:</b><br>
+                <b>Catatan dari pengurus:</b><br>
                 {{ $user->alasan_penolakan }}
             </div>
         @endif
 
         <p class="lead" style="margin-top:14px">
-            Silakan hubungi pengurus RT/RW jika memerlukan klarifikasi data pendaftaran Ibu.
+            Hubungi pengurus RT/RW jika Ibu ingin menanyakan keputusan ini.
         </p>
     @else
         <h1>Akun {{ ucfirst($user->status) }}</h1>

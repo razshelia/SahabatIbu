@@ -5,9 +5,9 @@
 <h1>Daftar <em>nasabah</em></h1>
 
 <div class="row" style="margin-bottom:16px;gap:8px">
-    <a href="{{ route('admin.nasabah.create') }}" class="btn sm" style="text-decoration:none">+ Tambah Nasabah</a>
+    <a href="{{ route('admin.nasabah.create') }}" class="btn sm" style="text-decoration:none">+ Tambah nasabah</a>
     <a href="{{ route('admin.nasabah.pendaftar') }}" class="btn o sm" style="text-decoration:none">
-        Verifikasi Pendaftar
+        Periksa pendaftar
         @php
             $jmlMenunggu = \App\Models\User::where('role', 'nasabah')->where('status', 'menunggu')->count();
         @endphp
@@ -25,7 +25,7 @@
     <label>
         Status
         <select name="status">
-            <option value="">Semua Status</option>
+            <option value="">Semua status</option>
             <option value="aktif" {{ request('status') === 'aktif' ? 'selected' : '' }}>Aktif</option>
             <option value="nonaktif" {{ request('status') === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
         </select>
@@ -40,7 +40,7 @@
     <table>
         <thead>
             <tr>
-                <th>No. Nasabah</th>
+                <th>Nomor nasabah</th>
                 <th>Nama</th>
                 <th>Email</th>
                 <th>Telepon</th>
@@ -79,7 +79,7 @@
                     <a href="{{ route('admin.nasabah.pendaftar') }}" class="btn sm" style="text-decoration:none">Verifikasi</a> @endif
 
                                 @if($nasabah->user->status === 'nonaktif' && $nasabah->saldo == 0)
-                                    <button class="btn o sm" type="button" onclick="bukaModalAnonim({{ $nasabah->id }}, '{{ addslashes($nasabah->nomor_nasabah) }}', '{{ addslashes($nasabah->user->name) }}')">
+                                    <button class="btn o sm" type="button" data-id="{{ $nasabah->id }}" data-nomor="{{ $nasabah->nomor_nasabah }}" data-nama="{{ $nasabah->user->name }}" onclick="bukaModalAnonimDariTombol(this)">
                                         Anonimkan
                                     </button>
                                 @endif
@@ -103,20 +103,23 @@
 <dialog id="modal-anonim">
     <form method="POST" id="form-anonim" class="f" style="min-width:320px">
         @csrf
-        <h3>Anonimkan Data Nasabah</h3>
+        <input type="hidden" name="nasabah_id" id="nasabah-anonim-id" value="{{ old('nasabah_id') }}">
+        <input type="hidden" name="nasabah_anonim_label" id="nasabah-anonim-label" value="{{ old('nasabah_anonim_label') }}">
+        <h3>Anonimkan data nasabah</h3>
         <p class="lead" id="ket-anonim" style="margin-bottom:12px;color:#fca5a5"></p>
         <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
-            Tindakan ini permanen sesuai UU PDP (BR-18). Data pribadi (nama, email, telepon, alamat, IP) akan diganti menjadi anonim.
-            Ketik <b>ANONIMKAN</b> untuk konfirmasi:
+            Tindakan ini tidak dapat dibatalkan. Nama, email, telepon, alamat, dan alamat IP akan diganti dengan data anonim sesuai ketentuan perlindungan data.
+            Ketik <b>ANONIMKAN</b> untuk melanjutkan:
         </p>
 
         <label for="konfirmasi">
-            Ketik kata konfirmasi
-            <input id="konfirmasi" name="konfirmasi" type="text" required placeholder="ANONIMKAN">
+            Ketik konfirmasi
+            <input id="konfirmasi" name="konfirmasi" type="text" value="{{ old('konfirmasi') }}" required data-exact-value="ANONIMKAN" placeholder="ANONIMKAN">
+            @error('konfirmasi')<span class="err" data-validation-error-for="konfirmasi">{{ $message }}</span>@enderror
         </label>
 
         <div class="row" style="margin-top:14px;gap:8px">
-            <button class="btn" type="submit" style="background:#dc2626;border-color:#b91c1c">Anonimkan Permanen</button>
+            <button class="btn" type="submit" style="background:#dc2626;border-color:#b91c1c">Anonimkan data</button>
             <button class="btn o" type="button" onclick="document.getElementById('modal-anonim').close()">Batal</button>
         </div>
     </form>
@@ -127,8 +130,25 @@
         const modal = document.getElementById('modal-anonim');
         const form = document.getElementById('form-anonim');
         document.getElementById('ket-anonim').textContent = nomor + ' · ' + nama;
+        document.getElementById('nasabah-anonim-id').value = id;
+        document.getElementById('nasabah-anonim-label').value = nomor + ' · ' + nama;
         form.action = "{{ url('admin/nasabah') }}/" + id + "/anonimkan";
         modal.showModal();
     }
+
+    function bukaModalAnonimDariTombol(button) {
+        bukaModalAnonim(Number(button.dataset.id), button.dataset.nomor, button.dataset.nama);
+    }
 </script>
+@if($errors->has('konfirmasi') && old('nasabah_id'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const id = Number(document.getElementById('nasabah-anonim-id').value);
+            if (!Number.isInteger(id) || id < 1) return;
+            document.getElementById('ket-anonim').textContent = document.getElementById('nasabah-anonim-label').value;
+            document.getElementById('form-anonim').action = "{{ url('admin/nasabah') }}/" + id + "/anonimkan";
+            document.getElementById('modal-anonim').showModal();
+        });
+    </script>
+@endif
 @endsection

@@ -1,18 +1,18 @@
-@extends('layouts.app', ['title' => 'Verifikasi Pendaftar · Bank Sampah Sahabat Ibu', 'dataView' => 'scan', 'pageTitle' => 'Verifikasi Pendaftar'])
+@extends('layouts.app', ['title' => 'Periksa Pendaftaran · Bank Sampah Sahabat Ibu', 'dataView' => 'scan', 'pageTitle' => 'Pendaftar baru'])
 
 @section('content')
 <small class="kick">Pendaftar &amp; nasabah</small>
-<h1>Verifikasi <em>pendaftar</em></h1>
-<p class="lead">Daftar calon nasabah baru yang menunggu verifikasi pengurus.</p>
+<h1>Periksa <em>pendaftaran</em></h1>
+<p class="lead">Pendaftar baru yang perlu diperiksa sebelum akunnya aktif.</p>
 
-<x-alat tool="scan" plat="Verifikasi Pendaftar">
+<x-alat tool="scan" plat="Pendaftar baru">
     <x-slot:layar>
-        <small>Menunggu verifikasi</small>
+        <small>Menunggu pemeriksaan</small>
         <b class="angka {{ $pendaftarList->total() > 0 ? 'kuning' : '' }}">{{ $pendaftarList->total() }} orang</b>
     </x-slot:layar>
     <div class="deret">
-        <a href="{{ route('admin.nasabah.create') }}" class="key g">+ Tambah nasabah langsung</a>
-        <a href="{{ route('admin.nasabah.index') }}" class="key p">&larr; Daftar nasabah</a>
+        <a href="{{ route('admin.nasabah.create') }}" class="key g">+ Tambah nasabah</a>
+        <a href="{{ route('admin.nasabah.index') }}" class="key p">&larr; Semua nasabah</a>
     </div>
 </x-alat>
 
@@ -25,7 +25,7 @@
                 <th>Telepon</th>
                 <th>Kategori</th>
                 <th>Alamat</th>
-                <th>Waktu Daftar</th>
+                <th>Tanggal daftar</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -46,14 +46,14 @@
                                 <button class="btn sm" type="submit">Setujui</button>
                             </form>
 
-                            <button class="btn o sm" type="button" onclick="bukaModalTolak({{ $pendaftar->id }}, '{{ addslashes($pendaftar->name) }}')">
+                            <button class="btn o sm" type="button" data-id="{{ $pendaftar->id }}" data-nama="{{ $pendaftar->name }}" onclick="bukaModalTolakDariTombol(this)">
                                 Tolak
                             </button>
                         </div>
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7">Tidak ada pendaftar yang menunggu verifikasi.</td></tr>
+                <tr><td colspan="7">Tidak ada pendaftar yang menunggu pemeriksaan.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -66,18 +66,21 @@
 <dialog id="modal-tolak" class="dlg-alat">
     <x-alat tool="scan" plat="Tolak Pendaftar">
         <x-slot:layar>
-            <small>Calon nasabah</small>
+            <small>Pendaftar</small>
             <b class="angka kecil kuning" id="nama-pendaftar-tolak">-</b>
         </x-slot:layar>
         <form method="POST" id="form-tolak" style="display:grid;gap:16px">
             @csrf
+            <input type="hidden" name="pendaftar_id" id="pendaftar-tolak-id" value="{{ old('pendaftar_id') }}">
+            <input type="hidden" name="pendaftar_tolak_label" id="pendaftar-tolak-label" value="{{ old('pendaftar_tolak_label') }}">
             <input type="hidden" name="aksi" value="tolak">
             <label for="alasan">
-                Alasan penolakan (wajib)
-                <input id="alasan" name="alasan" type="text" maxlength="255" required placeholder="Contoh: Bukan warga wilayah jangkauan RT/RW">
+                Catatan untuk pendaftar (wajib)
+                <input id="alasan" name="alasan" type="text" maxlength="255" value="{{ old('alasan') }}" required placeholder="Tuliskan alasan pendaftaran belum disetujui">
+                @error('alasan')<span class="err" data-validation-error-for="alasan">{{ $message }}</span>@enderror
             </label>
             <div class="deret">
-                <button class="key r besar" type="submit">Kirim penolakan</button>
+                <button class="key r besar" type="submit">Tolak pendaftaran</button>
                 <button class="key p" type="button" onclick="document.getElementById('modal-tolak').close()">Batal</button>
             </div>
         </form>
@@ -89,8 +92,26 @@
         const modal = document.getElementById('modal-tolak');
         const form = document.getElementById('form-tolak');
         document.getElementById('nama-pendaftar-tolak').textContent = nama;
+        document.getElementById('pendaftar-tolak-id').value = id;
+        document.getElementById('pendaftar-tolak-label').value = nama;
         form.action = "{{ url('admin/nasabah') }}/" + id + "/verifikasi";
         modal.showModal();
     }
+
+    function bukaModalTolakDariTombol(button) {
+        bukaModalTolak(Number(button.dataset.id), button.dataset.nama);
+    }
+
 </script>
+@if($errors->has('alasan') && old('pendaftar_id'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const id = Number(document.getElementById('pendaftar-tolak-id').value);
+            if (!Number.isInteger(id) || id < 1) return;
+            document.getElementById('nama-pendaftar-tolak').textContent = document.getElementById('pendaftar-tolak-label').value;
+            document.getElementById('form-tolak').action = "{{ url('admin/nasabah') }}/" + id + "/verifikasi";
+            document.getElementById('modal-tolak').showModal();
+        });
+    </script>
+@endif
 @endsection

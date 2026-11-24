@@ -3,7 +3,7 @@
 @section('content')
 <small class="kick">Pendaftar &amp; nasabah</small>
 <h1>Tambah <em>nasabah baru</em></h1>
-<p class="lead">Nasabah yang didaftarkan langsung oleh pengurus akan otomatis berstatus <em>Aktif</em>.</p>
+<p class="lead">Akun yang dibuat oleh pengurus langsung berstatus <em>Aktif</em>.</p>
 
 <form method="POST" action="{{ route('admin.nasabah.store') }}" novalidate>
     @csrf
@@ -28,27 +28,27 @@
         <label for="name">
             Nama lengkap
             <input id="name" name="name" type="text" autocomplete="name" value="{{ old('name') }}" maxlength="100" required>
-            @error('name')<span class="err">{{ $message }}</span>@enderror
+            @error('name')<span class="err" data-validation-error-for="name">{{ $message }}</span>@enderror
         </label>
 
         <label for="email">
             Email
             <input id="email" name="email" type="email" autocomplete="email" value="{{ old('email') }}" maxlength="255" required>
-            @error('email')<span class="err">{{ $message }}</span>@enderror
+            @error('email')<span class="err" data-validation-error-for="email">{{ $message }}</span>@enderror
         </label>
 
         <label for="telepon">
-            Telepon (angka / tanda +)
-            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon') }}" maxlength="20" required>
-            @error('telepon')<span class="err">{{ $message }}</span>@enderror
+            Nomor telepon
+            <input id="telepon" name="telepon" type="tel" autocomplete="tel" value="{{ old('telepon') }}" maxlength="20" pattern="[0-9+]+" data-validation-pattern-message="Gunakan angka dan tanda + saja. Hapus spasi atau tanda hubung." required>
+            @error('telepon')<span class="err" data-validation-error-for="telepon">{{ $message }}</span>@enderror
         </label>
 
         @include('partials.alamat-fields')
 
         <label for="password">
-            Kata sandi awal (min. 8, kombinasi huruf &amp; angka)
-            <input id="password" name="password" type="password" autocomplete="new-password" required>
-            @error('password')<span class="err">{{ $message }}</span>@enderror
+            Kata sandi awal (minimal 8 karakter, berisi huruf dan angka)
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).+" data-validation-pattern-message="Tambahkan minimal satu huruf dan satu angka." required>
+            @error('password')<span class="err" data-validation-error-for="password">{{ $message }}</span>@enderror
         </label>
 
         <div class="deret">

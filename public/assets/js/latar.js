@@ -31,58 +31,58 @@ if(!G){
   H.slice(0,6).forEach((j,i)=>{const y=82+i*56;g.fillStyle='#ffffff12';rr(g,12,y-34,W-24,48,14);g.fill();tf(g,j.n,24,y,30,'#fff','left','800',250);
    const dj=DR.rak&&DR.rak.n===j.n&&DR.rak.h>0?DR.rak:null;tx(g,rp(dj?dj.h:j.h),W-52,y,30,dj?'#f3c64f':'#8ef0be','right');
    if(dj){if(dj.h!==j.h)arrow(g,W-30,y-8,dj.h>j.h)}else if(j.p!=null&&j.p!==j.h)arrow(g,W-30,y-8,j.h>j.p)});
-  foot(g,W,Hh,DR.rak&&DR.rak.h>0?'Harga baru, belum disimpan':'Ketuk untuk buka '+L.rak)};
+  foot(g,W,Hh,DR.rak&&DR.rak.h>0?'Harga baru, belum disimpan':'Pilih untuk membuka '+L.rak)};
  kS.paint(harga);
 
  if(!ADM){
   const last=(N.setoran||[])[0],tr=N.tarik||[];
-  pmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Uang bisa diambil',24,46,28,'#9fd9b8','left','700');tf(g,rp(N.tersedia||0),24,122,66,'#8ef0be','left','800',W-48);
-   tx(g,N.tahan>0?'Sedang diajukan '+rp(N.tahan):'Total saldo '+rp(N.saldo||0),24,164,26,'#f3c64f','left','700');
-   tf(g,(N.nomor||'')+' · '+G.nama,24,Hh-52,24,'#fff','left','800',W-48);foot(g,W,Hh,'Ketuk untuk buka '+L.scan)});
+  pmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Saldo tersedia',24,46,28,'#9fd9b8','left','700');tf(g,rp(N.tersedia||0),24,122,66,'#8ef0be','left','800',W-48);
+   tx(g,N.tahan>0?'Saldo ditahan '+rp(N.tahan):'Saldo total '+rp(N.saldo||0),24,164,26,'#f3c64f','left','700');
+   tf(g,(N.nomor||'')+' · '+G.nama,24,Hh-52,24,'#fff','left','800',W-48);foot(g,W,Hh,'Pilih untuk melihat '+L.scan)});
   tmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Setoran saya',24,46,30,'#9fd9b8','left','700');tf(g,kg(N.berat||0),24,136,78,'#fff','left','800',W-48);
-   tx(g,(N.jumlah||0)+' kali setor berhasil',24,176,24,'#f3c64f','left','700');
+   tx(g,(N.jumlah||0)+' setoran berhasil',24,176,24,'#f3c64f','left','700');
    if(last){tx(g,last.k+' · '+last.t,24,226,24,'#9fd9b8','left','700');last.rows.slice(0,2).forEach((r,i)=>{tf(g,r.j+' '+kg(r.kg),24,262+i*34,26,'#eef5f0','left','700',300);tx(g,rp(r.v),W-24,262+i*34,26,'#eef5f0','right','700')});tx(g,'Total '+rp(last.v),24,Hh-78,36,'#f3c64f')}
-   else tx(g,'Belum ada setoran',24,240,30,'#eef5f0','left','700');foot(g,W,Hh,'Ketuk untuk buka '+L.timbang)});
-  prS.paint((g,W,Hh)=>{bg(g,W,Hh);if(last){tx(g,last.k,20,52,36,'#fff');tx(g,rp(last.v),W-20,52,36,'#8ef0be','right');tx(g,'Setoran terakhir · '+last.t,20,100,24,'#9fd9b8','left','700')}else tx(g,'Belum ada struk',20,56,34,'#fff');foot(g,W,Hh,'Ketuk untuk buka '+L.struk)});
+   else tx(g,'Belum ada setoran',24,240,30,'#eef5f0','left','700');foot(g,W,Hh,'Pilih untuk melihat '+L.timbang)});
+  prS.paint((g,W,Hh)=>{bg(g,W,Hh);if(last){tx(g,last.k,20,52,36,'#fff');tx(g,rp(last.v),W-20,52,36,'#8ef0be','right');tx(g,'Setoran terakhir · '+last.t,20,100,24,'#9fd9b8','left','700')}else tx(g,'Belum ada struk',20,56,34,'#fff');foot(g,W,Hh,'Pilih untuk melihat '+L.struk)});
   paper.paint((g,W,Hh)=>{g.fillStyle='#fff';g.fillRect(0,0,W,Hh);let y=62;const c=(s,sz)=>{tx(g,s,W/2,y,sz,'#222','center');y+=48};
    if(!last){c('Belum ada struk',34);return}c('BANK SAMPAH',40);c('SAHABAT IBU',34);c(last.k+' · '+last.t,30);g.fillStyle='#999';g.fillRect(24,y-18,W-48,3);y+=18;
    last.rows.slice(0,3).forEach(r=>{tf(g,r.j+' '+kg(r.kg),28,y,28,'#222','left','700',300);tx(g,rp(r.v),W-28,y,28,'#222','right','700');y+=48});
    g.fillStyle='#999';g.fillRect(24,y-18,W-48,3);y+=18;tx(g,'TOTAL',28,y,40,'#222','left','700');tx(g,rp(last.v),W-28,y,40,'#222','right','700');y+=56;c('Terima kasih, '+G.nama.split(' ')[0],30)});
   bL.paint((g,W,Hh)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,Hh);tx(g,'Buku Tabungan',W/2,62,40,'#3a2f1e','center');tf(g,G.nama,W/2,102,28,'#6b5a3d','center','700',W-60);tx(g,N.nomor||'',W/2,136,24,'#6b5a3d','center','700');
-   tx(g,'Uang bisa diambil',40,200,28,'#6b5a3d','left','700');tf(g,rp(N.tersedia||0),40,266,60,'#1f6b46','left','800',W-80);
-   tx(g,'Sedang diajukan '+rp(N.tahan||0),40,310,26,'#a0701a','left','700');tx(g,'Total saldo '+rp(N.saldo||0),40,350,26,'#6b5a3d','left','700');foot(g,W,Hh,'Ketuk untuk buka '+L.riwayat,'#9a8a68')});
+   tx(g,'Saldo tersedia',40,200,28,'#6b5a3d','left','700');tf(g,rp(N.tersedia||0),40,266,60,'#1f6b46','left','800',W-80);
+   tx(g,'Saldo ditahan '+rp(N.tahan||0),40,310,26,'#a0701a','left','700');tx(g,'Saldo total '+rp(N.saldo||0),40,350,26,'#6b5a3d','left','700');foot(g,W,Hh,'Pilih untuk melihat '+L.riwayat,'#9a8a68')});
   bR.paint((g,W,Hh)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,Hh);tx(g,'Catatan',40,62,40,'#3a2f1e');const l=N.setoran||[];tx(g,l.length+' terbaru',W-40,62,26,'#6b5a3d','right','700');
    if(!l.length)tx(g,'Belum ada catatan.',40,150,28,'#6b5a3d','left','700');
    l.slice(0,4).forEach((r,i)=>{const y=126+i*98;g.fillStyle='#d9cfb5';g.fillRect(40,y-26,W-80,3);tx(g,r.k+' · '+r.t,40,y+10,28,'#3a2f1e');tx(g,'+'+Math.round(r.v).toLocaleString('id-ID'),W-40,y+10,34,'#1f6b46','right');
     tf(g,r.rows.map(x=>x.j+' '+kg(x.kg)).join(', '),40,y+46,24,'#6b5a3d','left','700',W-80)});tx(g,'Halaman 1',W/2,Hh-18,22,'#9a8a68','center','700')});
-  cpS.paint((g,W,Hh)=>{bg(g,W,Hh);tf(g,'Uang bisa diambil',24,48,26,'#9fd9b8','left','700',230);tf(g,rp(N.tersedia||0),24,122,60,'#8ef0be','left','800',230);
+  cpS.paint((g,W,Hh)=>{bg(g,W,Hh);tf(g,'Saldo tersedia',24,48,26,'#9fd9b8','left','700',230);tf(g,rp(N.tersedia||0),24,122,60,'#8ef0be','left','800',230);
    tf(g,DR.capit>0?'Akan diajukan '+rp(DR.capit):(N.tahan>0?'Ditahan '+rp(N.tahan):'Tidak ada yang ditahan'),24,164,24,DR.capit>0?'#ffffff':'#f3c64f','left','700',230);
    tx(g,'Pengajuan terakhir',268,48,24,'#9fd9b8','left','700');if(!tr.length)tx(g,'Belum ada pengajuan',268,100,24,'#eef5f0','left','700');
    tr.slice(0,3).forEach((t,i)=>{const y=96+i*62,s=st(t.st);g.fillStyle='#ffffff10';rr(g,262,y-30,W-274,54,14);g.fill();tf(g,rp(t.v),274,y,28,'#fff','left','800',130);tx(g,s[0],W-26,y,24,s[1],'right','700')});
-   foot(g,W,Hh,'Ketuk untuk buka '+L.capit)});
+   foot(g,W,Hh,'Pilih untuk melihat '+L.capit)});
  }else{
   const dpl=A.terbaru,ln=A.log||[],gr=A.grafik||[],aq=A.antrian||[];
-  pmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Menunggu verifikasi',24,46,28,'#9fd9b8','left','700');tx(g,(A.pendaftar||0)+' orang',24,122,66,A.pendaftar>0?'#f3c64f':'#8ef0be');
-   tx(g,'Aktif '+(A.aktif||0)+' · Nonaktif '+(A.nonaktif||0),24,168,26,'#eef5f0','left','700');foot(g,W,Hh,'Ketuk untuk buka '+L.scan)});
+  pmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Pendaftar menunggu',24,46,28,'#9fd9b8','left','700');tx(g,(A.pendaftar||0)+' orang',24,122,66,A.pendaftar>0?'#f3c64f':'#8ef0be');
+   tx(g,'Aktif '+(A.aktif||0)+' · Nonaktif '+(A.nonaktif||0),24,168,26,'#eef5f0','left','700');foot(g,W,Hh,'Pilih untuk melihat '+L.scan)});
   tmS.paint((g,W,Hh)=>{if(DR.timbang){bg(g,W,Hh);tx(g,'Sedang ditimbang',24,46,30,'#9fd9b8','left','700');tf(g,kg(DR.timbang.kg),24,142,78,'#fff','left','800',W-48);
    tf(g,DR.timbang.nama||'Pilih nasabah dulu',24,190,26,'#f3c64f','left','700',W-48);tf(g,rp(DR.timbang.v),24,Hh-78,44,'#8ef0be','left','800',W-48);foot(g,W,Hh,'Belum disimpan');return}
    bg(g,W,Hh);tx(g,'Setoran hari ini',24,46,30,'#9fd9b8','left','700');tx(g,(A.hari_n||0)+' transaksi',24,132,66);
    tx(g,kg(A.hari_kg||0)+' · '+rp(A.hari_rp||0),24,178,26,'#f3c64f','left','700');tx(g,'Bulan ini',24,238,26,'#9fd9b8','left','700');
-   tx(g,(A.bulan_n||0)+' transaksi · '+kg(A.bulan_kg||0),24,276,26,'#eef5f0','left','700');tf(g,rp(A.bulan_rp||0),24,Hh-78,40,'#f3c64f','left','800',W-48);foot(g,W,Hh,'Ketuk untuk buka '+L.timbang)});
-  prS.paint((g,W,Hh)=>{bg(g,W,Hh);tf(g,G.nama,20,52,34,'#fff','left','800',W-40);tx(g,'Admin · '+ln.length+' aktivitas terbaru',20,100,24,'#9fd9b8','left','700');foot(g,W,Hh,'Ketuk untuk buka '+L.struk)});
-  paper.paint((g,W,Hh)=>{g.fillStyle='#fff';g.fillRect(0,0,W,Hh);tx(g,'LOG AKTIVITAS',W/2,56,38,'#222','center');g.fillStyle='#999';g.fillRect(24,70,W-48,3);
+   tx(g,(A.bulan_n||0)+' transaksi · '+kg(A.bulan_kg||0),24,276,26,'#eef5f0','left','700');tf(g,rp(A.bulan_rp||0),24,Hh-78,40,'#f3c64f','left','800',W-48);foot(g,W,Hh,'Pilih untuk melihat '+L.timbang)});
+  prS.paint((g,W,Hh)=>{bg(g,W,Hh);tf(g,G.nama,20,52,34,'#fff','left','800',W-40);tx(g,'Pengurus · '+ln.length+' aktivitas terbaru',20,100,24,'#9fd9b8','left','700');foot(g,W,Hh,'Pilih untuk melihat '+L.struk)});
+  paper.paint((g,W,Hh)=>{g.fillStyle='#fff';g.fillRect(0,0,W,Hh);tx(g,'RIWAYAT AKTIVITAS',W/2,56,38,'#222','center');g.fillStyle='#999';g.fillRect(24,70,W-48,3);
    if(!ln.length)tx(g,'Belum ada aktivitas',W/2,130,28,'#222','center','700');
    ln.slice(0,7).forEach((l,i)=>{const y=112+i*66;tx(g,l.w||'',28,y,22,'#777','left','700');tf(g,l.a||'',28,y+30,28,'#222','left','800',W-56)})});
   bL.paint((g,W,Hh)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,Hh);tx(g,'Laporan',W/2,62,40,'#3a2f1e','center');tx(g,'Bulan ini',W/2,102,28,'#6b5a3d','center','700');
    tf(g,rp(A.bulan_rp||0),40,190,60,'#1f6b46','left','800',W-80);tx(g,(A.bulan_n||0)+' transaksi',40,250,28,'#3a2f1e','left','700');tx(g,kg(A.bulan_kg||0)+' sampah',40,296,28,'#3a2f1e','left','700');
-   tx(g,'Hari ini '+rp(A.hari_rp||0),40,350,26,'#a0701a','left','700');foot(g,W,Hh,'Ketuk untuk buka '+L.riwayat,'#9a8a68')});
+   tx(g,'Hari ini '+rp(A.hari_rp||0),40,350,26,'#a0701a','left','700');foot(g,W,Hh,'Pilih untuk melihat '+L.riwayat,'#9a8a68')});
   bR.paint((g,W,Hh)=>{g.fillStyle='#f6f0df';g.fillRect(0,0,W,Hh);tx(g,'6 bulan terakhir',W/2,62,34,'#3a2f1e','center');const mx=Math.max(1,...gr.map(x=>x.v)),bw=(W-80)/Math.max(1,gr.length);
    gr.forEach((x,i)=>{const h=Math.max(6,(x.v/mx)*300),bx=40+i*bw+8;g.fillStyle=i===gr.length-1?'#1f6b46':'#9cc4ac';rr(g,bx,Hh-90-h,bw-16,h,10);g.fill();tx(g,x.b,bx+(bw-16)/2,Hh-56,24,'#3a2f1e','center','700')});
    tx(g,'Rp '+Math.round(mx/1000).toLocaleString('id-ID')+' rb tertinggi',W/2,Hh-18,22,'#9a8a68','center','700')});
   cpS.paint((g,W,Hh)=>{bg(g,W,Hh);tf(g,'Pengajuan penarikan',24,48,26,'#9fd9b8','left','700',230);tf(g,(A.tarik_menunggu||0)+' menunggu',24,122,50,A.tarik_menunggu>0?'#f3c64f':'#8ef0be','left','800',230);
-   tf(g,(A.tarik_siap||0)+' siap diberi tunai',24,164,24,'#eef5f0','left','700',230);tx(g,'Antrian',268,48,24,'#9fd9b8','left','700');if(!aq.length)tx(g,'Tidak ada antrian',268,100,24,'#eef5f0','left','700');
+   tf(g,(A.tarik_siap||0)+' disetujui',24,164,24,'#eef5f0','left','700',230);tx(g,'Pengajuan',268,48,24,'#9fd9b8','left','700');if(!aq.length)tx(g,'Tidak ada pengajuan',268,100,24,'#eef5f0','left','700');
    aq.slice(0,3).forEach((t,i)=>{const y=96+i*62,s=st(t.st);g.fillStyle='#ffffff10';rr(g,262,y-30,W-274,54,14);g.fill();tf(g,t.who||t.k,274,y,24,'#fff','left','800',110);tx(g,rp(t.v),W-20,y,24,s[1],'right','700')});
-   foot(g,W,Hh,'Ketuk untuk buka '+L.capit)});
+   foot(g,W,Hh,'Pilih untuk melihat '+L.capit)});
  }
 
  // ---------- papan nama di atas alat (bisa diketuk) ----------

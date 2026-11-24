@@ -2,15 +2,15 @@
 
 @section('content')
 <small class="kick">Laporan</small>
-<h1>Rekap <em>periode operasional</em></h1>
+<h1>Laporan <em>kegiatan</em></h1>
 
 <form class="f frow" method="GET" action="{{ route('admin.laporan.index') }}" style="margin-bottom:20px">
     <label>
-        Dari Tanggal
+        Dari tanggal
         <input name="start_date" type="date" value="{{ $startDate }}">
     </label>
     <label>
-        Sampai Tanggal
+        Sampai tanggal
         <input name="end_date" type="date" value="{{ $endDate }}">
     </label>
     <button class="btn sm" type="submit">Terapkan</button>
@@ -37,13 +37,13 @@
 
 <div class="row noprint" style="margin:20px 0;gap:8px">
     <a href="{{ route('admin.laporan.export.setoran', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="btn sm" style="text-decoration:none">
-        Ekspor CSV Setoran
+        Unduh CSV setoran
     </a>
     <a href="{{ route('admin.laporan.export.penarikan', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="btn sm" style="text-decoration:none">
-        Ekspor CSV Penarikan
+        Unduh CSV penarikan
     </a>
     <a href="{{ route('admin.laporan.cetak', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank" class="btn o sm" style="text-decoration:none">
-        Halaman Cetak (Print/PDF)
+        Cetak laporan
     </a>
 </div>
 
@@ -52,9 +52,9 @@
     <table>
         <thead>
             <tr>
-                <th>Jenis Sampah</th>
-                <th>Total Berat</th>
-                <th>Total Nilai</th>
+                <th>Jenis sampah</th>
+                <th>Total berat</th>
+                <th>Nilai setoran</th>
             </tr>
         </thead>
         <tbody>
@@ -79,7 +79,7 @@
                 <th>Kode</th>
                 <th>Tanggal</th>
                 <th>Nasabah</th>
-                <th>Total Berat</th>
+                <th>Total berat</th>
                 <th>Nilai (Rp)</th>
             </tr>
         </thead>
@@ -108,11 +108,11 @@
         <thead>
             <tr>
                 <th>Kode</th>
-                <th>Waktu Pencairan</th>
+                <th>Dicairkan</th>
                 <th>Nasabah</th>
                 <th>Metode</th>
-                <th>Nominal (Rp)</th>
-                <th>Catatan / Ref</th>
+                <th>Jumlah (Rp)</th>
+                <th>Catatan atau referensi</th>
             </tr>
         </thead>
         <tbody>

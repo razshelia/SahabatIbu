@@ -41,12 +41,12 @@ class PenarikanDanaService
         ?string $namaPemilik = null
     ): PenarikanDana {
         if ($nominal <= 0) {
-            throw new RuntimeException('Nominal penarikan harus lebih besar dari 0.');
+            throw new RuntimeException('Jumlah penarikan harus lebih dari 0.');
         }
 
         if ($metode === 'transfer') {
             if (empty(trim($namaBank ?? '')) || empty(trim($nomorRekening ?? '')) || empty(trim($namaPemilik ?? ''))) {
-                throw new RuntimeException('Nama bank/e-wallet, nomor rekening, dan nama pemilik wajib diisi untuk penarikan transfer.');
+                throw new RuntimeException('Lengkapi bank atau e-wallet tujuan, nomor rekening, dan nama pemilik.');
             }
         } else {
             $metode = 'tunai';
@@ -61,13 +61,13 @@ class PenarikanDanaService
             $lockedNasabah = Nasabah::where('id', $nasabah->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedNasabah->user->status !== 'aktif') {
-                throw new RuntimeException('Akun nasabah harus aktif untuk mengajukan penarikan dana.');
+                throw new RuntimeException('Akun nasabah harus aktif sebelum dapat mengajukan penarikan.');
             }
 
             $saldoTersedia = bcsub((string) $lockedNasabah->saldo, (string) $lockedNasabah->saldo_ditahan, 2);
 
             if (bccomp($nominalFormatted, $saldoTersedia, 2) > 0) {
-                throw new RuntimeException('Nominal penarikan (Rp ' . number_format((float) $nominalFormatted, 2, ',', '.') . ') melebihi saldo tersedia (Rp ' . number_format((float) $saldoTersedia, 2, ',', '.') . ').');
+                throw new RuntimeException('Jumlah penarikan (Rp ' . number_format((float) $nominalFormatted, 2, ',', '.') . ') melebihi saldo tersedia (Rp ' . number_format((float) $saldoTersedia, 2, ',', '.') . ').');
             }
 
             // Tahan saldo
@@ -126,11 +126,11 @@ class PenarikanDanaService
     public function batalkanOlehNasabah(PenarikanDana $penarikan, Nasabah $nasabah): void
     {
         if ($penarikan->nasabah_id !== $nasabah->id) {
-            throw new RuntimeException('Anda hanya dapat membatalkan pengajuan milik sendiri.');
+            throw new RuntimeException('Ibu hanya dapat membatalkan pengajuan milik sendiri.');
         }
 
         if ($penarikan->status !== 'menunggu') {
-            throw new RuntimeException('Hanya pengajuan penarikan berstatus Menunggu yang dapat dibatalkan.');
+            throw new RuntimeException('Pengajuan hanya dapat dibatalkan saat statusnya Menunggu.');
         }
 
         DB::transaction(function () use ($penarikan, $nasabah) {
@@ -163,7 +163,7 @@ class PenarikanDanaService
     public function setujuiPenarikan(PenarikanDana $penarikan, User $admin): void
     {
         if ($penarikan->status !== 'menunggu') {
-            throw new RuntimeException('Hanya pengajuan penarikan berstatus Menunggu yang dapat disetujui.');
+            throw new RuntimeException('Pengajuan hanya dapat disetujui saat statusnya Menunggu.');
         }
 
         DB::transaction(function () use ($penarikan, $admin) {
@@ -192,11 +192,11 @@ class PenarikanDanaService
     public function tolakPenarikan(PenarikanDana $penarikan, string $alasan, User $admin): void
     {
         if ($penarikan->status !== 'menunggu') {
-            throw new RuntimeException('Hanya pengajuan penarikan berstatus Menunggu yang dapat ditolak.');
+            throw new RuntimeException('Pengajuan hanya dapat ditolak saat statusnya Menunggu.');
         }
 
         if (empty(trim($alasan))) {
-            throw new RuntimeException('Alasan penolakan penarikan wajib diisi.');
+            throw new RuntimeException('Isi alasan penolakan penarikan.');
         }
 
         DB::transaction(function () use ($penarikan, $alasan, $admin) {
@@ -233,7 +233,7 @@ class PenarikanDanaService
     public function cairkanPenarikan(PenarikanDana $penarikan, User $admin, ?string $catatanReferensi = null): void
     {
         if ($penarikan->status !== 'disetujui') {
-            throw new RuntimeException('Hanya penarikan berstatus Disetujui yang dapat dicairkan.');
+            throw new RuntimeException('Penarikan hanya dapat dicairkan setelah disetujui.');
         }
 
         DB::transaction(function () use ($penarikan, $admin, $catatanReferensi) {

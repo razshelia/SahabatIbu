@@ -5,7 +5,7 @@
     <small class="kick">Keamanan akun</small>
     <h1>Ganti <em>kata sandi</em></h1>
     <p class="lead">
-        {{ $isMustChange ? 'Demi keamanan, akun wajib mengganti kata sandi sebelum membuka halaman lain.' : 'Perbarui kata sandi akun Ibu secara berkala.' }}
+        {{ $isMustChange ? 'Untuk melindungi akun, buat kata sandi baru sebelum melanjutkan.' : 'Gunakan kata sandi baru untuk akun Ibu.' }}
     </p>
 
     <form class="f" method="POST" action="{{ route('password.change.update') }}" novalidate>
@@ -20,25 +20,25 @@
                         <svg class="i" id="icon-cp-cur" style="width:20px;height:20px"><use href="#i-eye"/></svg>
                     </button>
                 </span>
-                @error('current_password')<span class="err" style="display:block">{{ $message }}</span>@enderror
+                @error('current_password')<span class="err" data-validation-error-for="current_password" style="display:block">{{ $message }}</span>@enderror
             </label>
         @endif
 
         <label for="password" style="position:relative">
-            Kata sandi baru (min. 8, huruf dan angka)
+            Kata sandi baru (minimal 8 karakter, berisi huruf dan angka)
             <span class="pw-wrap" style="display:block;position:relative">
-                <input id="password" name="password" type="password" autocomplete="new-password" required autofocus style="padding-right:44px;width:100%;box-sizing:border-box">
+                <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).+" data-validation-pattern-message="Tambahkan minimal satu huruf dan satu angka." required autofocus style="padding-right:44px;width:100%;box-sizing:border-box">
                 <button type="button" onclick="togglePw('password','icon-cp-new')" aria-label="Tampilkan" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--mu)">
                     <svg class="i" id="icon-cp-new" style="width:20px;height:20px"><use href="#i-eye"/></svg>
                 </button>
             </span>
-            @error('password')<span class="err" style="display:block">{{ $message }}</span>@enderror
+            @error('password')<span class="err" data-validation-error-for="password" style="display:block">{{ $message }}</span>@enderror
         </label>
 
         <label for="password_confirmation" style="position:relative">
-            Ulangi kata sandi baru
+            Ketik ulang kata sandi baru
             <span class="pw-wrap" style="display:block;position:relative">
-                <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required style="padding-right:44px;width:100%;box-sizing:border-box">
+                <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" data-match="password" required style="padding-right:44px;width:100%;box-sizing:border-box">
                 <button type="button" onclick="togglePw('password_confirmation','icon-cp-conf')" aria-label="Tampilkan" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--mu)">
                     <svg class="i" id="icon-cp-conf" style="width:20px;height:20px"><use href="#i-eye"/></svg>
                 </button>
