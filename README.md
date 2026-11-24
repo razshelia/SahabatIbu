@@ -1,3 +1,56 @@
+# Bank Sampah Sahabat Ibu
+
+Aplikasi web Bank Sampah Sahabat Ibu (Perumahan Taman Gading, Jember). Laravel 13, PHP 8.3, MySQL, Blade + Tailwind.
+
+## Menjalankan di komputer sendiri
+
+```bash
+composer install
+cp .env.example .env          # lalu isi DB_*, ADMIN_EMAIL, dan ADMIN_PASSWORD di .env
+php artisan key:generate
+php artisan migrate --force
+php artisan db:seed           # admin pertama + jenis sampah + harga awal
+```
+
+Ekstensi PHP `bcmath` harus aktif (perhitungan saldo memakainya).
+
+### Data awal (`php artisan db:seed`)
+
+| Seeder | Isi | Catatan |
+|---|---|---|
+| `AdminSeeder` | Akun admin dari `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Wajib ganti kata sandi saat login pertama. Dijalankan ulang tidak menimpa admin yang sudah ada. |
+| `JenisSampahSeeder` | Kertas, Botol Plastik, Logam | Aman dijalankan ulang. |
+| `HargaSampahSeeder` | Harga awal **contoh** | Hanya mengisi jenis yang belum punya harga, tidak pernah menimpa harga yang sudah ditetapkan pengurus. |
+
+Nilai `ADMIN_*` dibaca lewat `config/bank_sampah.php`, jadi tetap bekerja setelah `php artisan config:cache`
+(jalankan `php artisan config:clear` bila baru mengubah `.env`).
+
+### Data dummy untuk pengujian (bertema K-pop)
+
+```bash
+php artisan db:seed --class=DemoSeeder
+```
+
+Mengisi 24 nasabah (BLACKPINK, BTS, NewJeans, aespa, Stray Kids, TWICE), 140 setoran selama sekitar 70 hari
+dengan riwayat harga naik/turun, dan 16 pengajuan penarikan dengan semua status. Seluruh data dibuat lewat
+service aplikasi sehingga saldo, saldo ditahan, kode transaksi, dan log aktivitas konsisten.
+Aman dijalankan ulang (data yang sudah ada dilewati) dan **menolak berjalan di production**.
+
+- Kata sandi semua akun demo: `Password123!`. Contoh: `jungkook.bts@example.test` (aktif, banyak riwayat),
+  `hyein.newjeans@example.test` (menunggu verifikasi), `seokjin.bts@example.test` (nonaktif, saldo 0, bisa dianonimkan),
+  `yoongi.bts@example.test` (nonaktif, masih bersaldo), `felix.straykids@example.test` (nasabah umum).
+- Hanya sebagian: `--class=NasabahDemoSeeder`, `--class=SetoranDemoSeeder`, `--class=PenarikanDemoSeeder`
+  (urutannya harus nasabah, lalu setoran, lalu penarikan).
+- Mulai dari nol: `php artisan migrate:fresh --seed && php artisan db:seed --class=DemoSeeder`.
+
+## Pengujian
+
+```bash
+php artisan test
+```
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

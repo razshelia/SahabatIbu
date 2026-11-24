@@ -8,9 +8,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/style.css') }}?v=8">
+    <link rel="stylesheet" href="{{ asset('assets/style.css') }}?v=9">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="stylesheet" href="{{ asset('assets/alat.css') }}?v=3">
+    <script>
+        window.onAppPageReady = function (callback) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', callback, { once: true });
+                return;
+            }
+            callback();
+        };
+    </script>
 </head>
 <body data-view="{{ $dataView ?? 'home' }}" data-role="{{ auth()->user()->role }}">
     @include('partials.icons')
@@ -127,7 +136,11 @@
         </section>
     </main>
 
-    <script>window.GARASI = {{ \Illuminate\Support\Js::from(\App\Support\GarasiData::safe(auth()->user())) }};</script>
+    @php
+        $garasiData = \App\Support\GarasiData::safe(auth()->user());
+    @endphp
+    <script id="garasi-data" type="application/json">{!! json_encode($garasiData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    <script>window.GARASI = JSON.parse(document.getElementById('garasi-data').textContent);</script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script defer src="{{ asset('assets/js/inti.js') }}"></script>
     <script defer src="{{ asset('assets/js/dekor.js') }}"></script>
@@ -135,8 +148,8 @@
     <script defer src="{{ asset('assets/js/alat.js') }}?v=2"></script>
     <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
     <script defer src="{{ asset('assets/js/aksi.js') }}?v=2"></script>
-    <script defer src="{{ asset('assets/js/latar.js') }}?v=2"></script>
-    <script defer src="{{ asset('assets/js/sinkron.js') }}"></script>
+    <script defer src="{{ asset('assets/js/latar.js') }}?v=4"></script>
+    <script defer src="{{ asset('assets/js/sinkron.js') }}?v=2"></script>
     <button type="button" id="lihat" onclick="toggleLihat()" aria-pressed="false">Lihat ruangan penuh</button>
     <button type="button" id="pusat" aria-label="Kembalikan sudut pandang ruangan">Pusatkan ruangan</button>
     @include('partials.wa-admin')
@@ -147,7 +160,7 @@
     <script defer src="{{ asset('assets/js/gerak.js') }}"></script>
     <script defer src="{{ asset('assets/js/kilau-kartu.js') }}?v=2"></script>
     <script defer src="{{ asset('assets/js/menu.js') }}"></script>
-    <script defer src="{{ asset('assets/js/validasi-form.js') }}?v=5"></script>
+    <script defer src="{{ asset('assets/js/validasi-form.js') }}?v=6"></script>
     <script>
         function toggleLihat() {
             const on = document.documentElement.classList.toggle('lihat');
@@ -168,13 +181,14 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onAppPageReady(() => {
             const t = document.getElementById('toast');
             if (t && t.classList.contains('on')) {
                 setTimeout(() => t.classList.remove('on'), 5000);
             }
         });
     </script>
-    @stack('scripts')
+    <div id="page-scripts" hidden>@stack('scripts')</div>
+    <script defer src="{{ asset('assets/js/navigasi-aplikasi.js') }}?v=1"></script>
 </body>
 </html>

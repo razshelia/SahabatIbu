@@ -99,7 +99,7 @@
         </form>
     </dialog>
     @if($errors->has('alasan_pembatalan'))
-        <script>document.addEventListener('DOMContentLoaded', () => document.getElementById('modal-batal').showModal());</script>
+        <script>window.onAppPageReady(() => document.getElementById('modal-batal').showModal());</script>
     @endif
 @endif
 @endsection

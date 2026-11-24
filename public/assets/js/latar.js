@@ -2,7 +2,7 @@
 // - Tamu (login/daftar): adegan sama, tanpa interaksi (seperti sebelumnya).
 // - Sudah login (window.GARASI dari layouts/app.blade.php): alat 3D menampilkan data nyata
 //   sesuai peran, dan alat bisa diketuk untuk membuka halaman yang sesuai.
-const G=window.GARASI||null,RM=matchMedia('(prefers-reduced-motion:reduce)').matches,ROOT=document.documentElement;
+let G=window.GARASI||null;const RM=matchMedia('(prefers-reduced-motion:reduce)').matches,ROOT=document.documentElement;
 const VW={home:{p:[0,3.4,13.2],t:[0,2,-1]},timbang:{p:[8.5,3,10],t:[4.2,1.6,4.8]},struk:{p:[3,3,8],t:[-1.2,1.4,1.8]},capit:{p:[-.8,3.4,6.5],t:[-4.2,2.2,-2.2]},rak:{p:[-.5,3.6,15],t:[-6.2,2.2,7.8]},luar:{p:[0,5,32],t:[0,3,14.3],pintu:1},scan:{p:[12,3.4,16],t:[7.2,1.8,9.6]},riwayat:{p:[.4,3.4,7],t:[4.6,1.6,-.4]}};
 HD.forEach(x=>x.visible=false);LB.forEach(x=>x.sp.visible=false);RG.forEach(x=>x.m.visible=false);
 const T0=performance.now();
@@ -10,13 +10,19 @@ const T0=performance.now();
 if(!G){
  const K=VW[document.body.dataset.view]||VW.luar;sw.visible=K===VW.luar;
  const size=()=>{R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()};
- addEventListener('resize',size);size();rcptDraw(null);redraw();
- (function loop(){requestAnimationFrame(loop);const t=(performance.now()-T0)/1e3,o=RM||!K.pintu?1:sm(cl(t/2.4));
+ let frameId=0;
+ const draw=()=>{const t=(performance.now()-T0)/1e3,o=RM||!K.pintu?1:sm(cl(t/2.4));
   dr.scale.y=K.pintu?1-.92*o:.08;dl.intensity=K.pintu?o*1.3:1.3;
-  const w=RM?0:1;cam.position.set(K.p[0]+Math.sin(t/3)*.35*w,K.p[1]+Math.cos(t/4)*.12*w,K.p[2]);cam.lookAt(K.t[0],K.t[1],K.t[2]);R.render(sc,cam)})();
+  const w=RM?0:1;cam.position.set(K.p[0]+Math.sin(t/3)*.35*w,K.p[1]+Math.cos(t/4)*.12*w,K.p[2]);cam.lookAt(K.t[0],K.t[1],K.t[2]);R.render(sc,cam)};
+ const loop=()=>{frameId=0;if(document.hidden)return;draw();frameId=requestAnimationFrame(loop)};
+ const resume=()=>{if(document.hidden)return;size();draw();if(!frameId)frameId=requestAnimationFrame(loop)};
+ addEventListener('resize',resume);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(frameId);frameId=0}else resume()});
+ addEventListener('pageshow',resume);
+ rcptDraw(null);redraw();resume();
 }else{
  sw.visible=false;dr.scale.y=.08;dl.intensity=1.3;
- const ADM=G.role==='admin',N=G.nasabah||{},A=G.admin||{},H=G.harga||[],L=G.label||{};
+ let ADM=G.role==='admin',N=G.nasabah||{},A=G.admin||{},H=G.harga||[],L=G.label||{};
  const ST={menunggu:['Menunggu','#f3c64f'],disetujui:['Disetujui','#f3c64f'],dicairkan:['Dicairkan','#6fe0a2'],ditolak:['Ditolak','#ff8a7a'],dibatalkan:['Dibatalkan','#ff8a7a']};
  const st=s=>ST[s]||[s?s[0].toUpperCase()+s.slice(1):'-','#9fd9b8'];
  const tf=(g,s,x,y,sz,col,a,wt,mw)=>{s=String(s==null?'':s);wt=wt||'800';while(sz>14){g.font=wt+' '+sz+'px Trebuchet MS';if(g.measureText(s).width<=mw)break;sz-=2}tx(g,s,x,y,sz,col,a,wt)};
@@ -24,6 +30,7 @@ if(!G){
  const kg=v=>fmt(v)+' kg';
  const DR={};// draf dari isian form di halaman (lihat sinkron.js)
  const arrow=(g,x,y,up)=>{g.fillStyle=up?'#6fe0a2':'#ff8a7a';g.beginPath();up?(g.moveTo(x,y-14),g.lineTo(x+13,y+6),g.lineTo(x-13,y+6)):(g.moveTo(x,y+6),g.lineTo(x+13,y-14),g.lineTo(x-13,y-14));g.closePath();g.fill()};
+ let last,tr,dpl,ln,gr,aq;
 
  // ---------- isi layar tiap alat ----------
  const harga=(g,W,Hh)=>{bg(g,W,Hh);tx(g,'Harga hari ini',20,36,26,'#9fd9b8','left','700');tx(g,'per kg',W-20,36,22,'#9fd9b8','right','700');
@@ -35,7 +42,7 @@ if(!G){
  kS.paint(harga);
 
  if(!ADM){
-  const last=(N.setoran||[])[0],tr=N.tarik||[];
+  last=(N.setoran||[])[0];tr=N.tarik||[];
   pmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Saldo tersedia',24,46,28,'#9fd9b8','left','700');tf(g,rp(N.tersedia||0),24,122,66,'#8ef0be','left','800',W-48);
    tx(g,N.tahan>0?'Saldo ditahan '+rp(N.tahan):'Saldo total '+rp(N.saldo||0),24,164,26,'#f3c64f','left','700');
    tf(g,(N.nomor||'')+' · '+G.nama,24,Hh-52,24,'#fff','left','800',W-48);foot(g,W,Hh,'Pilih untuk melihat '+L.scan)});
@@ -61,7 +68,7 @@ if(!G){
    tr.slice(0,3).forEach((t,i)=>{const y=96+i*62,s=st(t.st);g.fillStyle='#ffffff10';rr(g,262,y-30,W-274,54,14);g.fill();tf(g,rp(t.v),274,y,28,'#fff','left','800',130);tx(g,s[0],W-26,y,24,s[1],'right','700')});
    foot(g,W,Hh,'Pilih untuk melihat '+L.capit)});
  }else{
-  const dpl=A.terbaru,ln=A.log||[],gr=A.grafik||[],aq=A.antrian||[];
+  dpl=A.terbaru;ln=A.log||[];gr=A.grafik||[];aq=A.antrian||[];
   pmS.paint((g,W,Hh)=>{bg(g,W,Hh);tx(g,'Pendaftar menunggu',24,46,28,'#9fd9b8','left','700');tx(g,(A.pendaftar||0)+' orang',24,122,66,A.pendaftar>0?'#f3c64f':'#8ef0be');
    tx(g,'Aktif '+(A.aktif||0)+' · Nonaktif '+(A.nonaktif||0),24,168,26,'#eef5f0','left','700');foot(g,W,Hh,'Pilih untuk melihat '+L.scan)});
   tmS.paint((g,W,Hh)=>{if(DR.timbang){bg(g,W,Hh);tx(g,'Sedang ditimbang',24,46,30,'#9fd9b8','left','700');tf(g,kg(DR.timbang.kg),24,142,78,'#fff','left','800',W-48);
@@ -126,6 +133,16 @@ if(!G){
   const dx=reg.x+reg.w/2-W/2,dy=reg.y+reg.h/2-Hh/2;
   dx||dy?cam.setViewOffset(W,Hh,-dx,-dy,W,Hh):cam.clearViewOffset();cam.updateProjectionMatrix()}
  ROOT.classList.add('g3d');addEventListener('resize',layout);layout();redraw();
+ window.refreshGarasiData=function(data){
+  if(!data||!G||data.uid!==G.uid)return;
+  G=data;window.GARASI=data;ADM=G.role==='admin';N=G.nasabah||{};A=G.admin||{};H=G.harga||[];L=G.label||{};
+  last=(N.setoran||[])[0];tr=N.tarik||[];dpl=A.terbaru;ln=A.log||[];gr=A.grafik||[];aq=A.antrian||[];
+  badge.scan=ADM?A.pendaftar:0;badge.capit=ADM?A.tarik_menunggu:0;
+  Object.keys(DR).forEach(k=>delete DR[k]);
+  Object.keys(LS).forEach(k=>{const old=LS[k];if(old.parent)old.parent.remove(old);if(old.material.map)old.material.map.dispose();old.material.dispose();LS[k]=mkLab(k,false)});
+  RG.forEach(r=>{r.m.visible=r.k===G.fokus;r.m.material.opacity=r.k===G.fokus ? .4 : .15});
+  SC.forEach(s=>s.render());layout();redraw();
+ };
 
  // ---------- ketuk alat -> pindah halaman ----------
  const ray=new THREE.Raycaster(),mv=new THREE.Vector2();
@@ -144,11 +161,12 @@ if(!G){
  const endDrag=()=>{if(drag&&drag.on)cv.classList.remove('drag');drag=null};
  cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
  cv.addEventListener('pointerup',e=>{if(!d0)return;const m=Math.hypot(e.clientX-d0.x,e.clientY-d0.y),dt=performance.now()-d0.t;d0=null;if(m>10||dt>700)return;
-  const k=pick(e),u=k&&G.links[k];if(!u)return;pulse[k]=performance.now();if(u.split('#')[0]===location.href.split('#')[0])return;setTimeout(()=>{location.href=u},260)});
+  const k=pick(e),u=k&&G.links[k];if(!u)return;pulse[k]=performance.now();if(u.split('#')[0]===location.href.split('#')[0])return;setTimeout(()=>{if(window.navigateApp)window.navigateApp(u);else location.href=u},260)});
  let hv=0;cv.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||hv)return;hv=1;requestAnimationFrame(()=>{hv=0;cv.style.cursor=pick(e)?'pointer':''})});
 
  // ---------- gambar ----------
- (function loop(){requestAnimationFrame(loop);const now=performance.now(),t=(now-T0)/1e3,full=ROOT.classList.contains('lihat'),K=full||!VW[G.fokus]?VW.home:VW[G.fokus];
+ let frameId=0;
+ const draw=()=>{const now=performance.now(),t=(now-T0)/1e3,full=ROOT.classList.contains('lihat'),K=full||!VW[G.fokus]?VW.home:VW[G.fokus];
   const tp=[0,1,2].map(i=>K.t[i]),pp=[0,1,2].map(i=>K.t[i]+(K.p[i]-K.t[i])*pull);
   if(!cur.init||RM){cur.p=pp;cur.t=tp;cur.init=true}else for(let i=0;i<3;i++){cur.p[i]=lerp(cur.p[i],pp[i],.08);cur.t[i]=lerp(cur.t[i],tp[i],.08)}
   ORB.y=lerp(ORB.y,ORB.ty,RM?1:.14);ORB.p=lerp(ORB.p,ORB.tp,RM?1:.14);
@@ -156,5 +174,10 @@ if(!G){
   const w=RM?0:1;cam.position.set(cur.t[0]+vx*cy+vz*sy+Math.sin(t/3)*.3*w,cur.p[1]+hd*ORB.p+Math.cos(t/4)*.1*w,cur.t[2]-vx*sy+vz*cy);cam.lookAt(cur.t[0],cur.t[1],cur.t[2]);
   Object.keys(TOOL).forEach(k=>{const p=pulse[k];let s=1;if(p!=null){const q=(now-p)/1300;if(q>=1)delete pulse[k];else if(q>=0)s=1+.09*Math.sin(Math.PI*q)}TOOL[k].scale.setScalar(s)});
   RG.forEach(r=>{if(r.k===G.fokus)r.m.material.opacity=.3+.15*Math.sin(t*2.4)});
-  R.render(sc,cam)})();
+  R.render(sc,cam)};
+ const loop=()=>{frameId=0;if(document.hidden)return;draw();frameId=requestAnimationFrame(loop)};
+ const resume=()=>{if(document.hidden)return;layout();draw();if(!frameId)frameId=requestAnimationFrame(loop)};
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(frameId);frameId=0}else resume()});
+ addEventListener('pageshow',resume);
+ resume();
 }

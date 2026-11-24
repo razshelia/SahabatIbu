@@ -84,7 +84,7 @@
 <script defer src="{{ asset('assets/js/aksi.js') }}?v=2"></script>
 <script defer src="{{ asset('assets/js/kamera-nav.js') }}?v=2"></script>
 <script defer src="{{ asset('assets/js/konten.js') }}?v=2"></script>
-<script defer src="{{ asset('assets/js/scroll.js') }}"></script>
+<script defer src="{{ asset('assets/js/scroll.js') }}?v=2"></script>
 @include('partials.wa-admin')
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>

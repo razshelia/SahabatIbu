@@ -135,7 +135,7 @@
 </script>
 @if($errors->has('alasan_pembatalan') && old('setoran_id'))
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onAppPageReady(() => {
             const id = Number(document.getElementById('setoran-batal-id').value);
             if (!Number.isInteger(id) || id < 1) return;
             document.getElementById('ket-setoran-batal').textContent = document.getElementById('setoran-batal-label').value;

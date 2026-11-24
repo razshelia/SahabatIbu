@@ -347,7 +347,12 @@
         });
     }
 
-    document.querySelectorAll('form').forEach(setupForm);
+    function setupPageForms() {
+        document.querySelectorAll('form').forEach(setupForm);
+    }
+
+    setupPageForms();
+    document.addEventListener('app:page-ready', setupPageForms);
 
     document.addEventListener('focusout', event => {
         const field = event.target;

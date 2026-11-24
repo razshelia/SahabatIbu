@@ -84,8 +84,9 @@
         });
     }
 
+    document.addEventListener('app:page-ready', pasang);
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', pasang);
+        document.addEventListener('DOMContentLoaded', pasang, { once: true });
     } else {
         pasang();
     }

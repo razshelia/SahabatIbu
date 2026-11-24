@@ -105,7 +105,7 @@
 </script>
 @if($errors->has('alasan') && old('pendaftar_id'))
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onAppPageReady(() => {
             const id = Number(document.getElementById('pendaftar-tolak-id').value);
             if (!Number.isInteger(id) || id < 1) return;
             document.getElementById('nama-pendaftar-tolak').textContent = document.getElementById('pendaftar-tolak-label').value;

@@ -84,7 +84,7 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    window.onAppPageReady(() => {
         const form = document.getElementById('form-setoran');
         const inputs = form.querySelectorAll('.input-berat');
         const pilih = document.getElementById('nasabah_id');

@@ -1,0 +1,1340 @@
+diff --git a/.env.example b/.env.example
+index ec1fa91..5be9e8b 100644
+--- a/.env.example
++++ b/.env.example
+@@ -68,3 +68,11 @@ VITE_APP_NAME="${APP_NAME}"
+ ADMIN_WHATSAPP=
+ ADMIN_WHATSAPP_PESAN="Halo Admin Bank Sampah Sahabat Ibu, saya ingin bertanya."
+ 
++# Akun admin pertama, dipakai `php artisan db:seed` (AdminSeeder). WAJIB diisi sebelum seeding.
++# Kata sandi minimal 8 karakter, kombinasi huruf dan angka; admin dipaksa menggantinya saat login pertama.
++# Seeder TIDAK menimpa admin yang sudah ada. Jika lupa kata sandi admin, set ADMIN_RESET_PASSWORD=true,
++# jalankan `php artisan db:seed --class=AdminSeeder`, lalu kembalikan ke false.
++ADMIN_NAME="Admin Bank Sampah"
++ADMIN_EMAIL=
++ADMIN_PASSWORD=
++ADMIN_RESET_PASSWORD=false
+diff --git a/README.md b/README.md
+index 5ad1377..5f7057a 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,56 @@
++# Bank Sampah Sahabat Ibu
++
++Aplikasi web Bank Sampah Sahabat Ibu (Perumahan Taman Gading, Jember). Laravel 13, PHP 8.3, MySQL, Blade + Tailwind.
++
++## Menjalankan di komputer sendiri
++
++```bash
++composer install
++cp .env.example .env          # lalu isi DB_*, ADMIN_EMAIL, dan ADMIN_PASSWORD di .env
++php artisan key:generate
++php artisan migrate --force
++php artisan db:seed           # admin pertama + jenis sampah + harga awal
++```
++
++Ekstensi PHP `bcmath` harus aktif (perhitungan saldo memakainya).
++
++### Data awal (`php artisan db:seed`)
++
++| Seeder | Isi | Catatan |
++|---|---|---|
++| `AdminSeeder` | Akun admin dari `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Wajib ganti kata sandi saat login pertama. Dijalankan ulang tidak menimpa admin yang sudah ada. |
++| `JenisSampahSeeder` | Kertas, Botol Plastik, Logam | Aman dijalankan ulang. |
++| `HargaSampahSeeder` | Harga awal **contoh** | Hanya mengisi jenis yang belum punya harga, tidak pernah menimpa harga yang sudah ditetapkan pengurus. |
++
++Nilai `ADMIN_*` dibaca lewat `config/bank_sampah.php`, jadi tetap bekerja setelah `php artisan config:cache`
++(jalankan `php artisan config:clear` bila baru mengubah `.env`).
++
++### Data dummy untuk pengujian (bertema K-pop)
++
++```bash
++php artisan db:seed --class=DemoSeeder
++```
++
++Mengisi 24 nasabah (BLACKPINK, BTS, NewJeans, aespa, Stray Kids, TWICE), 140 setoran selama sekitar 70 hari
++dengan riwayat harga naik/turun, dan 16 pengajuan penarikan dengan semua status. Seluruh data dibuat lewat
++service aplikasi sehingga saldo, saldo ditahan, kode transaksi, dan log aktivitas konsisten.
++Aman dijalankan ulang (data yang sudah ada dilewati) dan **menolak berjalan di production**.
++
++- Kata sandi semua akun demo: `Password123!`. Contoh: `jungkook.bts@example.test` (aktif, banyak riwayat),
++  `hyein.newjeans@example.test` (menunggu verifikasi), `seokjin.bts@example.test` (nonaktif, saldo 0, bisa dianonimkan),
++  `yoongi.bts@example.test` (nonaktif, masih bersaldo), `felix.straykids@example.test` (nasabah umum).
++- Hanya sebagian: `--class=NasabahDemoSeeder`, `--class=SetoranDemoSeeder`, `--class=PenarikanDemoSeeder`
++  (urutannya harus nasabah, lalu setoran, lalu penarikan).
++- Mulai dari nol: `php artisan migrate:fresh --seed && php artisan db:seed --class=DemoSeeder`.
++
++## Pengujian
++
++```bash
++php artisan test
++```
++
++---
++
+ <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+ 
+ <p align="center">
+diff --git a/config/bank_sampah.php b/config/bank_sampah.php
+new file mode 100644
+index 0000000..848a78a
+--- /dev/null
++++ b/config/bank_sampah.php
+@@ -0,0 +1,20 @@
++<?php
++
++/*
++| Pengaturan khusus Bank Sampah Sahabat Ibu.
++|
++| env() hanya boleh dibaca di berkas config. Setelah `php artisan config:cache`, pemanggilan env()
++| di luar config selalu mengembalikan null, jadi seeder membaca nilai ini lewat config().
++*/
++
++return [
++    // Akun admin pertama, dipakai AdminSeeder (BR-14: admin hanya dibuat lewat seeder).
++    'admin' => [
++        'nama'     => env('ADMIN_NAME', 'Admin Bank Sampah'),
++        'email'    => env('ADMIN_EMAIL'),
++        'password' => env('ADMIN_PASSWORD'),
++        // true = jika admin dengan email ini sudah ada, kata sandinya diganti ke ADMIN_PASSWORD
++        // dan wajib diganti lagi saat login. Biarkan false kecuali memang lupa kata sandi admin.
++        'reset_password' => (bool) env('ADMIN_RESET_PASSWORD', false),
++    ],
++];
+diff --git a/database/seeders/AdminSeeder.php b/database/seeders/AdminSeeder.php
+index f73e6c6..b6268ef 100644
+--- a/database/seeders/AdminSeeder.php
++++ b/database/seeders/AdminSeeder.php
+@@ -4,29 +4,62 @@
+ 
+ use App\Models\User;
+ use Illuminate\Database\Seeder;
++use RuntimeException;
+ 
+ class AdminSeeder extends Seeder
+ {
+     public function run(): void
+     {
+-        $email    = env('ADMIN_EMAIL');
+-        $password = env('ADMIN_PASSWORD');
++        $nama     = (string) config('bank_sampah.admin.nama');
++        $email    = (string) config('bank_sampah.admin.email');
++        $password = (string) config('bank_sampah.admin.password');
++        $reset    = (bool) config('bank_sampah.admin.reset_password');
+ 
+-        if (! $email || ! $password) {
+-            throw new \RuntimeException('Isi ADMIN_EMAIL dan ADMIN_PASSWORD di berkas .env sebelum menjalankan seeder.');
++        if ($email === '' || $password === '') {
++            throw new RuntimeException('Isi ADMIN_EMAIL dan ADMIN_PASSWORD di berkas .env sebelum menjalankan seeder '
++                . '(jalankan `php artisan config:clear` jika baru mengubah .env).');
++        }
++
++        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
++            throw new RuntimeException("ADMIN_EMAIL \"{$email}\" bukan alamat email yang valid.");
++        }
++
++        // Sama dengan kebijakan kata sandi aplikasi: minimal 8 karakter, kombinasi huruf dan angka.
++        if (strlen($password) < 8 || ! preg_match('/[A-Za-z]/', $password) || ! preg_match('/\d/', $password)) {
++            throw new RuntimeException('ADMIN_PASSWORD minimal 8 karakter dan harus kombinasi huruf dan angka.');
++        }
++
++        $admin = User::where('email', $email)->first();
++
++        if ($admin && $admin->role !== 'admin') {
++            // Jangan diam-diam menaikkan akun nasabah menjadi admin hanya karena emailnya sama.
++            throw new RuntimeException("Email {$email} sudah dipakai akun {$admin->role}. Gunakan email lain untuk ADMIN_EMAIL.");
++        }
++
++        if ($admin && ! $reset) {
++            // Seeder boleh dijalankan ulang (mis. saat deploy) tanpa menimpa kata sandi yang sudah diganti admin.
++            $this->command?->info("Admin {$email} sudah ada, tidak diubah.");
++
++            return;
+         }
+ 
+         // Admin hanya dibuat lewat seeder (BR-14). forceFill dipakai karena role/status
+         // sengaja tidak ada di $fillable.
+-        $admin = User::where('email', $email)->first() ?? new User();
++        $admin ??= new User();
++
++        if (! $admin->exists) {
++            $admin->name = $nama;
++        }
++
+         $admin->forceFill([
+-            'name'                 => env('ADMIN_NAME', 'Admin Bank Sampah'),
+             'email'                => $email,
+-            'password'             => $password,          // di-hash otomatis oleh cast 'hashed'
++            'password'             => $password,           // di-hash otomatis oleh cast 'hashed'
+             'role'                 => 'admin',
+             'status'               => 'aktif',
+             'must_change_password' => true,                // wajib ganti saat login pertama
+-            'email_verified_at'    => now(),
++            'email_verified_at'    => $admin->email_verified_at ?? now(),
+         ])->save();
++
++        $this->command?->info($reset ? "Kata sandi admin {$email} direset." : "Admin {$email} dibuat.");
+     }
+ }
+diff --git a/database/seeders/Concerns/HanyaNonProduksi.php b/database/seeders/Concerns/HanyaNonProduksi.php
+new file mode 100644
+index 0000000..373c422
+--- /dev/null
++++ b/database/seeders/Concerns/HanyaNonProduksi.php
+@@ -0,0 +1,27 @@
++<?php
++
++namespace Database\Seeders\Concerns;
++
++use App\Models\User;
++use RuntimeException;
++
++/**
++ * Dipakai seeder data demo. Akun demo berkata sandi yang diketahui umum, jadi tidak boleh
++ * pernah masuk ke production.
++ */
++trait HanyaNonProduksi
++{
++    protected function tolakDiProduksi(): void
++    {
++        if (app()->isProduction()) {
++            throw new RuntimeException('Seeder data demo tidak boleh dijalankan di production (APP_ENV=production).');
++        }
++    }
++
++    protected function ambilAdmin(): User
++    {
++        return User::where('role', 'admin')->orderBy('id')->first()
++            ?? throw new RuntimeException('Admin belum ada. Isi ADMIN_EMAIL/ADMIN_PASSWORD di .env lalu jalankan `php artisan db:seed` '
++                . '(atau langsung `php artisan db:seed --class=DemoSeeder`).');
++    }
++}
+diff --git a/database/seeders/DemoSeeder.php b/database/seeders/DemoSeeder.php
+new file mode 100644
+index 0000000..733ef3f
+--- /dev/null
++++ b/database/seeders/DemoSeeder.php
+@@ -0,0 +1,90 @@
++<?php
++
++namespace Database\Seeders;
++
++use App\Models\LogAktivitas;
++use App\Models\Nasabah;
++use App\Models\PenarikanDana;
++use App\Models\TransaksiSetoran;
++use App\Models\User;
++use App\Services\PendaftaranService;
++use Database\Seeders\Concerns\HanyaNonProduksi;
++use Database\Seeders\Support\DemoRoster;
++use Illuminate\Database\Seeder;
++use Illuminate\Support\Carbon;
++
++/**
++ * Data dummy lengkap bertema K-pop untuk pengembangan dan pengujian.
++ *
++ *   php artisan migrate:fresh --seed                    (admin + jenis + harga awal)
++ *   php artisan db:seed --class=DemoSeeder              (isi data dummy)
++ *
++ * TIDAK dipanggil dari DatabaseSeeder dan menolak berjalan di production. Aman dijalankan ulang
++ * (data yang sudah ada dilewati). Semua akun nasabah demo berkata sandi DemoRoster::PASSWORD.
++ */
++class DemoSeeder extends Seeder
++{
++    use HanyaNonProduksi;
++
++    public function run(): void
++    {
++        $this->tolakDiProduksi();
++
++        $this->call([
++            AdminSeeder::class,          // aman dijalankan ulang: tidak menimpa admin yang sudah ada
++            JenisSampahSeeder::class,
++            HargaSampahSeeder::class,
++            NasabahDemoSeeder::class,
++            SetoranDemoSeeder::class,
++            PenarikanDemoSeeder::class,
++        ]);
++
++        $this->nonaktifkanNasabahBerhenti();
++        $this->ringkasan();
++    }
++
++    /** Nasabah "nonaktif" baru dinonaktifkan setelah riwayat setoran dan penarikannya terbentuk. */
++    private function nonaktifkanNasabahBerhenti(): void
++    {
++        $admin = $this->ambilAdmin();
++        $service = app(PendaftaranService::class);
++
++        try {
++            foreach (DemoRoster::nasabah() as $n) {
++                if ($n['status'] !== 'nonaktif') {
++                    continue;
++                }
++
++                $user = User::where('email', $n['email'])->first();
++                if ($user && $user->status === 'aktif') {
++                    Carbon::setTestNow(Carbon::now()->startOfDay()->subDays(3)->setTime(15, 0));
++                    $service->toggleStatusAktif($user, $admin);
++                }
++            }
++        } finally {
++            Carbon::setTestNow();
++        }
++    }
++
++    private function ringkasan(): void
++    {
++        if (! $this->command) {
++            return;
++        }
++
++        $status = User::where('role', 'nasabah')->selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status');
++        $tarik = PenarikanDana::selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status');
++
++        $this->command->newLine();
++        $this->command->info('Data demo siap.');
++        $this->command->line('  Nasabah   : ' . Nasabah::count() . ' (' . $status->map(fn ($n, $s) => "{$n} {$s}")->implode(', ') . ')');
++        $this->command->line('  Setoran   : ' . TransaksiSetoran::where('status', 'berhasil')->count() . ' berhasil, '
++            . TransaksiSetoran::where('status', 'dibatalkan')->count() . ' dibatalkan');
++        $this->command->line('  Penarikan : ' . PenarikanDana::count() . ' (' . $tarik->map(fn ($n, $s) => "{$n} {$s}")->implode(', ') . ')');
++        $this->command->line('  Log       : ' . LogAktivitas::count() . ' catatan aktivitas');
++        $this->command->newLine();
++        $this->command->line('  Login nasabah contoh : jungkook.bts@example.test  /  ' . DemoRoster::PASSWORD);
++        $this->command->line('  Nasabah menunggu     : hyein.newjeans@example.test, ningning.aespa@example.test, sana.twice@example.test, chaeyoung.twice@example.test');
++        $this->command->line('  Nonaktif (saldo 0)   : seokjin.bts@example.test  -> bisa diuji anonimisasi');
++    }
++}
+diff --git a/database/seeders/HargaSampahSeeder.php b/database/seeders/HargaSampahSeeder.php
+index 9f37095..e31fe72 100644
+--- a/database/seeders/HargaSampahSeeder.php
++++ b/database/seeders/HargaSampahSeeder.php
+@@ -6,23 +6,34 @@
+ use App\Models\JenisSampah;
+ use App\Models\User;
+ use Illuminate\Database\Seeder;
++use RuntimeException;
+ 
+ class HargaSampahSeeder extends Seeder
+ {
+     public function run(): void
+     {
+-        $admin = User::where('role', 'admin')->firstOrFail();
++        $admin = User::where('role', 'admin')->orderBy('id')->first()
++            ?? throw new RuntimeException('Admin belum ada. Jalankan AdminSeeder dulu.');
+ 
+-        // CONTOH harga. Ganti dengan harga yang ditetapkan pengurus Bank Sampah Sahabat Ibu.
++        // CONTOH harga awal. Ganti dengan harga yang ditetapkan pengurus Bank Sampah Sahabat Ibu.
+         $harga = ['Kertas' => 1500, 'Botol Plastik' => 3000, 'Logam' => 5000];
+ 
+         foreach ($harga as $nama => $nilai) {
+             $jenis = JenisSampah::where('nama', $nama)->firstOrFail();
+ 
+-            HargaSampah::firstOrCreate(
+-                ['jenis_sampah_id' => $jenis->id, 'berlaku_mulai' => now()->toDateString()],
+-                ['harga_per_kg' => $nilai, 'dibuat_oleh' => $admin->id]
+-            );
++            // Harga yang berlaku = berlaku_mulai terbaru. Jika jenis ini sudah punya riwayat harga
++            // (misalnya ditetapkan pengurus), JANGAN menambah harga contoh: baris baru dengan tanggal
++            // lebih baru akan diam-diam menimpa harga asli dan mengubah nilai setoran.
++            if (HargaSampah::where('jenis_sampah_id', $jenis->id)->exists()) {
++                continue;
++            }
++
++            HargaSampah::create([
++                'jenis_sampah_id' => $jenis->id,
++                'harga_per_kg'    => $nilai,
++                'berlaku_mulai'   => now()->toDateString(),
++                'dibuat_oleh'     => $admin->id,
++            ]);
+         }
+     }
+ }
+diff --git a/database/seeders/NasabahDemoSeeder.php b/database/seeders/NasabahDemoSeeder.php
+index 51594b7..ea33000 100644
+--- a/database/seeders/NasabahDemoSeeder.php
++++ b/database/seeders/NasabahDemoSeeder.php
+@@ -2,61 +2,80 @@
+ 
+ namespace Database\Seeders;
+ 
+-use App\Models\Nasabah;
+ use App\Models\User;
++use App\Services\PendaftaranService;
++use Database\Seeders\Concerns\HanyaNonProduksi;
++use Database\Seeders\Support\DemoRoster;
+ use Illuminate\Database\Seeder;
++use Illuminate\Support\Carbon;
++use Illuminate\Support\Facades\DB;
+ 
+-// Data uji untuk pengembangan. TIDAK dipanggil dari DatabaseSeeder.
+-// Jalankan manual: php artisan db:seed --class=NasabahDemoSeeder
++/**
++ * Nasabah dummy bertema K-pop (lihat DemoRoster). Hanya untuk pengembangan/pengujian.
++ * TIDAK dipanggil dari DatabaseSeeder. Jalankan manual:
++ *   php artisan db:seed --class=NasabahDemoSeeder     (hanya akun nasabah)
++ *   php artisan db:seed --class=DemoSeeder            (lengkap: nasabah + setoran + penarikan)
++ *
++ * Akun dibuat lewat PendaftaranService (alur yang sama dengan aplikasi) dengan tanggal mundur,
++ * jadi nomor nasabah, alamat, dan log aktivitas konsisten. Aman dijalankan ulang: email yang
++ * sudah ada dilewati. Keadaan "nonaktif" diterapkan DemoSeeder setelah riwayat transaksi dibuat.
++ */
+ class NasabahDemoSeeder extends Seeder
+ {
++    use HanyaNonProduksi;
++
+     public function run(): void
+     {
+-        $admin = User::where('role', 'admin')->firstOrFail();
+-
+-        $data = [
+-            ['Siti Aminah',     'siti@example.test',   'aktif'],
+-            ['Dewi Lestari',    'dewi@example.test',   'aktif'],
+-            ['Rina Wulandari',  'rina@example.test',   'menunggu'],
+-            ['Ani Rahayu',      'ani@example.test',    'aktif'],
+-            ['Budi Santoso',    'budi@example.test',   'aktif'],
+-            ['Putri Maharani',  'putri@example.test',  'menunggu'],
+-            ['Joko Prasetyo',   'joko@example.test',   'aktif'],
+-            ['Sri Wahyuni',     'sri@example.test',    'aktif'],
+-            ['Agus Setiawan',   'agus@example.test',   'menunggu'],
+-            ['Maya Anggraini',  'maya@example.test',   'aktif'],
+-        ];
+-
+-        foreach ($data as $i => [$nama, $email, $status]) {
+-            // Lewati kalau email sudah ada, supaya seeder aman dijalankan ulang
+-            if (User::where('email', $email)->exists()) {
+-                continue;
+-            }
++        $this->tolakDiProduksi();
++
++        $admin = $this->ambilAdmin();
++        $service = app(PendaftaranService::class);
++        $dibuat = 0;
++
++        try {
++            foreach (DemoRoster::nasabah() as $n) {
++                if (User::where('email', $n['email'])->exists()) {
++                    continue;   // aman dijalankan ulang
++                }
++
++                // Satu transaksi basis data per nasabah: kalau gagal di tengah, tidak ada akun setengah jadi.
++                DB::transaction(function () use ($n, $admin, $service) {
++                    $daftar = Carbon::now()->startOfDay()->subDays($n['hari_daftar'])->setTime(9, 15);
++                    Carbon::setTestNow($daftar);
++
++                    $data = [
++                        'name'        => $n['nama'],
++                        'email'       => $n['email'],
++                        'password'    => DemoRoster::PASSWORD,
++                        'telepon'     => $n['telepon'],
++                        'kategori'    => $n['kategori'],
++                        'blok'        => $n['blok'],
++                        'nomor_rumah' => $n['nomor_rumah'],
++                        'alamat'      => $n['alamat'],
++                    ];
++
++                    if ($n['cara'] === 'langsung' && $n['status'] === 'aktif') {
++                        $service->tambahNasabahLangsung($data, $admin);
+ 
+-            $blok  = chr(65 + $i % 5);   // A-E
+-            $nomor = 10 + $i;
+-
+-            $user = new User();
+-            $user->forceFill([
+-                'name'              => $nama,
+-                'email'             => $email,
+-                'password'          => 'Password123!',
+-                'role'              => 'nasabah',
+-                'status'            => $status,
+-                'email_verified_at' => now(),
+-                'verified_by'       => $status === 'aktif' ? $admin->id : null,
+-                'verified_at'       => $status === 'aktif' ? now() : null,
+-            ])->save();
+-
+-            Nasabah::create([
+-                'user_id'       => $user->id,
+-                'nomor_nasabah' => sprintf('NSB-%04d', $i + 1),
+-                'telepon'       => sprintf('08120000%04d', $i + 1),
+-                'kategori'      => 'warga',
+-                'blok'          => $blok,
+-                'nomor_rumah'   => (string) $nomor,
+-                'alamat'        => "Blok {$blok} No. {$nomor}, Perumahan Taman Gading",
+-            ]);
++                        return;
++                    }
++
++                    $user = $service->registerMandiri($data);
++
++                    if ($n['status'] === 'menunggu') {
++                        return;
++                    }
++
++                    Carbon::setTestNow($daftar->copy()->addDay()->setTime(10, 30));
++                    $service->verifikasiPendaftar($user, $n['status'] !== 'ditolak', $n['alasan'], $admin);
++                });
++
++                $dibuat++;
++            }
++        } finally {
++            Carbon::setTestNow();
+         }
++
++        $this->command?->info("NasabahDemoSeeder: {$dibuat} nasabah dummy dibuat (kata sandi semua akun: " . DemoRoster::PASSWORD . ').');
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/database/seeders/PenarikanDemoSeeder.php b/database/seeders/PenarikanDemoSeeder.php
+new file mode 100644
+index 0000000..7473f86
+--- /dev/null
++++ b/database/seeders/PenarikanDemoSeeder.php
+@@ -0,0 +1,183 @@
++<?php
++
++namespace Database\Seeders;
++
++use App\Models\Nasabah;
++use App\Models\PenarikanDana;
++use App\Models\TransaksiSetoran;
++use App\Models\User;
++use App\Services\PenarikanDanaService;
++use Database\Seeders\Concerns\HanyaNonProduksi;
++use Illuminate\Database\Seeder;
++use Illuminate\Support\Carbon;
++
++/**
++ * Pengajuan penarikan dana dummy dengan semua status (hanya pengembangan/pengujian).
++ *
++ * Dibuat lewat PenarikanDanaService dengan tanggal mundur: saldo ditahan, saldo berkurang saat
++ * dicairkan, dan log aktivitas mengikuti aturan aplikasi (BR-06, BR-07, BR-09). Nominal dihitung
++ * dari saldo nasabah PADA tanggal pengajuan. Nasabah yang sudah punya penarikan dilewati.
++ */
++class PenarikanDemoSeeder extends Seeder
++{
++    use HanyaNonProduksi;
++
++    private const ALASAN_TOLAK_KAS = 'Kas tunai pengurus belum tersedia hari ini (pengurus sedang di Surabaya nonton konser). Silakan ajukan lagi hari Senin.';
++    private const ALASAN_TOLAK_REKENING = 'Nomor rekening/e-wallet tidak valid. Mohon cek lagi lalu ajukan ulang.';
++
++    /**
++     * email, hasil akhir, metode, bagian saldo yang ditarik (1 = semua), berapa hari lalu diajukan, rekening (bank, nomor)
++     */
++    private const RENCANA = [
++        ['jungkook.bts@example.test',     'dicairkan', 'tunai',    0.50, 30, null],
++        ['jungkook.bts@example.test',     'menunggu',  'transfer', 0.30, 1,  ['BCA', '8830214467']],
++        ['jisoo.blackpink@example.test',  'dicairkan', 'transfer', 0.60, 21, ['BRI', '002301045678509']],
++        ['jennie.blackpink@example.test', 'dicairkan', 'tunai',    0.40, 25, null],
++        ['jennie.blackpink@example.test', 'disetujui', 'tunai',    0.30, 2,  null],
++        ['lisa.blackpink@example.test',   'dicairkan', 'transfer', 0.50, 16, ['GoPay', '081230004455']],
++        ['jimin.bts@example.test',        'dicairkan', 'tunai',    0.50, 18, null],
++        ['jimin.bts@example.test',        'ditolak',   'tunai',    0.30, 6,  null],
++        ['hoseok.bts@example.test',       'disetujui', 'transfer', 0.40, 1,  ['BNI', '0457812390']],
++        ['minji.newjeans@example.test',   'menunggu',  'tunai',    0.35, 0,  null],
++        ['hanni.newjeans@example.test',   'dibatalkan', 'tunai',   0.20, 4,  null],
++        ['karina.aespa@example.test',     'dicairkan', 'tunai',    0.50, 12, null],
++        ['winter.aespa@example.test',     'ditolak',   'transfer', 0.50, 3,  ['DANA', '08129998877']],
++        ['rose.blackpink@example.test',   'menunggu',  'transfer', 0.30, 2,  ['Mandiri', '1400012345678']],
++        ['seokjin.bts@example.test',      'dicairkan', 'tunai',    1.00, 14, null],   // dikosongkan -> nanti nonaktif, bisa dianonimkan
++        ['yoongi.bts@example.test',       'dicairkan', 'tunai',    0.60, 15, null],   // masih ada sisa saldo
++    ];
++
++    public function run(): void
++    {
++        $this->tolakDiProduksi();
++
++        $admin = $this->ambilAdmin();
++        $layanan = app(PenarikanDanaService::class);
++        $sekarang = Carbon::now();
++
++        // Urutkan dari yang paling lama supaya saldo per tanggal masuk akal.
++        $rencana = collect(self::RENCANA)->sortByDesc(fn ($r) => $r[4])->values();
++
++        mt_srand(2612);   // menit pengajuan tetap sama setiap dijalankan
++
++        $hitung = array_fill_keys(['menunggu', 'disetujui', 'dicairkan', 'ditolak', 'dibatalkan'], 0);
++        $sudahPunya = [];
++
++        try {
++            foreach ($rencana as [$email, $hasil, $metode, $bagian, $hariLalu, $rekening]) {
++                $nasabah = $this->cariNasabah($email);
++                if (! $nasabah) {
++                    $this->command?->warn("Lewati {$email}: nasabah belum ada.");
++                    continue;
++                }
++
++                // Lewati bila nasabah ini sudah punya penarikan sebelum seeder ini dijalankan.
++                $sudahPunya[$nasabah->id] ??= PenarikanDana::where('nasabah_id', $nasabah->id)->exists();
++                if ($sudahPunya[$nasabah->id]) {
++                    continue;
++                }
++
++                $diajukan = $sekarang->copy()->startOfDay()->subDays($hariLalu)->setTime(10, mt_rand(0, 59));
++                if ($diajukan->greaterThan($sekarang->copy()->subMinutes(30))) {
++                    $diajukan = $sekarang->copy()->subMinutes(30);
++                }
++
++                $nominal = $this->hitungNominal($nasabah, $diajukan, $bagian);
++                if ($nominal === null) {
++                    $this->command?->warn("Lewati {$email}: saldo pada tanggal itu terlalu kecil.");
++                    continue;
++                }
++
++                Carbon::setTestNow($diajukan);
++                $penarikan = $layanan->ajukanPenarikan(
++                    $nasabah->fresh(),
++                    $nominal,
++                    $metode,
++                    $rekening[0] ?? null,
++                    $rekening[1] ?? null,
++                    $metode === 'transfer' ? $nasabah->user->name : null,
++                );
++
++                $this->selesaikan($layanan, $penarikan, $nasabah, $admin, $hasil, $metode, $diajukan, $sekarang);
++                $hitung[$hasil]++;
++            }
++        } finally {
++            Carbon::setTestNow();
++            mt_srand();
++        }
++
++        $this->command?->info('PenarikanDemoSeeder: ' . array_sum($hitung) . ' pengajuan dibuat ('
++            . collect($hitung)->map(fn ($j, $s) => "{$j} {$s}")->implode(', ') . ').');
++    }
++
++    private function cariNasabah(string $email): ?Nasabah
++    {
++        $user = User::where('email', $email)->first();
++
++        return $user ? Nasabah::where('user_id', $user->id)->first() : null;
++    }
++
++    /**
++     * Saldo nasabah pada tanggal tertentu (setoran berhasil sampai tanggal itu dikurangi penarikan
++     * yang masih berjalan atau sudah cair), lalu ambil sebagian. Pembulatan ke kelipatan Rp 5.000
++     * (sama dengan tombol di form), kecuali "semua saldo" yang dipakai persis.
++     */
++    private function hitungNominal(Nasabah $nasabah, Carbon $pada, float $bagian): ?float
++    {
++        $masuk = (float) TransaksiSetoran::where('nasabah_id', $nasabah->id)
++            ->where('status', 'berhasil')->where('tanggal', '<=', $pada)->sum('total_nilai');
++        $keluar = (float) PenarikanDana::where('nasabah_id', $nasabah->id)
++            ->whereIn('status', ['menunggu', 'disetujui', 'dicairkan'])->sum('nominal');
++        $tersedia = $masuk - $keluar;
++
++        if ($bagian >= 1.0) {
++            return $tersedia >= 5000 ? round($tersedia, 2) : null;
++        }
++
++        $nominal = floor(($tersedia * $bagian) / 5000) * 5000;
++
++        return $nominal >= 5000 ? (float) $nominal : null;
++    }
++
++    private function selesaikan(
++        PenarikanDanaService $layanan,
++        PenarikanDana $penarikan,
++        Nasabah $nasabah,
++        User $admin,
++        string $hasil,
++        string $metode,
++        Carbon $diajukan,
++        Carbon $sekarang,
++    ): void {
++        $paling = fn (Carbon $t) => $t->greaterThan($sekarang) ? $sekarang->copy()->subMinutes(5) : $t;
++
++        match ($hasil) {
++            'menunggu' => null,
++
++            'dibatalkan' => $this->pada($paling($diajukan->copy()->addHours(3)), fn () => $layanan->batalkanOlehNasabah($penarikan->fresh(), $nasabah->fresh())),
++
++            'ditolak' => $this->pada($paling($diajukan->copy()->addHours(5)), fn () => $layanan->tolakPenarikan(
++                $penarikan->fresh(),
++                $metode === 'transfer' ? self::ALASAN_TOLAK_REKENING : self::ALASAN_TOLAK_KAS,
++                $admin,
++            )),
++
++            'disetujui' => $this->pada($paling($diajukan->copy()->addHours(4)), fn () => $layanan->setujuiPenarikan($penarikan->fresh(), $admin)),
++
++            'dicairkan' => (function () use ($layanan, $penarikan, $admin, $metode, $diajukan, $paling) {
++                $this->pada($paling($diajukan->copy()->addHours(4)), fn () => $layanan->setujuiPenarikan($penarikan->fresh(), $admin));
++                $this->pada($paling($diajukan->copy()->addDay()->setTime(13, 20)), fn () => $layanan->cairkanPenarikan(
++                    $penarikan->fresh(),
++                    $admin,
++                    $metode === 'transfer' ? 'Transfer ' . $penarikan->nama_bank . ', bukti #' . strtoupper(substr(md5($penarikan->kode), 0, 8)) : 'Diserahkan tunai di pos pengurus',
++                ));
++            })(),
++        };
++    }
++
++    private function pada(Carbon $waktu, callable $aksi): void
++    {
++        Carbon::setTestNow($waktu);
++        $aksi();
++    }
++}
+diff --git a/database/seeders/SetoranDemoSeeder.php b/database/seeders/SetoranDemoSeeder.php
+new file mode 100644
+index 0000000..19277a7
+--- /dev/null
++++ b/database/seeders/SetoranDemoSeeder.php
+@@ -0,0 +1,220 @@
++<?php
++
++namespace Database\Seeders;
++
++use App\Models\HargaSampah;
++use App\Models\JenisSampah;
++use App\Models\Nasabah;
++use App\Models\TransaksiSetoran;
++use App\Models\User;
++use App\Services\TransaksiSetoranService;
++use Database\Seeders\Concerns\HanyaNonProduksi;
++use Database\Seeders\Support\DemoRoster;
++use Illuminate\Database\Seeder;
++use Illuminate\Support\Carbon;
++use RuntimeException;
++
++/**
++ * Jenis sampah tambahan, riwayat harga, dan riwayat setoran untuk nasabah demo (hanya pengembangan).
++ *
++ * Setoran dibuat lewat TransaksiSetoranService dengan tanggal mundur, sehingga harga yang dipakai
++ * adalah harga yang berlaku PADA tanggal itu (riwayat harga naik/turun ikut terbentuk), saldo
++ * bertambah dengan benar, dan log aktivitas tercatat. Beberapa setoran sengaja dibatalkan (BR-10).
++ * Hasilnya sama setiap dijalankan (angka acak memakai benih tetap). Nasabah yang sudah punya
++ * setoran dilewati, jadi aman dijalankan ulang.
++ */
++class SetoranDemoSeeder extends Seeder
++{
++    use HanyaNonProduksi;
++
++    private const BENIH = 2611;
++
++    /** Setoran ke-n milik nasabah (email) yang dibatalkan sebentar setelah dicatat. */
++    private const DIBATALKAN = [
++        'jisoo.blackpink@example.test'     => 2,
++        'hanni.newjeans@example.test'      => 3,
++        'karina.aespa@example.test'        => 2,
++        'jungkook.bts@example.test'        => 4,
++    ];
++
++    /** Nasabah yang punya setoran hari ini (agar "setoran hari ini" di dashboard admin terisi). */
++    private const SETORAN_HARI_INI = [
++        'jungkook.bts@example.test',
++        'jisoo.blackpink@example.test',
++        'jimin.bts@example.test',
++    ];
++
++    public function run(): void
++    {
++        $this->tolakDiProduksi();
++
++        $this->call([JenisSampahSeeder::class, HargaSampahSeeder::class]);
++
++        $admin = $this->ambilAdmin();
++        $jenis = $this->siapkanJenisDanHarga($admin);
++        $layanan = app(TransaksiSetoranService::class);
++
++        $peristiwa = $this->susunPeristiwa();
++        if ($peristiwa === []) {
++            $this->command?->warn('SetoranDemoSeeder: tidak ada nasabah demo yang perlu diisi (jalankan NasabahDemoSeeder dulu, atau data sudah ada).');
++
++            return;
++        }
++
++        $dibuat = 0;
++        $dibatalkan = 0;
++
++        try {
++            foreach ($peristiwa as $p) {
++                Carbon::setTestNow($p['waktu']);
++
++                $items = [];
++                foreach ($p['items'] as $nama => $berat) {
++                    $items[] = ['jenis_sampah_id' => $jenis[$nama]->id, 'berat_kg' => $berat];
++                }
++
++                $transaksi = $layanan->simpanSetoran($p['nasabah_id'], $items, $admin);
++                $dibuat++;
++
++                if ($p['batal'] !== null) {
++                    Carbon::setTestNow($p['waktu']->copy()->addMinutes(35));
++                    $layanan->batalkanSetoran($transaksi, $p['batal'], $admin);
++                    $dibatalkan++;
++                }
++            }
++        } finally {
++            Carbon::setTestNow();
++        }
++
++        $this->command?->info("SetoranDemoSeeder: {$dibuat} setoran dibuat ({$dibatalkan} di antaranya dibatalkan).");
++    }
++
++    /**
++     * Pastikan jenis demo ada dan seluruh jenis punya riwayat harga sejak sebelum setoran tertua.
++     *
++     * @return array<string, JenisSampah> nama => jenis (hanya yang aktif dan boleh disetor)
++     */
++    private function siapkanJenisDanHarga(User $admin): array
++    {
++        $riwayat = DemoRoster::RIWAYAT_JENIS_BAWAAN;
++
++        foreach (DemoRoster::JENIS_TAMBAHAN as $nama => [$aktif, $harga]) {
++            JenisSampah::firstOrCreate(['nama' => $nama], ['satuan' => 'kg', 'aktif' => $aktif]);
++            $riwayat[$nama] = $harga;
++        }
++
++        foreach ($riwayat as $nama => $daftarHarga) {
++            $jenis = JenisSampah::where('nama', $nama)->firstOrFail();
++
++            foreach ($daftarHarga as $hariLalu => $harga) {
++                $tanggal = Carbon::now()->subDays($hariLalu)->toDateString();
++
++                // whereDate (bukan firstOrCreate dengan tanggal polos): di SQLite kolom tersimpan
++                // sebagai "Y-m-d 00:00:00" sehingga pencarian "Y-m-d" tidak menemukannya dan
++                // menabrak unique(jenis_sampah_id, berlaku_mulai) saat seeder dijalankan ulang.
++                $sudah = HargaSampah::where('jenis_sampah_id', $jenis->id)->whereDate('berlaku_mulai', $tanggal)->exists();
++                if (! $sudah) {
++                    HargaSampah::create([
++                        'jenis_sampah_id' => $jenis->id,
++                        'harga_per_kg'    => $harga,
++                        'berlaku_mulai'   => $tanggal,
++                        'dibuat_oleh'     => $admin->id,
++                    ]);
++                }
++            }
++        }
++
++        return JenisSampah::where('aktif', true)->whereIn('nama', array_keys(DemoRoster::KISARAN_BERAT))
++            ->get()->keyBy('nama')->all();
++    }
++
++    /**
++     * Susun semua setoran (tanggal, nasabah, isi) lalu urutkan dari yang paling lama.
++     *
++     * @return list<array{waktu:Carbon,nasabah_id:int,items:array<string,float>,batal:?string}>
++     */
++    private function susunPeristiwa(): array
++    {
++        mt_srand(self::BENIH);
++
++        $nama = array_keys(DemoRoster::KISARAN_BERAT);
++        $sekarang = Carbon::now();
++        $acara = [];
++        $alasan = DemoRoster::ALASAN_BATAL_SETORAN;
++        $noAlasan = 0;
++
++        foreach (DemoRoster::nasabah() as $n) {
++            if ($n['setoran'] < 1) {
++                continue;
++            }
++
++            $user = User::where('email', $n['email'])->first();
++            $nasabah = $user ? Nasabah::where('user_id', $user->id)->first() : null;
++
++            if (! $nasabah) {
++                $this->command?->warn("Lewati {$n['email']}: belum ada (jalankan NasabahDemoSeeder).");
++                continue;
++            }
++
++            if (TransaksiSetoran::where('nasabah_id', $nasabah->id)->exists()) {
++                continue;   // sudah punya riwayat, jangan digandakan
++            }
++
++            // Tanggal: setoran pertama 55-68 hari lalu (setelah akun diverifikasi), sisanya acak.
++            // Nasabah yang akan nonaktif berhenti menyetor sejak 20 hari lalu (sebelum penarikan terakhir mereka).
++            $terbaru = $n['berhenti'] ? 20 : 0;
++            $hari = [mt_rand(55, 68)];
++            for ($i = 1; $i < $n['setoran']; $i++) {
++                $hari[] = mt_rand($terbaru, 55);
++            }
++            if (in_array($n['email'], self::SETORAN_HARI_INI, true)) {
++                $hari[count($hari) - 1] = 0;
++            }
++            rsort($hari);   // dari yang paling lama
++
++            foreach ($hari as $urutan => $hariLalu) {
++                $waktu = $sekarang->copy()->startOfDay()->subDays($hariLalu)->setTime(mt_rand(8, 16), mt_rand(0, 59));
++                if ($waktu->greaterThan($sekarang->copy()->subMinutes(45))) {
++                    $waktu = $sekarang->copy()->subMinutes(45 + mt_rand(0, 60));   // jangan di masa depan
++                }
++
++                $batal = null;
++                if ((self::DIBATALKAN[$n['email']] ?? null) === $urutan + 1) {
++                    $batal = $alasan[$noAlasan++ % count($alasan)];
++                }
++
++                $acara[] = [
++                    'waktu'      => $waktu,
++                    'nasabah_id' => $nasabah->id,
++                    'items'      => $this->isiSetoran($nama),
++                    'batal'      => $batal,
++                ];
++            }
++        }
++
++        mt_srand();   // kembalikan ke acak biasa
++
++        usort($acara, fn ($a, $b) => $a['waktu']->getTimestamp() <=> $b['waktu']->getTimestamp());
++
++        return $acara;
++    }
++
++    /** @return array<string, float> nama jenis => berat kg (kelipatan 0,25) */
++    private function isiSetoran(array $nama): array
++    {
++        $r = mt_rand(1, 100);
++        $banyak = $r <= 30 ? 1 : ($r <= 65 ? 2 : ($r <= 90 ? 3 : 4));
++
++        $pilihan = $nama;
++        shuffle($pilihan);
++
++        $items = [];
++        foreach (array_slice($pilihan, 0, $banyak) as $jenis) {
++            [$min, $max] = DemoRoster::KISARAN_BERAT[$jenis];
++            $berat = round((mt_rand((int) ($min * 4), (int) ($max * 4))) / 4, 2);
++            $items[$jenis] = max(0.25, $berat);
++        }
++
++        return $items;
++    }
++}
+diff --git a/database/seeders/Support/DemoRoster.php b/database/seeders/Support/DemoRoster.php
+new file mode 100644
+index 0000000..f881e39
+--- /dev/null
++++ b/database/seeders/Support/DemoRoster.php
+@@ -0,0 +1,143 @@
++<?php
++
++namespace Database\Seeders\Support;
++
++/**
++ * Daftar nasabah dummy bertema K-pop untuk pengujian (hanya dipakai seeder demo).
++ *
++ * Nama = nama depan/panggung + nama belakang Indonesia (karangan), grup ada di email
++ * supaya mudah dikenali saat menguji, mis. jisoo.blackpink@example.test.
++ * Semua akun demo memakai kata sandi DemoRoster::PASSWORD.
++ *
++ * Susunan sengaja mencakup semua keadaan yang perlu diuji:
++ *  - aktif (banyak, riwayat setoran dan penarikan beragam)
++ *  - menunggu verifikasi, ditolak, nonaktif (saldo nol -> bisa dianonimkan; saldo masih ada -> ditolak anonimisasi)
++ *  - warga Taman Gading (blok + nomor rumah) dan umum (alamat bebas)
++ *  - didaftarkan admin langsung vs daftar mandiri lalu diverifikasi
++ */
++final class DemoRoster
++{
++    public const PASSWORD = 'Password123!';
++
++    /**
++     * @return list<array{grup:string,nama:string,email:string,status:string,cara:string,kategori:string,
++     *                    telepon:string,blok:?string,nomor_rumah:?string,alamat:?string,setoran:int,
++     *                    berhenti:bool,alasan:?string,hari_daftar:int}>
++     */
++    public static function nasabah(): array
++    {
++        $warga = 0;
++        $urut = 0;
++        $out = [];
++
++        $tambah = function (string $grup, string $nama, string $status, string $cara, string $kategori, int $setoran, array $opsi = []) use (&$out, &$warga, &$urut): void {
++            $urut++;
++            $depan = strtolower(explode(' ', $nama)[0]);
++            $telepon = sprintf('0812%08d', 41000000 + $urut * 7919);
++            if ($urut % 6 === 0) {
++                $telepon = '+62' . substr($telepon, 1);
++            }
++
++            $blok = $nomor = $alamat = null;
++            if ($kategori === 'warga') {
++                $blok = chr(65 + $warga % 5);          // A-E
++                $nomor = (string) (2 + $warga * 3);    // pasangan blok+nomor tidak pernah kembar
++                $warga++;
++            } else {
++                $alamat = $opsi['alamat'];
++            }
++
++            $out[] = [
++                'grup'        => $grup,
++                'nama'        => $nama,
++                'email'       => $depan . '.' . strtolower(str_replace(' ', '', $grup)) . '@example.test',
++                'status'      => $status,
++                'cara'        => $cara,
++                'kategori'    => $kategori,
++                'telepon'     => $telepon,
++                'blok'        => $blok,
++                'nomor_rumah' => $nomor,
++                'alamat'      => $alamat,
++                'setoran'     => $setoran,
++                'berhenti'    => $opsi['berhenti'] ?? false,
++                'alasan'      => $opsi['alasan'] ?? null,
++                'hari_daftar' => $opsi['hari_daftar'] ?? (78 - ($urut % 8)),
++            ];
++        };
++
++        // BLACKPINK
++        $tambah('BLACKPINK', 'Jisoo Anggraini',   'aktif', 'langsung', 'warga', 12);
++        $tambah('BLACKPINK', 'Jennie Wulandari',  'aktif', 'langsung', 'warga', 9);
++        $tambah('BLACKPINK', 'Rose Pramesti',     'aktif', 'mandiri',  'warga', 7);
++        $tambah('BLACKPINK', 'Lisa Kusuma',       'aktif', 'mandiri',  'warga', 10);
++
++        // BTS
++        $tambah('BTS', 'Namjoon Santoso',    'aktif',    'mandiri', 'warga', 6);
++        $tambah('BTS', 'Seokjin Hartono',    'nonaktif', 'mandiri', 'warga', 5, ['berhenti' => true]);   // saldo dikosongkan -> uji anonimisasi
++        $tambah('BTS', 'Yoongi Pratama',     'nonaktif', 'mandiri', 'warga', 4, ['berhenti' => true]);   // saldo tersisa -> anonimisasi ditolak
++        $tambah('BTS', 'Hoseok Wijaya',      'aktif',    'mandiri', 'warga', 8);
++        $tambah('BTS', 'Jimin Saputra',      'aktif',    'mandiri', 'warga', 11);
++        $tambah('BTS', 'Taehyung Nugroho',   'aktif',    'mandiri', 'warga', 7);
++        $tambah('BTS', 'Jungkook Firmansyah', 'aktif',   'mandiri', 'warga', 13);
++
++        // NewJeans
++        $tambah('NewJeans', 'Minji Lestari',    'aktif',    'mandiri', 'warga', 6);
++        $tambah('NewJeans', 'Hanni Permata',    'aktif',    'mandiri', 'warga', 9);
++        $tambah('NewJeans', 'Danielle Maharani', 'aktif',   'mandiri', 'warga', 5);
++        $tambah('NewJeans', 'Haerin Kartika',   'aktif',    'mandiri', 'warga', 4);
++        $tambah('NewJeans', 'Hyein Safitri',    'menunggu', 'mandiri', 'warga', 0, ['hari_daftar' => 2]);
++
++        // aespa
++        $tambah('aespa', 'Karina Dewanti',     'aktif',    'mandiri', 'warga', 8);
++        $tambah('aespa', 'Giselle Rahmawati',  'aktif',    'mandiri', 'warga', 6);
++        $tambah('aespa', 'Winter Purnama',     'aktif',    'mandiri', 'warga', 7);
++        $tambah('aespa', 'Ningning Susanti',   'menunggu', 'mandiri', 'warga', 0, ['hari_daftar' => 1]);
++
++        // Nasabah umum (bukan warga Taman Gading): alamat bebas
++        $tambah('StrayKids', 'Felix Gunawan',     'aktif',    'mandiri', 'umum', 3, ['alamat' => 'Jl. Gajah Mada No. 17, Kaliwates, Jember']);
++        $tambah('StrayKids', 'Hyunjin Salim',     'ditolak',  'mandiri', 'umum', 0, [
++            'alamat' => 'Jl. Kalimantan No. 4, Sumbersari, Jember',
++            'alasan' => 'Nomor telepon tidak aktif saat dikonfirmasi pengurus. Silakan daftar ulang dengan nomor yang benar.',
++            'hari_daftar' => 12,
++        ]);
++        $tambah('TWICE', 'Sana Aprilia',          'menunggu', 'mandiri', 'umum', 0, ['alamat' => 'Jl. Mastrip Gg. 3 No. 21, Sumbersari, Jember', 'hari_daftar' => 3]);
++        $tambah('TWICE', 'Chaeyoung Ramadhani',   'menunggu', 'mandiri', 'umum', 0, ['alamat' => 'Perumahan Tegal Besar Indah B-9, Kaliwates, Jember', 'hari_daftar' => 0]);
++
++        return $out;
++    }
++
++    /** Jenis sampah tambahan khusus demo (agar keranjang timbangan bisa diuji dengan >= 5 baris). */
++    public const JENIS_TAMBAHAN = [
++        // nama => [aktif, [hariLalu => harga per kg]]
++        'Kardus Album'     => [true,  [80 => 1700, 45 => 1800, 18 => 1900, 0 => 2000]],
++        'Kertas Poster'    => [true,  [80 => 900,  45 => 1000, 18 => 1000, 0 => 1100]],
++        'Botol Kaca'       => [true,  [80 => 400,  45 => 500,  18 => 450,  0 => 500]],
++        'Kaleng Aluminium' => [true,  [80 => 9000, 45 => 9500, 18 => 10000, 0 => 9800]],
++        'Styrofoam'        => [false, [80 => 300,  0 => 300]],   // sengaja nonaktif: uji penolakan jenis nonaktif
++    ];
++
++    /** Riwayat harga jenis bawaan (harga hari ini berasal dari HargaSampahSeeder). */
++    public const RIWAYAT_JENIS_BAWAAN = [
++        'Kertas'        => [80 => 1200, 45 => 1300, 18 => 1400],   // naik terus -> 1.500 hari ini
++        'Botol Plastik' => [80 => 2800, 45 => 3200, 18 => 3100],   // turun ke 3.000 hari ini
++        'Logam'         => [80 => 4500, 45 => 4800, 18 => 5200],   // turun ke 5.000 hari ini
++    ];
++
++    /** Kisaran berat per setoran (kg) tiap jenis, kelipatan 0,25 kg seperti tombol di timbangan. */
++    public const KISARAN_BERAT = [
++        'Kertas'           => [1.0, 6.0],
++        'Botol Plastik'    => [0.5, 4.0],
++        'Logam'            => [0.5, 8.0],
++        'Kardus Album'     => [1.0, 7.0],
++        'Kertas Poster'    => [0.25, 2.0],
++        'Botol Kaca'       => [1.0, 5.0],
++        'Kaleng Aluminium' => [0.25, 3.0],
++    ];
++
++    public const ALASAN_BATAL_SETORAN = [
++        'Salah timbang: Kardus Album tercatat 15 kg, seharusnya 1,5 kg.',
++        'Setoran tercatat atas nama yang salah (tertukar dengan tetangga sesama penggemar satu blok).',
++        'Input ganda saat antrean ramai setelah acara nobar konser, satu catatan dihapus.',
++        'Botol kaca pecah dan basah terkena air hujan, tidak memenuhi syarat sampah bersih.',
++    ];
++}
+diff --git a/tests/Feature/SeederTest.php b/tests/Feature/SeederTest.php
+new file mode 100644
+index 0000000..5c3f3c4
+--- /dev/null
++++ b/tests/Feature/SeederTest.php
+@@ -0,0 +1,284 @@
++<?php
++
++namespace Tests\Feature;
++
++use App\Models\HargaSampah;
++use App\Models\JenisSampah;
++use App\Models\Nasabah;
++use App\Models\PenarikanDana;
++use App\Models\TransaksiSetoran;
++use App\Models\User;
++use App\Services\PendaftaranService;
++use Database\Seeders\AdminSeeder;
++use Database\Seeders\DemoSeeder;
++use Database\Seeders\HargaSampahSeeder;
++use Database\Seeders\JenisSampahSeeder;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Support\Carbon;
++use Illuminate\Support\Facades\DB;
++use Illuminate\Support\Facades\Hash;
++use RuntimeException;
++use Tests\TestCase;
++
++class SeederTest extends TestCase
++{
++    use RefreshDatabase;
++
++    protected function setUp(): void
++    {
++        parent::setUp();
++
++        config([
++            'bank_sampah.admin.nama' => 'Admin Uji',
++            'bank_sampah.admin.email' => 'admin@example.test',
++            'bank_sampah.admin.password' => 'Admin12345',
++            'bank_sampah.admin.reset_password' => false,
++        ]);
++    }
++
++    protected function tearDown(): void
++    {
++        Carbon::setTestNow();   // seeder demo memakai tanggal mundur; pastikan selalu dikembalikan
++        parent::tearDown();
++    }
++
++    // ---------------------------------------------------------------- AdminSeeder
++
++    public function test_admin_seeder_membuat_admin_dengan_kata_sandi_ter_hash_dan_wajib_ganti(): void
++    {
++        $this->seed(AdminSeeder::class);
++
++        $admin = User::where('email', 'admin@example.test')->firstOrFail();
++        $this->assertSame('admin', $admin->role);
++        $this->assertSame('aktif', $admin->status);
++        $this->assertTrue($admin->must_change_password);
++        $this->assertNotSame('Admin12345', $admin->password);
++        $this->assertTrue(Hash::check('Admin12345', $admin->password));
++    }
++
++    public function test_admin_seeder_dijalankan_ulang_tidak_menimpa_kata_sandi_yang_sudah_diganti(): void
++    {
++        $this->seed(AdminSeeder::class);
++
++        User::where('role', 'admin')->firstOrFail()->forceFill([
++            'password' => 'SudahDiganti99',
++            'must_change_password' => false,
++        ])->save();
++
++        $this->seed(AdminSeeder::class);
++
++        $admin = User::where('role', 'admin')->firstOrFail();
++        $this->assertTrue(Hash::check('SudahDiganti99', $admin->password));
++        $this->assertFalse($admin->must_change_password);
++        $this->assertSame(1, User::where('role', 'admin')->count());
++    }
++
++    public function test_admin_seeder_boleh_mereset_kata_sandi_hanya_jika_diminta_eksplisit(): void
++    {
++        $this->seed(AdminSeeder::class);
++        User::where('role', 'admin')->firstOrFail()->forceFill(['password' => 'SudahDiganti99', 'must_change_password' => false])->save();
++
++        config(['bank_sampah.admin.reset_password' => true]);
++        $this->seed(AdminSeeder::class);
++
++        $admin = User::where('role', 'admin')->firstOrFail();
++        $this->assertTrue(Hash::check('Admin12345', $admin->password));
++        $this->assertTrue($admin->must_change_password);
++    }
++
++    public function test_admin_seeder_menolak_email_milik_akun_nasabah(): void
++    {
++        $u = new User();
++        $u->forceFill(['name' => 'Nasabah', 'email' => 'admin@example.test', 'password' => 'Password123', 'role' => 'nasabah', 'status' => 'aktif'])->save();
++
++        $this->expectException(RuntimeException::class);
++        $this->expectExceptionMessage('sudah dipakai akun nasabah');
++
++        try {
++            $this->seed(AdminSeeder::class);
++        } finally {
++            $this->assertSame('nasabah', $u->fresh()->role, 'akun nasabah tidak boleh berubah jadi admin');
++        }
++    }
++
++    public function test_admin_seeder_menolak_pengaturan_kosong_atau_kata_sandi_lemah(): void
++    {
++        foreach ([
++            ['bank_sampah.admin.email', ''],
++            ['bank_sampah.admin.password', ''],
++            ['bank_sampah.admin.password', 'pendek1'],
++            ['bank_sampah.admin.password', 'hanyahuruf'],
++            ['bank_sampah.admin.password', '1234567890'],
++            ['bank_sampah.admin.email', 'bukan-email'],
++        ] as [$kunci, $nilai]) {
++            config([
++                'bank_sampah.admin.email' => 'admin@example.test',
++                'bank_sampah.admin.password' => 'Admin12345',
++                $kunci => $nilai,
++            ]);
++
++            try {
++                $this->seed(AdminSeeder::class);
++                $this->fail("Seeder seharusnya menolak {$kunci} = \"{$nilai}\"");
++            } catch (RuntimeException) {
++                $this->assertSame(0, User::where('role', 'admin')->count());
++            }
++        }
++    }
++
++    // ---------------------------------------------------------------- HargaSampahSeeder
++
++    public function test_harga_seeder_tidak_menimpa_harga_yang_sudah_ditetapkan_pengurus(): void
++    {
++        $this->seed(AdminSeeder::class);
++        $this->seed(JenisSampahSeeder::class);
++        $admin = User::where('role', 'admin')->firstOrFail();
++        $kertas = JenisSampah::where('nama', 'Kertas')->firstOrFail();
++
++        // Pengurus sudah menetapkan harga Kertas sejak beberapa hari lalu.
++        HargaSampah::create([
++            'jenis_sampah_id' => $kertas->id,
++            'harga_per_kg' => 2000,
++            'berlaku_mulai' => now()->subDays(5)->toDateString(),
++            'dibuat_oleh' => $admin->id,
++        ]);
++
++        $this->seed(HargaSampahSeeder::class);
++
++        $this->assertEquals(2000, $kertas->hargaBerlaku()->harga_per_kg, 'harga contoh tidak boleh menimpa harga asli');
++        $this->assertSame(1, HargaSampah::where('jenis_sampah_id', $kertas->id)->count());
++        // Jenis yang belum punya harga tetap diberi harga awal.
++        $this->assertNotNull(JenisSampah::where('nama', 'Logam')->firstOrFail()->hargaBerlaku());
++
++        // Dijalankan lagi (mis. di hari berikutnya) tidak menambah baris apa pun.
++        $jumlah = HargaSampah::count();
++        Carbon::setTestNow(now()->addDays(3));
++        $this->seed(HargaSampahSeeder::class);
++        $this->assertSame($jumlah, HargaSampah::count());
++    }
++
++    // ---------------------------------------------------------------- Seeder demo
++
++    public function test_seeder_demo_menolak_berjalan_di_production(): void
++    {
++        $this->seed(AdminSeeder::class);
++        $this->app->detectEnvironment(fn () => 'production');
++
++        try {
++            // Dipanggil langsung: lewat `db:seed` di production Laravel lebih dulu meminta konfirmasi (--force).
++            $this->app->make(DemoSeeder::class)->run();
++            $this->fail('DemoSeeder seharusnya ditolak di production');
++        } catch (RuntimeException $e) {
++            $this->assertStringContainsString('production', $e->getMessage());
++        }
++
++        $this->assertSame(0, Nasabah::count());
++    }
++
++    public function test_seeder_demo_membuat_data_k_pop_yang_lengkap_dan_konsisten(): void
++    {
++        $this->seed(DemoSeeder::class);
++
++        // Cukup banyak dan mencakup semua keadaan yang perlu diuji.
++        $this->assertGreaterThanOrEqual(20, Nasabah::count());
++        $this->assertGreaterThanOrEqual(100, TransaksiSetoran::count());
++        foreach (['menunggu', 'ditolak', 'aktif', 'nonaktif'] as $status) {
++            $this->assertGreaterThan(0, User::where('role', 'nasabah')->where('status', $status)->count(), "tidak ada nasabah {$status}");
++        }
++        foreach (['menunggu', 'disetujui', 'dicairkan', 'ditolak', 'dibatalkan'] as $status) {
++            $this->assertGreaterThan(0, PenarikanDana::where('status', $status)->count(), "tidak ada penarikan {$status}");
++        }
++        $this->assertGreaterThan(0, PenarikanDana::where('metode', 'transfer')->count());
++        $this->assertGreaterThan(0, TransaksiSetoran::where('status', 'dibatalkan')->count());
++        $this->assertGreaterThan(0, Nasabah::where('kategori', 'umum')->count());
++        $this->assertGreaterThanOrEqual(7, JenisSampah::where('aktif', true)->count(), 'keranjang timbangan perlu >= 5 jenis');
++
++        // Bertema K-pop.
++        $this->assertTrue(User::where('email', 'jungkook.bts@example.test')->exists());
++        $this->assertTrue(User::where('email', 'jisoo.blackpink@example.test')->exists());
++
++        // Saldo mengikuti aturan bisnis: setoran berhasil - penarikan dicairkan; ditahan = menunggu + disetujui.
++        foreach (Nasabah::all() as $n) {
++            $masuk = (float) TransaksiSetoran::where('nasabah_id', $n->id)->where('status', 'berhasil')->sum('total_nilai');
++            $cair = (float) PenarikanDana::where('nasabah_id', $n->id)->where('status', 'dicairkan')->sum('nominal');
++            $tahan = (float) PenarikanDana::where('nasabah_id', $n->id)->whereIn('status', ['menunggu', 'disetujui'])->sum('nominal');
++
++            $this->assertEqualsWithDelta($masuk - $cair, (float) $n->saldo, 0.005, "saldo {$n->nomor_nasabah}");
++            $this->assertEqualsWithDelta($tahan, (float) $n->saldo_ditahan, 0.005, "saldo ditahan {$n->nomor_nasabah}");
++            $this->assertLessThanOrEqual((float) $n->saldo + 0.005, (float) $n->saldo_ditahan);
++        }
++
++        // Harga pada tiap detail = harga yang berlaku PADA tanggal setoran (riwayat harga naik/turun).
++        foreach (TransaksiSetoran::with('detail')->get() as $t) {
++            foreach ($t->detail as $d) {
++                $harga = HargaSampah::where('jenis_sampah_id', $d->jenis_sampah_id)
++                    ->whereDate('berlaku_mulai', '<=', $t->tanggal->toDateString())
++                    ->orderByDesc('berlaku_mulai')->firstOrFail();
++                $this->assertEquals((float) $harga->harga_per_kg, (float) $d->harga_per_kg, "harga {$t->kode}");
++            }
++        }
++
++        // Kasus khusus untuk menguji anonimisasi (BR-18): satu nonaktif saldo nol, satu nonaktif masih bersaldo.
++        $seokjin = Nasabah::whereHas('user', fn ($q) => $q->where('email', 'seokjin.bts@example.test'))->firstOrFail();
++        $yoongi = Nasabah::whereHas('user', fn ($q) => $q->where('email', 'yoongi.bts@example.test'))->firstOrFail();
++        $this->assertSame('nonaktif', $seokjin->user->status);
++        $this->assertEquals(0, (float) $seokjin->saldo);
++        $this->assertSame('nonaktif', $yoongi->user->status);
++        $this->assertGreaterThan(0, (float) $yoongi->saldo);
++
++        // Tidak ada jenis nonaktif yang pernah disetor, dan tidak ada tanggal di masa depan.
++        $this->assertSame(0, DB::table('detail_setoran')->join('jenis_sampah', 'jenis_sampah.id', '=', 'jenis_sampah_id')->where('aktif', false)->count());
++        $this->assertSame(0, TransaksiSetoran::where('tanggal', '>', now())->count());
++        $this->assertSame(0, PenarikanDana::where('diajukan_pada', '>', now())->count());
++    }
++
++    public function test_seeder_demo_aman_dijalankan_ulang_dan_tidak_menggandakan_data(): void
++    {
++        $this->seed(DemoSeeder::class);
++        $hitung = fn () => [User::count(), Nasabah::count(), TransaksiSetoran::count(), PenarikanDana::count(), HargaSampah::count(), DB::table('log_aktivitas')->count()];
++        $sebelum = $hitung();
++
++        $this->seed(DemoSeeder::class);
++
++        $this->assertSame($sebelum, $hitung());
++    }
++
++    public function test_seeder_demo_tidak_bentrok_dengan_nasabah_nyata_yang_sudah_ada(): void
++    {
++        $this->seed(AdminSeeder::class);
++        $admin = User::where('role', 'admin')->firstOrFail();
++
++        // Nasabah asli sudah mengambil NSB-0001 lewat alur pendaftaran biasa.
++        app(PendaftaranService::class)->tambahNasabahLangsung([
++            'name' => 'Ibu Warga Asli', 'email' => 'asli@example.test', 'telepon' => '08123456789',
++            'kategori' => 'warga', 'blok' => 'Z', 'nomor_rumah' => '99', 'password' => 'Password123',
++        ], $admin);
++
++        $this->seed(DemoSeeder::class);
++
++        $this->assertSame('NSB-0001', Nasabah::whereHas('user', fn ($q) => $q->where('email', 'asli@example.test'))->firstOrFail()->nomor_nasabah);
++        $this->assertSame(Nasabah::count(), Nasabah::distinct('nomor_nasabah')->count('nomor_nasabah'));
++        $this->assertSame(0, User::where('role', 'nasabah')->doesntHave('nasabah')->count(), 'tidak boleh ada akun nasabah tanpa data nasabah');
++    }
++
++    public function test_halaman_utama_admin_dan_nasabah_bisa_dibuka_dengan_data_demo(): void
++    {
++        $this->seed(DemoSeeder::class);
++
++        $admin = User::where('role', 'admin')->firstOrFail();
++        $admin->forceFill(['must_change_password' => false])->save();
++
++        foreach (['admin.dashboard', 'admin.nasabah.index', 'admin.nasabah.pendaftar', 'admin.setoran.index',
++                  'admin.setoran.create', 'admin.penarikan.index', 'admin.katalog.index', 'admin.laporan.index'] as $rute) {
++            $this->actingAs($admin)->get(route($rute))->assertOk();
++        }
++        $this->actingAs($admin)->get(route('admin.setoran.show', TransaksiSetoran::firstOrFail()))->assertOk();
++        $this->actingAs($admin)->get(route('admin.penarikan.index', ['status' => 'menunggu']))->assertOk();
++
++        $jungkook = User::where('email', 'jungkook.bts@example.test')->firstOrFail();
++        foreach (['nasabah.dashboard', 'nasabah.setoran.index', 'nasabah.penarikan.index', 'nasabah.katalog.index', 'nasabah.profile.show'] as $rute) {
++            $this->actingAs($jungkook)->get(route($rute))->assertOk();
++        }
++        $this->actingAs($jungkook)->get(route('garasi'))->assertOk();
++    }
++}

@@ -21,8 +21,8 @@ addEventListener('pointerup',e=>{if(drag&&!drag.m&&e.target===R.domElement){cons
   else if(k=='luar')goSec('scan');else if(k&&k!=cur)goSec(k)}}drag=null});
 function size(){if(!innerWidth||!innerHeight)return;R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();measure();calcViews();nav()}
 addEventListener('resize',size);addEventListener('load',()=>setTimeout(size,200));
-const C={p:null,t:null},FOC={};let lastIdx=-1,lastStep='',frame=0,pT=performance.now();
-function loop(){requestAnimationFrame(loop);const T0=performance.now(),t=T0/1000,dt=Math.min(.25,(T0-pT)/1000);pT=T0;const kk=1-Math.exp(-dt*7);frame++;if(frame%90==0)measure();
+const C={p:null,t:null},FOC={};let lastIdx=-1,lastStep='',frame=0,pT=performance.now(),frameId=0;
+function draw(){const T0=performance.now(),t=T0/1000,dt=Math.min(.25,(T0-pT)/1000);pT=T0;const kk=1-Math.exp(-dt*7);frame++;if(frame%90==0)measure();
  const y=scrollY+innerHeight*.5;let i=0;while(i<SECS.length-2&&y>SECS[i+1].c)i++;
  const A=SECS[i],Bq=SECS[i+1],tt=cl((y-A.c)/(Bq.c-A.c)),s=sm(cl((tt-.28)/.44));
  const va=V[A.k],vb=V[Bq.k],G={p:[0,1,2].map(n=>lerp(va.p[n],vb.p[n],s)),t:[0,1,2].map(n=>lerp(va.t[n],vb.t[n],s))};
@@ -47,7 +47,11 @@ function loop(){requestAnimationFrame(loop);const T0=performance.now(),t=T0/1000
  if(!S.busy){claw.position.x=Math.sin(pOf('capit')*2)*.9;claw.position.z=Math.cos(pOf('capit')*1.7)*.2;claw.rotation.z=Math.sin(t*1.4)*.05}
  rk.visible=!(cam.position.z>rk.position.z-2.5&&(cur=='capit'||cur=='riwayat'||cur=='struk'));sw.visible=cur=='luar';
  R.render(sc,cam)}
-rcptDraw(null);size();redraw();nav();loop();
+function loop(){frameId=0;if(document.hidden)return;frameId=requestAnimationFrame(loop);draw()}
+function resume(){if(document.hidden)return;size();pT=performance.now();if(!frameId)frameId=requestAnimationFrame(loop);draw()}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(frameId);frameId=0}else resume()});
+addEventListener('pageshow',resume);
+rcptDraw(null);redraw();resume();
 const SK='<span class="skel" aria-hidden="true"><i class="sk" style="width:38%;height:14px"></i><i class="sk" style="width:82%;height:34px"></i><i class="sk" style="width:100%;height:14px"></i><i class="sk" style="width:90%;height:14px"></i><i class="sk" style="width:100%;height:56px;border-radius:16px"></i><i class="sk" style="width:55%;height:46px;border-radius:999px"></i></span>';
 document.querySelectorAll('.card,.grid>div').forEach(e=>e.insertAdjacentHTML('afterbegin',SK));
 const ready=()=>setTimeout(()=>{document.documentElement.classList.remove('ld');size()},1100);

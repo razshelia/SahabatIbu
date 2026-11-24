@@ -1507,8 +1507,8 @@ td {
     display: none;
     position: fixed;
     z-index: 8;
-    left: 16px;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    top: calc(136px + env(safe-area-inset-top, 0px));
+    right: 16px;
     padding: 14px 22px;
     border: 0;
     border-radius: 999px;
@@ -1620,8 +1620,8 @@ html.g3d canvas.drag {
     display: none;
     position: fixed;
     z-index: 8;
-    left: 16px;
-    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    top: calc(84px + env(safe-area-inset-top, 0px));
+    right: 16px;
     padding: 10px 18px;
     border: 0;
     border-radius: 999px;

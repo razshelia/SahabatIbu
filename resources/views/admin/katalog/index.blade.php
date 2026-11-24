@@ -44,7 +44,7 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    window.onAppPageReady(() => {
         const pilih = document.getElementById('jenis_sampah_id');
         const lcdJenis = document.getElementById('lcd-jenis');
         const lcdLama = document.getElementById('lcd-lama');

@@ -108,7 +108,7 @@
             namaInput.removeAttribute('required');
         }
     }
-    document.addEventListener('DOMContentLoaded', toggleMetode);
+    window.onAppPageReady(toggleMetode);
 </script>
 
 <h2>Riwayat pengajuan penarikan</h2>

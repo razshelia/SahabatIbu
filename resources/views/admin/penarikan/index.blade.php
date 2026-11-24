@@ -276,7 +276,7 @@
 </script>
 @if($errors->has('catatan_referensi') && old('cairkan_penarikan_id'))
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onAppPageReady(() => {
             const id = Number(document.getElementById('cairkan-penarikan-id').value);
             const button = Number.isInteger(id) && id > 0 ? document.getElementById('cairkan-penarikan-' + id) : null;
             if (!button) return;
@@ -286,7 +286,7 @@
     </script>
 @elseif($errors->has('alasan_penolakan') && old('tolak_penarikan_id'))
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onAppPageReady(() => {
             const id = Number(document.getElementById('tolak-penarikan-id').value);
             const button = Number.isInteger(id) && id > 0 ? document.getElementById('tolak-penarikan-' + id) : null;
             if (!button) return;

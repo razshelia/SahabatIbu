@@ -142,7 +142,7 @@
 </script>
 @if($errors->has('konfirmasi') && old('nasabah_id'))
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onAppPageReady(() => {
             const id = Number(document.getElementById('nasabah-anonim-id').value);
             if (!Number.isInteger(id) || id < 1) return;
             document.getElementById('ket-anonim').textContent = document.getElementById('nasabah-anonim-label').value;
