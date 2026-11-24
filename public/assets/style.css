@@ -168,3 +168,28 @@ html.lihat main.pgm{display:none}
 html.g3d canvas{cursor:grab}html.g3d canvas.drag{cursor:grabbing}
 #pusat{display:none;position:fixed;z-index:8;left:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));padding:10px 18px;border:0;border-radius:999px;background:#ffffffd9;color:#141c18;font:800 14px/1 'Trebuchet MS',sans-serif;box-shadow:0 8px 22px #0007;cursor:pointer}
 #pusat.on{display:block}
+
+/* ===== Gerak halus (Lenis + Motion + ScrollTrigger), aktif bila html.mo ===== */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-stopped{overflow:hidden}
+/* Animasi masuk dipegang Motion; matikan transisi CSS lama agar tidak berebut */
+html.mo .card,html.mo .wide{transition:box-shadow .3s,border-color .3s}
+html.mo .sec.in .card,html.mo .sec.in .wide,html.mo .cta .card{opacity:0;transform:translateY(28px)}
+html.mo .sec.in .card:hover,html.mo .sec.in .card:active{transform:translateY(28px)}
+/* Kaca: gradasi tipis + kilau yang mengikuti kursor (teks tetap kontras tinggi) */
+html.mo .card.g{position:relative;isolation:isolate;border-color:#ffffff2e;background:linear-gradient(145deg,#ffffff1f 0,#141c18e0 28%,#141c18ea 100%);backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6)}
+html.mo .card.g::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(360px circle at var(--mx,50%) var(--my,0%),#ffffff2e,transparent 62%)}
+html.mo .card.g.glow::before{opacity:1}
+html.mo .card.g.glow{border-color:#6fe0a266;box-shadow:0 18px 44px #0008,0 0 0 1px #6fe0a244,inset 0 1px 0 #ffffff33}
+/* Laptop berlayar pendek: kartu garasi dipadatkan agar tidak menabrak bilah atas */
+@media(min-width:901px) and (max-height:900px){
+.card{width:min(500px,44vw,100%);padding:18px 22px;max-height:calc(100vh - 200px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#ffffff33 transparent}
+.card h2{font-size:clamp(24px,3.6vh,32px)}
+.card p{margin-top:8px;font-size:15.5px;line-height:1.5}
+.ic{width:52px;height:52px;font-size:30px;border-radius:16px}.hd{margin-bottom:8px}
+.st{margin-top:10px;gap:6px}.st li{padding:6px 10px}.st li i{width:40px;height:40px}
+.hint{margin-top:10px;padding:9px 12px;font-size:14.5px;line-height:1.4}
+.card .row{flex-direction:row;flex-wrap:wrap;margin-top:12px;gap:8px}.card .row .btn{flex:1 1 auto;min-height:46px}
+}

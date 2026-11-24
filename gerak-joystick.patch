@@ -1,0 +1,233 @@
+diff --git a/public/assets/js/gerak.js b/public/assets/js/gerak.js
+new file mode 100644
+index 0000000..8fede89
+--- /dev/null
++++ b/public/assets/js/gerak.js
+@@ -0,0 +1,124 @@
++/* Gerak halus: Lenis (smooth scroll) + ScrollTrigger (pemicu saat digulir) + Motion (animasi masuk & hover).
++   Jika pustaka gagal dimuat, atau pengguna meminta gerak dikurangi, berkas ini tidak berbuat apa-apa
++   dan tampilan lama (CSS) tetap berjalan. */
++(function () {
++    'use strict';
++    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
++    if (!(window.Motion && window.gsap && window.ScrollTrigger && window.Lenis)) return;
++
++    var animate = Motion.animate, stagger = Motion.stagger;
++    gsap.registerPlugin(ScrollTrigger);
++    var EASE = [0.22, 1, 0.36, 1];
++    var root = document.documentElement;
++    root.classList.add('mo');
++
++    /* ---------- Lenis: smooth scroll, sinkron dengan ScrollTrigger ---------- */
++    var lenis = new Lenis({
++        duration: 1.15,
++        easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
++        smoothWheel: true,
++        // Area yang punya gulungan sendiri dibiarkan natural.
++        prevent: function (n) {
++            if (n.closest('dialog,#side,#keys,.tbl,textarea,select,[data-lenis-prevent]')) return true;
++            var c = n.closest('.card'); // kartu yang isinya melebihi layar menggulir sendiri
++            return !!(c && c.scrollHeight > c.clientHeight + 2);
++        }
++    });
++    window.lenis = lenis;
++    lenis.on('scroll', ScrollTrigger.update);
++    gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
++    gsap.ticker.lagSmoothing(0);
++
++    /* ---------- Bantu ---------- */
++    function isiKartu(card) {
++        var out = [];
++        Array.prototype.forEach.call(card.children, function (k) {
++            if (k.matches('script,style,.skel,[hidden]')) return;
++            if (k.matches('.grid,.chips,.how,.row')) out.push.apply(out, k.children);
++            else out.push(k);
++        });
++        return out;
++    }
++
++    function masuk(card) {
++        card.dataset.mo = '1';
++        animate(card, { opacity: [0, 1], y: [36, 0], scale: [0.97, 1] }, { duration: 0.8, ease: EASE });
++        var kids = isiKartu(card);
++        if (kids.length) {
++            animate(kids, { opacity: [0, 1], y: [18, 0] },
++                { duration: 0.6, ease: EASE, delay: stagger(0.07, { startDelay: 0.12 }) });
++        }
++    }
++
++    function keluar(card) {
++        card.dataset.mo = '0';
++        animate(card, { opacity: 0, y: 24, scale: 0.98 }, { duration: 0.35, ease: 'easeIn' });
++    }
++
++    /* ---------- Hover (kaca): angkat sedikit + kilau mengikuti kursor ---------- */
++    function pasangHover(el) {
++        if (el.dataset.moHover) return;
++        el.dataset.moHover = '1';
++        el.addEventListener('pointerenter', function (e) {
++            if (e.pointerType === 'touch' || el.dataset.mo === '0') return;
++            el.classList.add('glow');
++            animate(el, { y: -6, scale: 1.015 }, { duration: 0.3, ease: EASE });
++        });
++        el.addEventListener('pointermove', function (e) {
++            var r = el.getBoundingClientRect();
++            el.style.setProperty('--mx', (e.clientX - r.left) + 'px');
++            el.style.setProperty('--my', (e.clientY - r.top) + 'px');
++        });
++        el.addEventListener('pointerleave', function () {
++            el.classList.remove('glow');
++            if (el.dataset.mo === '0') return;
++            animate(el, { y: 0, scale: 1 }, { duration: 0.35, ease: EASE });
++        });
++        el.addEventListener('pointerdown', function () {
++            if (el.dataset.mo !== '0') animate(el, { scale: 0.98 }, { duration: 0.12 });
++        });
++        el.addEventListener('pointerup', function () {
++            if (el.dataset.mo !== '0') animate(el, { scale: el.matches(':hover') ? 1.015 : 1 }, { duration: 0.2, ease: EASE });
++        });
++    }
++
++    /* ---------- Halaman garasi: kartu tiap bagian muncul saat bagiannya di tengah layar ---------- */
++    var secs = document.querySelectorAll('.sec');
++    if (secs.length) {
++        secs.forEach(function (sec) {
++            var cards = sec.querySelectorAll('.card, .wide');
++            cards.forEach(function (c) { if (c.classList.contains('g')) pasangHover(c); });
++            ScrollTrigger.create({
++                trigger: sec, start: 'top 60%', end: 'bottom 40%',
++                onEnter: function () { cards.forEach(masuk); },
++                onEnterBack: function () { cards.forEach(masuk); },
++                onLeave: function () { cards.forEach(keluar); },
++                onLeaveBack: function () { cards.forEach(keluar); }
++            });
++        });
++        document.querySelectorAll('.grid > div, .how > div').forEach(pasangHover);
++    }
++
++    /* ---------- Halaman lain (dashboard, login, dll.): kotak muncul, isinya menyusul saat terlihat ---------- */
++    document.querySelectorAll('main.pgm .box').forEach(function (box) {
++        animate(box, { opacity: [0, 1], y: [28, 0], scale: [0.98, 1] }, { duration: 0.7, ease: EASE });
++        isiKartu(box).forEach(function (k, i) {
++            var r = k.getBoundingClientRect();
++            if (r.top < innerHeight * 0.92) {
++                animate(k, { opacity: [0, 1], y: [16, 0] }, { duration: 0.6, ease: EASE, delay: 0.1 + Math.min(i, 8) * 0.06 });
++                return;
++            }
++            k.style.opacity = '0';
++            ScrollTrigger.create({
++                trigger: k, start: 'top 92%', once: true,
++                onEnter: function () { animate(k, { opacity: [0, 1], y: [18, 0] }, { duration: 0.6, ease: EASE }); }
++            });
++        });
++    });
++
++    // Tinggi halaman berubah setelah konten/gambar/font selesai dimuat: hitung ulang posisi pemicu.
++    var tunda = 0;
++    function hitungUlang() { clearTimeout(tunda); tunda = setTimeout(function () { ScrollTrigger.refresh(); }, 120); }
++    window.addEventListener('load', hitungUlang);
++    if (window.ResizeObserver) new ResizeObserver(hitungUlang).observe(document.body);
++})();
+diff --git a/public/assets/js/kamera-nav.js b/public/assets/js/kamera-nav.js
+index 0c96955..3d7d2ac 100644
+--- a/public/assets/js/kamera-nav.js
++++ b/public/assets/js/kamera-nav.js
+@@ -30,5 +30,5 @@ addEventListener('keydown',e=>{if(e.key=='Escape')toggleSide(false)});
+ function toggleSide(o){if(o===undefined){document.documentElement.classList.toggle('mini');setTimeout(size,320);return}$('side').classList.toggle('open',o);$('scrim').classList.toggle('on',o)}
+ function nav(){document.querySelectorAll('#keys button,#dots button').forEach(b=>b.classList.toggle('on',b.dataset.k==curSec));$('loc').textContent=NM[curSec]||'';$('ds2').textContent=S.door?'Pintu terbuka':'Pintu tertutup'}
+ let cur='luar',curSec='hero';
+-const goSec=k=>$(k).scrollIntoView({behavior:'smooth',block:k=='hero'?'start':'center'});
++const goSec=k=>{const e=$(k);if(window.lenis){lenis.scrollTo(e,{offset:k=='hero'?0:-(innerHeight-e.offsetHeight)/2,duration:1.3})}else e.scrollIntoView({behavior:'smooth',block:k=='hero'?'start':'center'})};
+ const step=d=>goSec(ORD[Math.max(0,Math.min(ORD.length-1,ORD.indexOf(curSec)+d))]);
+diff --git a/public/assets/style.css b/public/assets/style.css
+index ce07045..2553def 100644
+--- a/public/assets/style.css
++++ b/public/assets/style.css
+@@ -168,3 +168,28 @@ @media print{#wa-admin,#pusat{display:none!important}}
+ html.g3d canvas{cursor:grab}html.g3d canvas.drag{cursor:grabbing}
+ #pusat{display:none;position:fixed;z-index:8;left:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));padding:10px 18px;border:0;border-radius:999px;background:#ffffffd9;color:#141c18;font:800 14px/1 'Trebuchet MS',sans-serif;box-shadow:0 8px 22px #0007;cursor:pointer}
+ #pusat.on{display:block}
++
++/* ===== Gerak halus (Lenis + Motion + ScrollTrigger), aktif bila html.mo ===== */
++html.lenis,html.lenis body{height:auto}
++.lenis.lenis-smooth{scroll-behavior:auto!important}
++.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
++.lenis.lenis-stopped{overflow:hidden}
++/* Animasi masuk dipegang Motion; matikan transisi CSS lama agar tidak berebut */
++html.mo .card,html.mo .wide{transition:box-shadow .3s,border-color .3s}
++html.mo .sec.in .card,html.mo .sec.in .wide,html.mo .cta .card{opacity:0;transform:translateY(28px)}
++html.mo .sec.in .card:hover,html.mo .sec.in .card:active{transform:translateY(28px)}
++/* Kaca: gradasi tipis + kilau yang mengikuti kursor (teks tetap kontras tinggi) */
++html.mo .card.g{position:relative;isolation:isolate;border-color:#ffffff2e;background:linear-gradient(145deg,#ffffff1f 0,#141c18e0 28%,#141c18ea 100%);backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6)}
++html.mo .card.g::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(360px circle at var(--mx,50%) var(--my,0%),#ffffff2e,transparent 62%)}
++html.mo .card.g.glow::before{opacity:1}
++html.mo .card.g.glow{border-color:#6fe0a266;box-shadow:0 18px 44px #0008,0 0 0 1px #6fe0a244,inset 0 1px 0 #ffffff33}
++/* Laptop berlayar pendek: kartu garasi dipadatkan agar tidak menabrak bilah atas */
++@media(min-width:901px) and (max-height:900px){
++.card{width:min(500px,44vw,100%);padding:18px 22px;max-height:calc(100vh - 200px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#ffffff33 transparent}
++.card h2{font-size:clamp(24px,3.6vh,32px)}
++.card p{margin-top:8px;font-size:15.5px;line-height:1.5}
++.ic{width:52px;height:52px;font-size:30px;border-radius:16px}.hd{margin-bottom:8px}
++.st{margin-top:10px;gap:6px}.st li{padding:6px 10px}.st li i{width:40px;height:40px}
++.hint{margin-top:10px;padding:9px 12px;font-size:14.5px;line-height:1.4}
++.card .row{flex-direction:row;flex-wrap:wrap;margin-top:12px;gap:8px}.card .row .btn{flex:1 1 auto;min-height:46px}
++}
+diff --git a/resources/views/garasi/jelajah.blade.php b/resources/views/garasi/jelajah.blade.php
+index 26f3d59..6e60ca0 100644
+--- a/resources/views/garasi/jelajah.blade.php
++++ b/resources/views/garasi/jelajah.blade.php
+@@ -439,7 +439,7 @@ function act(h){const o=h.object,k=o.userData.k;
+  if(o.hot&&(cur==k||inBoard)){const px=h.uv.x*o.W,py=(1-h.uv.y)*o.H,b=o.hot.find(b=>px>=b.x&&px<=b.x+b.w&&py>=b.y&&py<=b.y+b.h);if(b)b.cb();else if(o===bS&&cur=='capit')moveTo('papan')}
+  else if(o.userData.dr&&(cur=='pintu'||cur=='luar'))toggleDoor();else moveTo(k)}
+ function size(){R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();nav()}addEventListener('resize',size);
+-function walk(dt){if(cur=='luar'||S.doorBusy)return;const K=k=>kd.has(k),f=(K('w')||K('arrowup')||hold.f?1:0)-(K('s')||K('arrowdown')||hold.b?1:0)+joyV.y,sd=(K('d')||K('arrowright')||hold.r?1:0)-(K('a')||K('arrowleft')||hold.l?1:0)-joyV.x,z=(K('+')||K('=')||hold.zi?1:0)-(K('-')||hold.zo?1:0);
++function walk(dt){if(cur=='luar'||S.doorBusy)return;const K=k=>kd.has(k),f=(K('w')||K('arrowup')||hold.f?1:0)-(K('s')||K('arrowdown')||hold.b?1:0)-joyV.y,sd=(K('d')||K('arrowright')||hold.r?1:0)-(K('a')||K('arrowleft')||hold.l?1:0)+joyV.x,z=(K('+')||K('=')||hold.zi?1:0)-(K('-')||hold.zo?1:0);
+  if(f||sd){const sp=5.5*dt,fx=-Math.sin(G.th),fz=-Math.cos(G.th),rx=Math.cos(G.th),rz=-Math.sin(G.th);G.t[0]+=(fx*f+rx*sd)*sp;G.t[2]+=(fz*f+rz*sd)*sp;
+   const asp=innerWidth/innerHeight,mu=asp<1?Math.min(1.6,1.3/asp):1,r=G.r*mu,kk=Math.sin(G.ph),px=G.t[0]+r*kk*Math.sin(G.th),pz=G.t[2]+r*kk*Math.cos(G.th);
+   if(px>10)G.t[0]-=px-10;if(px<-10)G.t[0]-=px+10;if(pz>13.3)G.t[2]-=pz-13.3;if(pz<-4.1)G.t[2]-=pz+4.1}
+diff --git a/resources/views/layouts/app.blade.php b/resources/views/layouts/app.blade.php
+index d652150..9c42cfa 100644
+--- a/resources/views/layouts/app.blade.php
++++ b/resources/views/layouts/app.blade.php
+@@ -136,6 +136,11 @@
+     <button type="button" id="lihat" onclick="toggleLihat()" aria-pressed="false">Lihat ruangan penuh</button>
+     <button type="button" id="pusat" aria-label="Kembalikan sudut pandang ruangan">Pusatkan ruangan</button>
+     @include('partials.wa-admin')
++    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
++    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
++    <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
++    <script defer src="https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.js"></script>
++    <script defer src="{{ asset('assets/js/gerak.js') }}"></script>
+     <script defer src="{{ asset('assets/js/menu.js') }}"></script>
+     <script>
+         function toggleLihat() {
+diff --git a/resources/views/layouts/guest.blade.php b/resources/views/layouts/guest.blade.php
+index 4cdc369..6f1ace9 100644
+--- a/resources/views/layouts/guest.blade.php
++++ b/resources/views/layouts/guest.blade.php
+@@ -53,6 +53,11 @@
+     <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
+     <script defer src="{{ asset('assets/js/aksi.js') }}"></script>
+     <script defer src="{{ asset('assets/js/latar.js') }}"></script>
++    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
++    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
++    <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
++    <script defer src="https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.js"></script>
++    <script defer src="{{ asset('assets/js/gerak.js') }}"></script>
+     <script>
+         // Auto-hide toast after 5s
+         document.addEventListener('DOMContentLoaded', () => {
+diff --git a/resources/views/welcome.blade.php b/resources/views/welcome.blade.php
+index 9af9408..62f7459 100644
+--- a/resources/views/welcome.blade.php
++++ b/resources/views/welcome.blade.php
+@@ -84,4 +84,9 @@
+ <script defer src="{{ asset('assets/js/konten.js') }}"></script>
+ <script defer src="{{ asset('assets/js/scroll.js') }}"></script>
+ @include('partials.wa-admin')
++<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
++<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
++<script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
++<script defer src="https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.js"></script>
++<script defer src="{{ asset('assets/js/gerak.js') }}"></script>
+ <script defer src="{{ asset('assets/js/menu.js') }}"></script></body></html>

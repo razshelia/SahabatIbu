@@ -30,5 +30,5 @@ addEventListener('keydown',e=>{if(e.key=='Escape')toggleSide(false)});
 function toggleSide(o){if(o===undefined){document.documentElement.classList.toggle('mini');setTimeout(size,320);return}$('side').classList.toggle('open',o);$('scrim').classList.toggle('on',o)}
 function nav(){document.querySelectorAll('#keys button,#dots button').forEach(b=>b.classList.toggle('on',b.dataset.k==curSec));$('loc').textContent=NM[curSec]||'';$('ds2').textContent=S.door?'Pintu terbuka':'Pintu tertutup'}
 let cur='luar',curSec='hero';
-const goSec=k=>$(k).scrollIntoView({behavior:'smooth',block:k=='hero'?'start':'center'});
+const goSec=k=>{const e=$(k);if(window.lenis){lenis.scrollTo(e,{offset:k=='hero'?0:-(innerHeight-e.offsetHeight)/2,duration:1.3})}else e.scrollIntoView({behavior:'smooth',block:k=='hero'?'start':'center'})};
 const step=d=>goSec(ORD[Math.max(0,Math.min(ORD.length-1,ORD.indexOf(curSec)+d))]);

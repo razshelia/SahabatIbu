@@ -84,4 +84,9 @@
 <script defer src="{{ asset('assets/js/konten.js') }}"></script>
 <script defer src="{{ asset('assets/js/scroll.js') }}"></script>
 @include('partials.wa-admin')
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.js"></script>
+<script defer src="{{ asset('assets/js/gerak.js') }}"></script>
 <script defer src="{{ asset('assets/js/menu.js') }}"></script></body></html>
