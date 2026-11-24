@@ -8,4 +8,4 @@ box(.3,HH,19.5,M(0xc3bdac,.9),-10.5,HH/2,4.75);box(.3,HH,19.5,M(0xc3bdac,.9),10.
 for(let i=-1;i<=1;i++){const l=box(3,.15,.6,M(0xffffff,.2),i*6,HH-.5,1);l.material.emissive=new THREE.Color(0xfff4d0);l.material.emissiveIntensity=.8}
 const sign=screen(5,.85,0,HH-1,-4.3);sign.paint((g,W,H)=>{bg(g,W,H,'#2f7d5b');tx(g,'BANK SAMPAH SAHABAT IBU',W/2,H*.5,31,'#fff','center');tx(g,'Perum. Taman Gading, Jember',W/2,H*.82,20,'#cfeedd','center','600')});
 const cream=M(0xf1ead8,.5);
-
+if(window.dekor)dekor();

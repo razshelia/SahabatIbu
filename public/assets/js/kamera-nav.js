@@ -25,7 +25,7 @@ const KEYS=[['hero','home','Beranda'],['scan','card','Cek Saldo'],['rak','tag','
 const ORD=['hero','scan','rak','timbang','struk','riwayat','capit','aman','cta'];
 const NM={hero:'Luar garasi',scan:'Cek saldo',rak:'Daftar harga',timbang:'Timbang sampah',struk:'Cetak struk',riwayat:'Buku tabungan',capit:'Ambil uang',aman:'Aman & privat',cta:'Masuk / daftar'};
 const GL={scan:'Alat bank sampah',aman:'Informasi'};
-$('keys').innerHTML=KEYS.map(n=>(GL[n[0]]?`<small class="gl">${GL[n[0]]}</small>`:'')+`<button data-k="${n[0]}" title="${n[2]}" onclick="goSec('${n[0]}');toggleSide(false)"><svg class="i"><use href="#i-${n[1]}"/></svg><span class="t">${n[2]}</span></button>`).join('');
+$('keys').innerHTML=KEYS.map(n=>(GL[n[0]]?`<small class="gl">${GL[n[0]]}</small>`:'')+`<button data-k="${n[0]}" title="${n[2]}" onclick="goSec('${n[0]}');toggleSide(false)"><svg class="i"><use href="#i-${n[1]}"/></svg><span class="t">${n[2]}</span></button>`).join('')+'<small class="gl">Coba tanpa akun</small><a href="/garasi"><svg class="i"><use href="#i-touch"/></svg><span class="t">Main di garasi 3D</span></a>';
 addEventListener('keydown',e=>{if(e.key=='Escape')toggleSide(false)});
 function toggleSide(o){if(o===undefined){document.documentElement.classList.toggle('mini');setTimeout(size,320);return}$('side').classList.toggle('open',o);$('scrim').classList.toggle('on',o)}
 function nav(){document.querySelectorAll('#keys button,#dots button').forEach(b=>b.classList.toggle('on',b.dataset.k==curSec));$('loc').textContent=NM[curSec]||'';$('ds2').textContent=S.door?'Pintu terbuka':'Pintu tertutup'}

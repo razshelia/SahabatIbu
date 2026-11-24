@@ -49,10 +49,11 @@
 <aside id="side" class="g" aria-label="Menu utama"><div class="brand"><img class="logo" src="{{ asset('assets/logo-mark.svg') }}" alt="" width="34" height="34"><div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div></div><nav id="keys" aria-label="Menu"></nav><button class="fold" id="fold" onclick="toggleSide()" aria-label="Ciutkan atau perluas menu"><svg class="i"><use href="#i-chev"/></svg><span class="t">Ciutkan menu</span></button></aside><div id="scrim" onclick="toggleSide(false)"></div>
 <i id="pg"></i>
 <main>
-<section class="sec" id="hero" data-k="luar"><div class="card g"><small class="kick">Final Project PBW · Kelompok 11</small><h1>Setor sampah, <em>saldo langsung naik</em>.</h1><p>Cek saldo, lihat harga sampah, dan ajukan pengambilan uang dari satu halaman. Masuk ke garasi, lalu coba tiap alat.</p>
+<section class="sec" id="hero" data-k="luar"><div class="card g"><h1>Setor sampah, <em>saldo langsung naik</em>.</h1><p>Cek saldo, lihat harga sampah, dan ajukan pengambilan uang dari satu halaman. Masuk ke garasi, lalu coba tiap alat.</p>
 <div class="how"><div><b><svg class="i"><use href="#i-down"/></svg></b>Gulir ke bawah</div><div><b><svg class="i"><use href="#i-eye"/></svg></b>Pilih alat</div><div><b><svg class="i"><use href="#i-check"/></svg></b>Tekan tombol hijau</div></div>
 <div class="row">
     <a class="btn" href="#scan" onclick="goSec('scan');return false"><svg class="i"><use href="#i-door"/></svg>Masuk garasi</a>
+    <a class="btn o" href="{{ route('garasi') }}"><svg class="i"><use href="#i-touch"/></svg>Main garasi 3D</a>
     @auth
         <a class="btn o" href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}"><svg class="i"><use href="#i-user"/></svg>Buka Portal</a>
     @else
@@ -70,12 +71,14 @@
         <a class="btn" href="{{ route('login') }}"><svg class="i"><use href="#i-key"/></svg> Masuk</a>
         <a class="btn o" href="{{ route('register') }}"><svg class="i"><use href="#i-doc"/></svg> Daftar sebagai nasabah</a>
     @endauth
+    <a class="btn o" href="{{ route('garasi') }}"><svg class="i"><use href="#i-touch"/></svg> Coba garasi 3D tanpa akun</a>
 </div>
 <footer>Bank Sampah Sahabat Ibu · Perum. Taman Gading, Kel. Tegal Besar, Kec. Kaliwates, Kab. Jember · <a href="{{ route('privacy.policy') }}">Kebijakan Privasi</a></footer></div></div></section>
 </main>
 <dialog id="dlg"></dialog>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script defer src="{{ asset('assets/js/inti.js') }}"></script>
+<script defer src="{{ asset('assets/js/dekor.js') }}"></script>
 <script defer src="{{ asset('assets/js/ruangan.js') }}"></script>
 <script defer src="{{ asset('assets/js/alat.js') }}"></script>
 <script defer src="{{ asset('assets/js/pintu.js') }}"></script>

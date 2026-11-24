@@ -71,7 +71,11 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;background:radi
 #remote button:focus-visible{outline:3px solid #2f7d5b;outline-offset:2px}
 @media(max-width:900px){#remote{flex-wrap:wrap;padding:6px 8px;gap:6px;border-radius:18px}.lcd{flex:1;width:auto}#keys{order:9;flex:0 0 100%}#keys button{height:34px;font-size:10px;border-radius:9px}.slide em{display:none}}
 </style></head><body>
-<header id="top"><div class="brand g"><img class="logo" src="{{ asset('assets/logo-mark.svg') }}" alt="" width="34" height="34"><div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div></div><div class="right"><div class="bal g" id="balbox"><small>Saldo</small><b id="balv"></b></div><div class="bal g" id="dombox"><small>Dompet tunai</small><b id="domv"></b></div><a class="sw g" href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}" style="text-decoration:none">&larr; Kembali</a></div></header>
+<header id="top"><div class="brand g"><img class="logo" src="{{ asset('assets/logo-mark.svg') }}" alt="" width="34" height="34"><div><b>Sahabat Ibu</b><span>Bank Sampah, Jember</span></div></div><div class="right"><div class="bal g" id="balbox"><small>Saldo</small><b id="balv"></b></div><div class="bal g" id="dombox"><small>Dompet tunai</small><b id="domv"></b></div>@auth
+<a class="sw g" href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('nasabah.dashboard') }}" style="text-decoration:none">&larr; Kembali</a>
+@else
+<a class="sw g" href="{{ url('/') }}" style="text-decoration:none">&larr; Beranda</a><a class="sw g" href="{{ route('login') }}" style="text-decoration:none">Masuk / Daftar</a>
+@endauth</div></header>
 <div id="remote" role="toolbar" aria-label="Remote garasi">
 <button class="home" onclick="goStart()" aria-label="Kembali ke awal, di luar garasi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0d2a1b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/></svg></button>
 <div class="lcd" aria-live="polite"><b id="loc">Luar garasi</b><span id="ds2">Pintu tertutup</span></div>
@@ -91,6 +95,7 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;background:radi
         : 50000;
 @endphp
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="{{ asset('assets/js/dekor.js') }}"></script>
 <script>
 const USER_NAME = @js($namaNasabah);
 const USER_NO = @js($nomorNasabah);
@@ -339,8 +344,9 @@ tag(dr,'pintu');dr.traverse(o=>o.userData.dr=1);
 let doorP=0;
 async function toggleDoor(to){if(S.doorBusy)return;S.doorBusy=1;S.door=S.door?0:1;const a=doorP,b=S.door;$('doorBtn').classList.toggle('on',!!S.door);$('ds').textContent=S.door?'buka':'tutup';nav();redraw();
  await tw(p=>{doorP=a+(b-a)*p;dr.scale.y=1-.92*doorP;dl.intensity=doorP*1.3},2200);S.doorBusy=0;
- if(S.door){$('hint').textContent='Seret layar = putar  •  W/S atau joystick = jalan  •  roda mouse atau cubit = zoom  •  ketuk alat = mendekat';hintFade(1);moveTo(to||(cur=='luar'?'home':cur))}else{if(cur=='luar')$('hint').textContent='Garasi masih tertutup. Ketuk pintu atau panel di sampingnya untuk membuka.';hintFade(0)}}
+ if(S.door){$('hint').textContent='Seret layar = putar  •  W/S atau joystick = jalan  •  roda mouse atau cubit = zoom  •  ketuk alat = mendekat';hintFade(1);moveTo(to||(cur=='luar'?'home':cur))}else if(cur=='luar'){$('hint').textContent='Garasi masih tertutup. Ketuk pintu atau panel di sampingnya untuk membuka.';hintFade(0)}else{$('hint').textContent='Pintu garasi ditutup. Ketuk tombol Pintu atau panel untuk membuka kembali.';hintFade(1)}}
 
+dekor();
 // animasi
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 const tw=(f,ms)=>new Promise(r=>{const t0=performance.now();(function s(){const p=Math.min(1,(performance.now()-t0)/ms);f(ease(p));p<1?requestAnimationFrame(s):r()})()});

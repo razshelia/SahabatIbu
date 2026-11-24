@@ -46,6 +46,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Garasi 3D: permainan murni di browser (tanpa basis data), boleh dicoba siapa saja tanpa akun.
+Route::get('/garasi', fn () => view('garasi.jelajah'))->name('garasi');
+
 // Area Tamu (Guest)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -66,7 +69,6 @@ Route::middleware('guest')->group(function () {
 // Area Autentikasi (Auth)
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::get('/garasi', fn () => view('garasi.jelajah'))->name('garasi');
 
     // Status akun pendaftar (menunggu / ditolak)
     Route::get('/status-pendaftaran', [AccountStatusController::class, 'show'])->name('account.status');

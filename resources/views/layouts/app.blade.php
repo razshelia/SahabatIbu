@@ -127,6 +127,7 @@
     <script>window.GARASI = {{ \Illuminate\Support\Js::from(\App\Support\GarasiData::safe(auth()->user())) }};</script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script defer src="{{ asset('assets/js/inti.js') }}"></script>
+    <script defer src="{{ asset('assets/js/dekor.js') }}"></script>
     <script defer src="{{ asset('assets/js/ruangan.js') }}"></script>
     <script defer src="{{ asset('assets/js/alat.js') }}"></script>
     <script defer src="{{ asset('assets/js/pintu.js') }}"></script>
