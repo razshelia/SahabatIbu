@@ -11,10 +11,11 @@
         @if(count($katalog))
             <div class="daftar">
                 @foreach($katalog as $item)
+                    @php($harga = $item->harga_berlaku?->harga_per_kg)
                     <div>
                         <span style="color:#eef5f0">{{ $item['nama'] }}</span>
-                        @if($item['harga_per_kg'] > 0)
-                            <span>Rp {{ number_format($item['harga_per_kg'], 0, ',', '.') }}/{{ $item['satuan'] }}</span>
+                        @if($harga !== null && $harga > 0)
+                            <span>Rp {{ number_format((float) $harga, 0, ',', '.') }}/{{ $item['satuan'] }}</span>
                         @else
                             <span class="kuning" style="color:#f3c64f">Belum ditetapkan</span>
                         @endif

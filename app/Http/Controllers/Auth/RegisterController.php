@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class RegisterController extends Controller
@@ -42,6 +43,11 @@ class RegisterController extends Controller
             return back()->withErrors([
                 'email' => "Terlalu banyak permintaan pendaftaran. Coba lagi dalam {$seconds} detik.",
             ])->withInput();
+        }
+
+        $email = $request->input('email');
+        if (is_string($email)) {
+            $request->merge(['email' => Str::lower(trim($email))]);
         }
 
         $validated = $request->validate([

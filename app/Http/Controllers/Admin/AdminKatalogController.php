@@ -51,6 +51,7 @@ class AdminKatalogController extends Controller
 
         try {
             $this->katalogService->simpanJenisSampah($validated, null, Auth::user());
+
             return back()->with('success', "Jenis sampah {$validated['nama']} sudah ditambahkan.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
@@ -71,6 +72,7 @@ class AdminKatalogController extends Controller
         try {
             $validated['aktif'] = $request->has('aktif');
             $this->katalogService->simpanJenisSampah($validated, $jenis, Auth::user());
+
             return back()->with('success', "Jenis sampah {$jenis->nama} sudah diperbarui.");
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
@@ -91,14 +93,18 @@ class AdminKatalogController extends Controller
         ]);
 
         try {
-            $this->katalogService->tambahHarga(
+            $harga = $this->katalogService->tambahHarga(
                 (int) $validated['jenis_sampah_id'],
                 (float) $validated['harga_per_kg'],
                 $validated['berlaku_mulai'],
                 Auth::user()
             );
 
-            return back()->with('success', 'Harga baru sudah disimpan dan berlaku mulai ' . $validated['berlaku_mulai'] . '.');
+            $pesan = $harga->wasRecentlyCreated
+                ? 'Harga baru sudah disimpan dan berlaku mulai '.$validated['berlaku_mulai'].'.'
+                : 'Harga pada tanggal tersebut sudah diperbarui.';
+
+            return back()->with('success', $pesan);
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }

@@ -35,20 +35,24 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $throttleKey = Str::transliterate(Str::lower($request->input('email')) . '|' . $request->ip());
+        $throttleKey = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
 
         // Pembatasan 5 percobaan login per menit (F-06, Lampiran D)
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
 
             LogAktivitasService::catat(
-                aksi: 'login_terblokir_throttle',
-                keterangan: ['email' => $request->input('email'), 'detik' => $seconds]
+                aksi: 'login_gagal',
+                keterangan: [
+                    'email' => $request->input('email'),
+                    'detik' => $seconds,
+                    'dibatasi' => true,
+                ]
             );
 
-            return back()->withErrors([
-                'email' => "Terlalu banyak percobaan masuk yang gagal. Coba lagi dalam {$seconds} detik.",
-            ])->onlyInput('email');
+            return back()
+                ->with('error', "Terlalu banyak percobaan masuk yang gagal. Coba lagi dalam {$seconds} detik.")
+                ->onlyInput('email');
         }
 
         if (Auth::attempt($request->only('email', 'password'))) {

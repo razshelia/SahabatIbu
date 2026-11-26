@@ -70,8 +70,8 @@ class KatalogHargaService
     }
 
     /**
-     * Tambah harga baru untuk jenis sampah (F-13, F-14).
-     * Riwayat terjaga karena selalu membuat record baru di harga_sampah.
+     * Simpan harga jenis sampah (F-13, F-14).
+     * Harga untuk jenis dan tanggal yang sama diperbarui agar sesuai batas unik tabel.
      */
     public function tambahHarga(int $jenisSampahId, float $hargaPerKg, string $berlakuMulai, User $admin): HargaSampah
     {
@@ -82,23 +82,42 @@ class KatalogHargaService
         $jenis = JenisSampah::findOrFail($jenisSampahId);
 
         return DB::transaction(function () use ($jenis, $hargaPerKg, $berlakuMulai, $admin) {
-            $harga = HargaSampah::create([
-                'jenis_sampah_id' => $jenis->id,
-                'harga_per_kg' => number_format($hargaPerKg, 2, '.', ''),
+            $harga = HargaSampah::query()
+                ->where('jenis_sampah_id', $jenis->id)
+                ->whereDate('berlaku_mulai', $berlakuMulai)
+                ->first() ?? new HargaSampah([
+                    'jenis_sampah_id' => $jenis->id,
+                    'berlaku_mulai' => $berlakuMulai,
+                ]);
+
+            $hargaBaru = ! $harga->exists;
+            $hargaSebelumnya = $harga->harga_per_kg;
+            $harga->harga_per_kg = number_format($hargaPerKg, 2, '.', '');
+
+            if ($hargaBaru) {
+                $harga->dibuat_oleh = $admin->id;
+            }
+
+            $harga->save();
+
+            $keterangan = [
+                'jenis_sampah' => $jenis->nama,
+                'harga_per_kg' => $harga->harga_per_kg,
                 'berlaku_mulai' => $berlakuMulai,
-                'dibuat_oleh' => $admin->id,
-            ]);
+            ];
+
+            if ($hargaBaru) {
+                $keterangan['dibuat_oleh'] = $admin->email;
+            } else {
+                $keterangan['harga_sebelumnya'] = $hargaSebelumnya;
+                $keterangan['diubah_oleh'] = $admin->email;
+            }
 
             LogAktivitasService::catat(
-                aksi: 'tambah_harga_sampah',
+                aksi: $hargaBaru ? 'tambah_harga_sampah' : 'ubah_harga_sampah',
                 objekTipe: 'HargaSampah',
                 objekId: $harga->id,
-                keterangan: [
-                    'jenis_sampah' => $jenis->nama,
-                    'harga_per_kg' => $harga->harga_per_kg,
-                    'berlaku_mulai' => $berlakuMulai,
-                    'dibuat_oleh' => $admin->email,
-                ],
+                keterangan: $keterangan,
                 user: $admin
             );
 

@@ -1,14 +1,14 @@
-@extends('layouts.app', ['title' => 'Periksa Pendaftaran · Bank Sampah Sahabat Ibu', 'dataView' => 'scan', 'pageTitle' => 'Pendaftar baru'])
+@extends('layouts.app', ['title' => 'Pendaftar & Nasabah · Bank Sampah Sahabat Ibu', 'dataView' => 'scan', 'pageTitle' => 'Pendaftar & Nasabah'])
 
 @section('content')
 <small class="kick">Pendaftar &amp; nasabah</small>
-<h1>Periksa <em>pendaftaran</em></h1>
-<p class="lead">Pendaftar baru yang perlu diperiksa sebelum akunnya aktif.</p>
+<h1>Semua <em>pendaftaran</em></h1>
+<p class="lead">Daftar ini memuat semua nasabah, baik yang menunggu verifikasi maupun yang sudah diproses.</p>
 
-<x-alat tool="scan" plat="Pendaftar baru">
+<x-alat tool="scan" plat="Semua pendaftaran">
     <x-slot:layar>
-        <small>Menunggu pemeriksaan</small>
-        <b class="angka {{ $pendaftarList->total() > 0 ? 'kuning' : '' }}">{{ $pendaftarList->total() }} orang</b>
+        <small>Total nasabah terdaftar</small>
+        <b class="angka">{{ $pendaftarList->total() }} orang</b>
     </x-slot:layar>
     <div class="deret">
         <a href="{{ route('admin.nasabah.create') }}" class="key g">+ Tambah nasabah</a>
@@ -26,6 +26,7 @@
                 <th>Kategori</th>
                 <th>Alamat</th>
                 <th>Tanggal daftar</th>
+                <th>Status verifikasi</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -39,21 +40,37 @@
                     <td>{{ $pendaftar->nasabah->alamat ?? '-' }}</td>
                     <td>{{ $pendaftar->created_at->format('d/m/Y H:i') }}</td>
                     <td>
+                        @if($pendaftar->status === 'menunggu')
+                            <span class="pill kuning">Belum diverifikasi</span>
+                        @elseif($pendaftar->status === 'aktif')
+                            <span class="pill ok">Disetujui</span>
+                        @elseif($pendaftar->status === 'nonaktif')
+                            <span class="pill no">Disetujui · Nonaktif</span>
+                        @else
+                            <span class="pill no">{{ ucfirst($pendaftar->status) }}</span>
+                        @endif
+                    </td>
+                    <td>
                         <div class="row" style="gap:6px">
-                            <form method="POST" action="{{ route('admin.nasabah.verifikasi', $pendaftar) }}" style="margin:0">
-                                @csrf
-                                <input type="hidden" name="aksi" value="setujui">
-                                <button class="btn sm" type="submit">Setujui</button>
-                            </form>
-
-                            <button class="btn o sm" type="button" data-id="{{ $pendaftar->id }}" data-nama="{{ $pendaftar->name }}" onclick="bukaModalTolakDariTombol(this)">
-                                Tolak
-                            </button>
+                            @if($pendaftar->status === 'menunggu')
+                                <form method="POST" action="{{ route('admin.nasabah.verifikasi', $pendaftar) }}" style="margin:0">
+                                    @csrf
+                                    <input type="hidden" name="aksi" value="setujui">
+                                    <button class="btn sm" type="submit">Setujui</button>
+                                </form>
+                                <button class="btn o sm" type="button" data-id="{{ $pendaftar->id }}" data-nama="{{ $pendaftar->name }}" onclick="bukaModalTolakDariTombol(this)">
+                                    Tolak
+                                </button>
+                            @elseif(in_array($pendaftar->status, ['aktif', 'nonaktif']))
+                                <a href="{{ route('admin.nasabah.index', ['q' => $pendaftar->email]) }}" class="btn o sm" style="text-decoration:none">Lihat nasabah</a>
+                            @else
+                                <small>Sudah diproses</small>
+                            @endif
                         </div>
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7">Tidak ada pendaftar yang menunggu pemeriksaan.</td></tr>
+                <tr><td colspan="8">Belum ada data pendaftaran nasabah.</td></tr>
             @endforelse
         </tbody>
     </table>

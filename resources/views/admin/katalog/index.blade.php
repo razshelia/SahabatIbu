@@ -3,7 +3,7 @@
 @section('content')
 <small class="kick">Katalog harga</small>
 <h1>Harga sampah <em>harian</em></h1>
-<p class="lead">Tetapkan harga per satuan dan tanggal mulai berlakunya.</p>
+<p class="lead">Tetapkan harga per satuan dan tanggal mulai berlakunya. Jika jenis dan tanggal yang sama sudah ada, harganya akan diperbarui.</p>
 
 <form method="POST" action="{{ route('admin.katalog.harga.store') }}" id="form-harga">
     @csrf

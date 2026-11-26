@@ -58,7 +58,6 @@ class AdminNasabahController extends Controller
     {
         $pendaftarList = User::with('nasabah')
             ->where('role', 'nasabah')
-            ->where('status', 'menunggu')
             ->latest()
             ->paginate(15);
 

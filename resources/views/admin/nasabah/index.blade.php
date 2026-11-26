@@ -7,12 +7,12 @@
 <div class="row" style="margin-bottom:16px;gap:8px">
     <a href="{{ route('admin.nasabah.create') }}" class="btn sm" style="text-decoration:none">+ Tambah nasabah</a>
     <a href="{{ route('admin.nasabah.pendaftar') }}" class="btn o sm" style="text-decoration:none">
-        Periksa pendaftar
+        Pendaftar &amp; nasabah
         @php
             $jmlMenunggu = \App\Models\User::where('role', 'nasabah')->where('status', 'menunggu')->count();
         @endphp
         @if($jmlMenunggu > 0)
-            <span class="pill" style="margin-left:6px;padding:2px 8px">{{ $jmlMenunggu }}</span>
+            <span class="pill" title="Pendaftar menunggu verifikasi" style="margin-left:6px;padding:2px 8px">{{ $jmlMenunggu }}</span>
         @endif
     </a>
 </div>
@@ -26,8 +26,10 @@
         Status
         <select name="status">
             <option value="">Semua status</option>
+            <option value="menunggu" {{ request('status') === 'menunggu' ? 'selected' : '' }}>Menunggu verifikasi</option>
             <option value="aktif" {{ request('status') === 'aktif' ? 'selected' : '' }}>Aktif</option>
             <option value="nonaktif" {{ request('status') === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
+            <option value="ditolak" {{ request('status') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
         </select>
     </label>
     <button class="btn sm" type="submit">Filter</button>

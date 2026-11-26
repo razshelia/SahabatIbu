@@ -17,7 +17,7 @@ class User extends Authenticatable implements MustVerifyEmail
     // verified_by, dan verified_at TIDAK boleh diisi dari input pengguna (BR-12, BR-14).
     protected $fillable = ['name', 'email', 'password', 'google_id'];
 
-    protected $hidden = ['password', 'google_id'];
+    protected $hidden = ['password', 'remember_token', 'google_id'];
 
     protected function casts(): array
     {

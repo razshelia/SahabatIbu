@@ -49,6 +49,30 @@ class KategoriAlamatNasabahTest extends TestCase
         $this->post('/register', $this->data(['kategori' => 'umum']))->assertSessionHasErrors('alamat');
     }
 
+    public function test_registration_rejects_an_email_that_is_already_in_use(): void
+    {
+        User::forceCreate([
+            'name' => 'Pengguna Lama',
+            'email' => 'siti@example.test',
+            'password' => 'PasswordLama123',
+            'role' => 'nasabah',
+            'status' => 'aktif',
+            'must_change_password' => false,
+        ]);
+
+        $this->followingRedirects()
+            ->from(route('register'))
+            ->post(route('register'), $this->data([
+                'email' => 'SITI@EXAMPLE.TEST',
+                'kategori' => 'umum',
+                'alamat' => 'Jl. Mawar 5, Sumbersari',
+            ]))
+            ->assertOk()
+            ->assertSee('Email ini sudah terdaftar.');
+
+        $this->assertSame(1, User::where('email', 'siti@example.test')->count());
+    }
+
     public function test_nasabah_tidak_bisa_mengubah_alamat_lewat_profil(): void
     {
         $this->post('/register', $this->data(['kategori' => 'warga', 'blok' => 'A', 'nomor_rumah' => '1']));

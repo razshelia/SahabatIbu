@@ -218,6 +218,32 @@ body:after {
     transform: translate(-50%, 0)
 }
 
+.password-change-success {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+    margin-top: 12px;
+    padding: 14px 20px;
+    border-radius: 14px;
+    border: 1px solid #6fe0a266;
+    background: #1d3a2b;
+    color: #d5ffe8;
+    font-size: 15px;
+    line-height: 1.4;
+    transition: opacity .25s ease, transform .25s ease
+}
+
+.password-change-success .i {
+    flex: 0 0 auto;
+    color: #6fe0a2
+}
+
+.password-change-success.is-hiding {
+    opacity: 0;
+    transform: translateY(-4px)
+}
+
 #cue {
     position: fixed;
     z-index: 5;
