@@ -98,7 +98,7 @@
         </tbody>
     </table>
 </div>
-<div style="margin:12px 0 24px">
+<div class="admin-pagination">
     {{ $setoranList->links() }}
 </div>
 
@@ -135,7 +135,7 @@
         </tbody>
     </table>
 </div>
-<div style="margin-top:12px">
+<div class="admin-pagination">
     {{ $penarikanList->links() }}
 </div>
 @endsection

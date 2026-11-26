@@ -28,8 +28,9 @@ class NasabahPenarikanController extends Controller
         $penarikanList = $nasabah->penarikanDana()
             ->orderBy('diajukan_pada', 'desc')
             ->paginate(15);
+        $batasMaksimalUmum = (float) config('bank_sampah.penarikan.batas_maksimal_umum', 100000);
 
-        return view('nasabah.penarikan.index', compact('nasabah', 'penarikanList'));
+        return view('nasabah.penarikan.index', compact('nasabah', 'penarikanList', 'batasMaksimalUmum'));
     }
 
     /**

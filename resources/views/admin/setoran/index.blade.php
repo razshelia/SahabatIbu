@@ -40,8 +40,20 @@
         </select>
     </label>
 
+    <label>
+        Jenis sampah
+        <select name="jenis_sampah_id">
+            <option value="">Semua jenis sampah</option>
+            @foreach($jenisSampahList as $jenis)
+                <option value="{{ $jenis->id }}" {{ (string) request('jenis_sampah_id') === (string) $jenis->id ? 'selected' : '' }}>
+                    {{ $jenis->nama }}
+                </option>
+            @endforeach
+        </select>
+    </label>
+
     <button class="btn sm" type="submit">Filter</button>
-    @if(request('nasabah_id') || request('start_date') || request('end_date') || request('status'))
+    @if(request('nasabah_id') || request('start_date') || request('end_date') || request('status') || request('jenis_sampah_id'))
         <a href="{{ route('admin.setoran.index') }}" class="btn o sm" style="text-decoration:none">Reset</a>
     @endif
 </form>
@@ -53,6 +65,7 @@
                 <th>Kode</th>
                 <th>Tanggal</th>
                 <th>Nasabah</th>
+                <th>Jenis sampah</th>
                 <th>Total berat</th>
                 <th>Nilai (Rp)</th>
                 <th>Status</th>
@@ -65,6 +78,15 @@
                     <td><b>{{ $setoran->kode }}</b></td>
                     <td>{{ $setoran->tanggal->format('d/m/Y') }}</td>
                     <td>{{ $setoran->nasabah->user->name ?? '-' }}</td>
+                    <td>
+                        @forelse($setoran->detailSetoran as $detail)
+                            <span class="pill" style="display:inline-block;margin:2px">
+                                {{ $detail->jenisSampah->nama ?? '-' }}
+                            </span>
+                        @empty
+                            -
+                        @endforelse
+                    </td>
                     <td>{{ number_format($setoran->total_berat, 2, ',', '.') }} kg</td>
                     <td>Rp {{ number_format($setoran->total_nilai, 0, ',', '.') }}</td>
                     <td>
@@ -88,13 +110,13 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7">Belum ada transaksi setoran yang cocok.</td></tr>
+                <tr><td colspan="8">Belum ada transaksi setoran yang cocok.</td></tr>
             @endforelse
         </tbody>
     </table>
 </div>
 
-<div style="margin-top:16px">
+<div class="admin-pagination">
     {{ $transaksiList->links() }}
 </div>
 

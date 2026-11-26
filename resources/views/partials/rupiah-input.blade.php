@@ -1,7 +1,7 @@
 {{--
     Isian nominal rupiah dengan pintasan (hanya angka, tidak bisa minus).
     Tampil sebagai layar angka + papan tombol (gaya panel alat, lihat public/assets/alat.css).
-    Variabel: $id, $name, $label, $step (kelipatan tombol +/−), $max (opsional), $value (opsional),
+    Variabel: $id, $name, $label, $step (kelipatan tombol +/−), $max (opsional, nilai pintasan maksimum), $value (opsional),
               $placeholder (opsional), $maxLabel (opsional, teks tombol "isi maksimum"),
               $draf (opsional: kunci alat 3D yang ikut menampilkan angka ini, mis. 'capit').
     Setiap perubahan mengirim event 'rupiah' (detail = angka) yang ditangkap public/assets/js/sinkron.js.
@@ -46,7 +46,6 @@
             function nilai() { return parseInt(inp.value || '0', 10) || 0; }
             function tulis(n) {
                 n = Math.max(0, Math.floor(n));
-                if (max !== null && n > max) n = max;
                 inp.value = n > 0 ? String(n) : '';
                 tampil.textContent = n > 0 ? fmt(n) : '';
                 w.dispatchEvent(new CustomEvent('rupiah', { bubbles: true, detail: n }));

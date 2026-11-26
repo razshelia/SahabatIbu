@@ -80,6 +80,14 @@ html.g3d .alat-plat .sambung{display:block}
 .alat legend{display:block;padding:0;margin-bottom:6px}
 .alat small{color:#5b5645;font-weight:600;font-size:14.5px;line-height:1.45}
 .alat .err{color:#b03a2d;font-size:15px;font-weight:700}
+.alat .privacy-note{
+  display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid #c9b989;border-radius:12px;
+  background:#fbf3d9;color:#4a3525;font-size:14px;font-weight:500;line-height:1.5
+}
+.alat .privacy-note-icon{
+  display:inline-flex;flex:none;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;
+  background:#e8d8a8;color:#4a3525;font-size:13px;font-weight:700;line-height:1
+}
 .alat :is(input,select,textarea):not([type=checkbox]):not([type=radio]){
   width:100%; min-height:56px; padding:10px 16px; border-radius:14px;
   border:3px solid var(--rangka); background:#fff; color:#1b241f;

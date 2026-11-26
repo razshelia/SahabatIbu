@@ -125,7 +125,7 @@
     </table>
 </div>
 
-<div style="margin-top:16px">
+<div class="admin-pagination">
     {{ $penarikanList->links() }}
 </div>
 

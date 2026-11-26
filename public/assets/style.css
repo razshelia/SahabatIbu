@@ -1436,6 +1436,87 @@ td {
     vertical-align: top
 }
 
+.admin-pagination {
+    margin: 16px 0;
+    color: var(--ink)
+}
+
+.admin-pagination nav > div:first-child {
+    display: none
+}
+
+.admin-pagination nav > div:nth-child(2) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px
+}
+
+.admin-pagination nav p {
+    margin: 0;
+    color: #eef5f0b3;
+    font-size: 13px;
+    line-height: 1.4
+}
+
+.admin-pagination nav > div:nth-child(2) > div:last-child > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px
+}
+
+.admin-pagination nav > div:nth-child(2) > div:last-child > span > a,
+.admin-pagination nav > div:nth-child(2) > div:last-child > span > span > span {
+    display: inline-flex;
+    min-width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #1b211e;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1;
+    text-decoration: none
+}
+
+.admin-pagination nav > div:nth-child(2) > div:last-child > span > span[aria-current="page"] > span {
+    border-color: #6fe0a2;
+    background: #2f7d5b;
+    color: #fff
+}
+
+.admin-pagination nav > div:nth-child(2) > div:last-child > span > span[aria-disabled="true"] > span {
+    color: #eef5f080;
+    cursor: not-allowed
+}
+
+.admin-pagination nav > div:nth-child(2) > div:last-child > span > a:hover {
+    border-color: var(--green);
+    color: var(--green)
+}
+
+.admin-pagination nav svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    flex: none
+}
+
+@media (max-width: 600px) {
+    .admin-pagination nav > div:nth-child(2) {
+        justify-content: center
+    }
+
+    .admin-pagination nav > div:nth-child(2) > div:first-child {
+        width: 100%;
+        text-align: center
+    }
+}
+
 .btn.sm {
     min-height: 38px;
     padding: 0 14px;

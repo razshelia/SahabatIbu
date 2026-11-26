@@ -75,7 +75,7 @@
     </table>
 </div>
 
-<div style="margin-top:16px">
+<div class="admin-pagination">
     {{ $logs->links() }}
 </div>
 @endsection

@@ -41,6 +41,16 @@ class TransaksiSetoranService
      */
     public function simpanSetoran(int $nasabahId, array $items, User $admin): TransaksiSetoran
     {
+        $items = array_filter($items, static function ($item) {
+            if (! is_array($item) || ! array_key_exists('berat_kg', $item)) {
+                return true;
+            }
+
+            $berat = $item['berat_kg'];
+
+            return $berat !== null && (! is_string($berat) || trim($berat) !== '');
+        });
+
         if (empty($items)) {
             throw new RuntimeException('Pilih setidaknya satu jenis sampah untuk dicatat.');
         }

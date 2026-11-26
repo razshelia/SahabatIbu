@@ -29,8 +29,9 @@ class AdminSetoranController extends Controller
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
         $status = $request->query('status');
+        $jenisSampahId = $request->query('jenis_sampah_id');
 
-        $query = TransaksiSetoran::with(['nasabah.user', 'admin']);
+        $query = TransaksiSetoran::with(['nasabah.user', 'admin', 'detailSetoran.jenisSampah']);
 
         if ($nasabahId) {
             $query->where('nasabah_id', $nasabahId);
@@ -48,10 +49,24 @@ class AdminSetoranController extends Controller
             $query->where('status', $status);
         }
 
+        if ($jenisSampahId) {
+            $query->whereHas('detailSetoran', fn ($q) => $q->where('jenis_sampah_id', $jenisSampahId));
+        }
+
         $transaksiList = $query->orderBy('tanggal', 'desc')->paginate(15)->withQueryString();
         $nasabahList = Nasabah::with('user')->whereHas('user', fn ($q) => $q->where('status', 'aktif'))->get();
+        $jenisSampahList = JenisSampah::orderBy('nama')->get();
 
-        return view('admin.setoran.index', compact('transaksiList', 'nasabahList', 'nasabahId', 'startDate', 'endDate', 'status'));
+        return view('admin.setoran.index', compact(
+            'transaksiList',
+            'nasabahList',
+            'jenisSampahList',
+            'nasabahId',
+            'startDate',
+            'endDate',
+            'status',
+            'jenisSampahId'
+        ));
     }
 
     /**
@@ -76,6 +91,20 @@ class AdminSetoranController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $items = $request->input('items', []);
+        if (is_array($items)) {
+            $items = array_filter($items, static function ($item) {
+                if (! is_array($item) || ! array_key_exists('berat_kg', $item)) {
+                    return true;
+                }
+
+                $berat = $item['berat_kg'];
+
+                return $berat !== null && (! is_string($berat) || trim($berat) !== '');
+            });
+            $request->merge(['items' => $items]);
+        }
+
         $request->validate([
             'nasabah_id' => ['required', 'exists:nasabah,id'],
             'items' => ['required', 'array', 'min:1'],

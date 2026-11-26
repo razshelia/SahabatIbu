@@ -17,4 +17,8 @@ return [
         // dan wajib diganti lagi saat login. Biarkan false kecuali memang lupa kata sandi admin.
         'reset_password' => (bool) env('ADMIN_RESET_PASSWORD', false),
     ],
+
+    'penarikan' => [
+        'batas_maksimal_umum' => (float) env('BATAS_PENARIKAN_UMUM', 100000),
+    ],
 ];

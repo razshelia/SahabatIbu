@@ -22,7 +22,8 @@ Ekstensi PHP `bcmath` harus aktif (perhitungan saldo memakainya).
 | `JenisSampahSeeder` | Kertas, Botol Plastik, Logam | Aman dijalankan ulang. |
 | `HargaSampahSeeder` | Harga awal **contoh** | Hanya mengisi jenis yang belum punya harga, tidak pernah menimpa harga yang sudah ditetapkan pengurus. |
 
-Nilai `ADMIN_*` dibaca lewat `config/bank_sampah.php`, jadi tetap bekerja setelah `php artisan config:cache`
+Nilai `ADMIN_*` dan batas penarikan kategori umum (`BATAS_PENARIKAN_UMUM`, default Rp100.000; nilai `0` menonaktifkan batas)
+dibaca lewat `config/bank_sampah.php`, jadi tetap bekerja setelah `php artisan config:cache`
 (jalankan `php artisan config:clear` bila baru mengubah `.env`).
 
 ### Data dummy untuk pengujian (bertema K-pop)

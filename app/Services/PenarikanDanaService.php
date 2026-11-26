@@ -64,10 +64,22 @@ class PenarikanDanaService
                 throw new RuntimeException('Akun nasabah harus aktif sebelum dapat mengajukan penarikan.');
             }
 
+            $batasMaksimalUmum = (float) config('bank_sampah.penarikan.batas_maksimal_umum', 100000);
+            if (
+                $lockedNasabah->kategori === 'umum'
+                && $batasMaksimalUmum > 0
+                && bccomp($nominalFormatted, number_format($batasMaksimalUmum, 2, '.', ''), 2) > 0
+            ) {
+                throw new RuntimeException(
+                    'Ditolak: batas maksimal penarikan untuk nasabah umum adalah Rp '
+                    . number_format($batasMaksimalUmum, 2, ',', '.') . '.'
+                );
+            }
+
             $saldoTersedia = bcsub((string) $lockedNasabah->saldo, (string) $lockedNasabah->saldo_ditahan, 2);
 
             if (bccomp($nominalFormatted, $saldoTersedia, 2) > 0) {
-                throw new RuntimeException('Jumlah penarikan (Rp ' . number_format((float) $nominalFormatted, 2, ',', '.') . ') melebihi saldo tersedia (Rp ' . number_format((float) $saldoTersedia, 2, ',', '.') . ').');
+                throw new RuntimeException('Ditolak: saldo tidak mencukupi. Saldo tersedia saat ini Rp ' . number_format((float) $saldoTersedia, 2, ',', '.') . '.');
             }
 
             // Tahan saldo

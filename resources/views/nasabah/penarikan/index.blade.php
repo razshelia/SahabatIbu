@@ -4,6 +4,9 @@
 <small class="kick">Penarikan dana</small>
 <h1>Ajukan <em>penarikan</em></h1>
 <p class="lead">Pilih jumlah dan cara menerima dana: tunai atau transfer.</p>
+@if($nasabah->kategori === 'umum' && $batasMaksimalUmum > 0)
+    <p class="lead">Batas maksimal penarikan untuk nasabah umum adalah <b>Rp {{ number_format($batasMaksimalUmum, 2, ',', '.') }}</b> per pengajuan.</p>
+@endif
 
 <x-alat tool="capit" plat="Penarikan dana">
     <x-slot:layar>
@@ -74,7 +77,10 @@
                 @error('nama_pemilik')<p class="err" data-validation-error-for="nama_pemilik">{{ $message }}</p>@enderror
             </div>
 
-            <small style="opacity:0.75;color:var(--yel)">Data rekening atau e-wallet hanya digunakan untuk pengajuan ini. Data tersebut tidak disimpan di profil Ibu.</small>
+            <div class="privacy-note" role="note">
+                <span class="privacy-note-icon" aria-hidden="true">i</span>
+                <span>Data rekening atau e-wallet hanya digunakan untuk pengajuan ini. Data tersebut tidak disimpan di profil Ibu.</span>
+            </div>
         </div>
 
         <div class="deret">
@@ -177,7 +183,7 @@
     </table>
 </div>
 
-<div style="margin-top:16px">
+<div class="admin-pagination">
     {{ $penarikanList->links() }}
 </div>
 @endsection

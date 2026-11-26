@@ -13,7 +13,7 @@ class PenarikanDanaMetodeTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function createNasabah(float $saldo = 100000): User
+    private function createNasabah(float $saldo = 100000, string $kategori = 'warga'): User
     {
         $u = new User();
         $u->forceFill([
@@ -30,7 +30,7 @@ class PenarikanDanaMetodeTest extends TestCase
             'user_id' => $u->id,
             'nomor_nasabah' => 'NSB-TEST-001',
             'telepon' => '08123456789',
-            'kategori' => 'warga',
+            'kategori' => $kategori,
             'blok' => 'A',
             'nomor_rumah' => '1',
             'alamat' => 'Blok A No. 1, Perumahan Taman Gading',
@@ -81,6 +81,65 @@ class PenarikanDanaMetodeTest extends TestCase
 
         $nasabah = $user->nasabah->fresh();
         $this->assertEquals('25000.00', $nasabah->saldo_ditahan);
+    }
+
+    public function test_pengajuan_melebihi_saldo_tersedia_ditolak_dengan_pemberitahuan(): void
+    {
+        $user = $this->createNasabah(100000);
+        $nasabah = $user->nasabah;
+        $nasabah->forceFill(['saldo_ditahan' => 25000])->save();
+
+        $response = $this->actingAs($user)->post(route('nasabah.penarikan.store'), [
+            'nominal' => '80000',
+            'metode' => 'tunai',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', 'Ditolak: saldo tidak mencukupi. Saldo tersedia saat ini Rp 75.000,00.');
+        $this->assertDatabaseCount('penarikan_dana', 0);
+        $this->assertEquals('100000.00', $nasabah->fresh()->saldo);
+        $this->assertEquals('25000.00', $nasabah->fresh()->saldo_ditahan);
+    }
+
+    public function test_nasabah_umum_ditolak_jika_penarikan_melebihi_batas_maksimal(): void
+    {
+        config(['bank_sampah.penarikan.batas_maksimal_umum' => 100000]);
+        $user = $this->createNasabah(200000, 'umum');
+
+        $response = $this->actingAs($user)->post(route('nasabah.penarikan.store'), [
+            'nominal' => '150000',
+            'metode' => 'tunai',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', 'Ditolak: batas maksimal penarikan untuk nasabah umum adalah Rp 100.000,00.');
+        $this->assertDatabaseCount('penarikan_dana', 0);
+        $this->assertEquals('0.00', $user->nasabah->fresh()->saldo_ditahan);
+
+        $this->actingAs($user)->get(route('nasabah.penarikan.index'))
+            ->assertOk()
+            ->assertSee('Batas maksimal penarikan untuk nasabah umum')
+            ->assertSee('Rp 100.000');
+    }
+
+    public function test_nasabah_warga_tidak_dibatasi_batas_penarikan_umum(): void
+    {
+        config(['bank_sampah.penarikan.batas_maksimal_umum' => 100000]);
+        $user = $this->createNasabah(200000, 'warga');
+
+        $response = $this->actingAs($user)->post(route('nasabah.penarikan.store'), [
+            'nominal' => '150000',
+            'metode' => 'tunai',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('penarikan_dana', [
+            'nasabah_id' => $user->nasabah->id,
+            'nominal' => '150000.00',
+            'status' => 'menunggu',
+        ]);
+        $this->assertEquals('150000.00', $user->nasabah->fresh()->saldo_ditahan);
     }
 
     public function test_nasabah_dapat_mengajukan_penarikan_transfer_dan_log_disamarkan(): void
